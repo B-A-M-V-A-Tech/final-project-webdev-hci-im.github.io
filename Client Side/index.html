@@ -1,0 +1,1655 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sip & Pulse Cafe</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-body:#F8F4E1; --bg-surface:#E1DCC9; --bg-surface-2:#cfc9b4;
+      --text-main:#1F150C; --text-dim:#412D15;
+      --brand:#74512D; --brand-dark:#543310; --brand-light:#AF8F6F;
+      --border:#AF8F6F; --admin-accent:#c0392b; --transition:0.3s ease;
+    }
+    [data-bs-theme="dark"] {
+      --bg-body:#000000; --bg-surface:#1F150C; --bg-surface-2:#2a1d10;
+      --text-main:#F8F4E1; --text-dim:#E1DCC9;
+      --brand:#AF8F6F; --brand-dark:#74512D; --brand-light:#74512D; --border:#412D15;
+    }
+    *,*::before,*::after{box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background-color:var(--bg-body);color:var(--text-main);font-family:'Inter',sans-serif;transition:background-color var(--transition),color var(--transition);min-height:100vh;}
+    h1,h2,h3,.display-font{font-family:'Playfair Display',serif;}
+
+    /* ── NAVBAR ── */
+    .site-nav{background-color:var(--bg-surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1030;transition:background-color var(--transition);}
+    .navbar-brand-link{color:var(--text-main);font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;}
+    .nav-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--border);}
+    .nav-link-item{color:var(--text-dim);font-size:0.84rem;font-weight:500;text-decoration:none;padding:6px 10px;border-radius:6px;transition:color var(--transition),background-color var(--transition);}
+    .nav-link-item:hover,.nav-link-item.active{color:var(--brand);background-color:rgba(116,81,45,0.08);}
+    .mode-badge{font-size:0.72rem;font-weight:600;padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;}
+    .mode-badge.client{background-color:#1a7c4a;color:#fff;}
+    .mode-badge.admin{background-color:var(--admin-accent);color:#fff;}
+    .btn-theme{background:transparent;border:1.5px solid var(--border);color:var(--text-main);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all var(--transition);}
+    .btn-theme:hover{background-color:var(--bg-surface-2);border-color:var(--brand);color:var(--brand);}
+    .admin-toggle-wrap{display:flex;align-items:center;gap:8px;background-color:var(--bg-surface-2);border:1.5px solid var(--border);border-radius:24px;padding:5px 12px;cursor:pointer;user-select:none;}
+    .admin-toggle-wrap label{cursor:pointer;font-size:.8rem;font-weight:600;color:var(--text-dim);white-space:nowrap;pointer-events:none;}
+    .admin-toggle-wrap.is-admin{border-color:var(--admin-accent);background-color:rgba(192,57,43,.07);}
+    .admin-toggle-wrap.is-admin label{color:var(--admin-accent);}
+    /* Google Login btn */
+    .btn-google-login{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid #ddd;border-radius:24px;padding:5px 14px;cursor:pointer;font-size:.8rem;font-weight:600;color:#3c4043;white-space:nowrap;transition:box-shadow .2s;}
+    .btn-google-login:hover{box-shadow:0 2px 8px rgba(0,0,0,.15);}
+    .btn-google-login img{width:16px;height:16px;}
+    .user-avatar-wrap{display:flex;align-items:center;gap:8px;background:var(--bg-surface-2);border:1.5px solid var(--border);border-radius:24px;padding:4px 12px;font-size:.8rem;font-weight:600;color:var(--text-main);}
+    .user-avatar{width:24px;height:24px;border-radius:50%;object-fit:cover;}
+
+    /* ── ADMIN BANNER ── */
+    #adminBanner{background:linear-gradient(90deg,#7b1c10,#c0392b);color:#fff;font-size:.8rem;font-weight:600;padding:7px 0;text-align:center;letter-spacing:.5px;display:none;}
+    #adminBanner.visible{display:block;}
+
+    /* ── HERO — VIDEO BG ── */
+    .hero-section{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden;color:#F8F4E1;}
+    .hero-video-bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;}
+    .hero-overlay{position:absolute;inset:0;background:linear-gradient(135deg,rgba(31,21,12,.82) 0%,rgba(84,51,16,.6) 100%);z-index:1;}
+    .hero-content{position:relative;z-index:2;}
+    .hero-eyebrow{font-size:.75rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:12px;}
+    .hero-title{font-family:'Playfair Display',serif;font-size:clamp(2.2rem,5vw,3.6rem);font-weight:700;color:#F8F4E1;line-height:1.12;margin-bottom:16px;}
+    .hero-title em{font-style:italic;color:#AF8F6F;}
+    .hero-subtitle{font-size:.975rem;color:#E1DCC9;max-width:460px;line-height:1.7;}
+    .hero-stat{background-color:rgba(225,220,201,.12);border:1px solid rgba(175,143,111,.4);border-radius:12px;padding:14px 18px;min-width:100px;text-align:center;backdrop-filter:blur(6px);}
+    .hero-stat .stat-num{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#AF8F6F;display:block;}
+    .hero-stat .stat-label{font-size:.7rem;color:#E1DCC9;font-weight:500;text-transform:uppercase;letter-spacing:.5px;}
+    .btn-hero-primary{background-color:#74512D;color:#F8F4E1;border:none;border-radius:30px;padding:13px 32px;font-size:.9rem;font-weight:700;cursor:pointer;transition:background-color var(--transition);text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+    .btn-hero-primary:hover{background-color:#543310;color:#F8F4E1;}
+    .btn-hero-outline{background:transparent;color:#F8F4E1;border:2px solid rgba(175,143,111,.7);border-radius:30px;padding:11px 28px;font-size:.9rem;font-weight:600;cursor:pointer;transition:all var(--transition);text-decoration:none;display:inline-flex;align-items:center;gap:8px;}
+    .btn-hero-outline:hover{background-color:rgba(175,143,111,.2);color:#F8F4E1;}
+
+    /* ── SECTIONS ── */
+    .section-eyebrow{font-size:.7rem;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--brand);}
+    .section-title{font-family:'Playfair Display',serif;font-size:1.75rem;font-weight:700;color:var(--text-main);margin-bottom:4px;}
+
+    /* ── MENU PREVIEW CARDS (homepage) ── */
+    .menu-preview-section{position:relative;overflow:hidden;}
+    .menu-preview-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1800&q=80') center/cover no-repeat;filter:brightness(.25);z-index:0;}
+    .menu-preview-content{position:relative;z-index:1;}
+    .preview-card{background:rgba(225,220,201,.12);border:1px solid rgba(175,143,111,.3);border-radius:16px;padding:24px;text-align:center;backdrop-filter:blur(8px);color:#F8F4E1;}
+    .preview-card-name{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;margin-bottom:6px;}
+    .preview-card-price{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#AF8F6F;}
+    .btn-open-menu{background:linear-gradient(135deg,#74512D,#543310);color:#F8F4E1;border:none;border-radius:30px;padding:14px 36px;font-size:.95rem;font-weight:700;cursor:pointer;transition:all .3s;text-decoration:none;display:inline-flex;align-items:center;gap:10px;box-shadow:0 6px 20px rgba(116,81,45,.4);}
+    .btn-open-menu:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(116,81,45,.55);color:#F8F4E1;}
+
+    /* ── FULL MENU MODAL ── */
+    #fullMenuModal .modal-content{border-radius:0;border:none;}
+    #fullMenuModal .modal-dialog{margin:0;}
+    .menu-modal-bg{background:url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1800&q=80') center/cover no-repeat fixed;min-height:100vh;}
+    .menu-modal-overlay{background:rgba(31,21,12,.88);min-height:100vh;padding:20px 0 80px;}
+    .menu-modal-close-btn{position:fixed;top:20px;right:20px;z-index:9999;background:rgba(255,255,255,.15);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(6px);transition:all .2s;}
+    .menu-modal-close-btn:hover{background:rgba(255,255,255,.25);}
+    .menu-search-bar{background:rgba(225,220,201,.12);border:1.5px solid rgba(175,143,111,.4);border-radius:30px;padding:11px 20px 11px 44px;color:#F8F4E1;font-size:.9rem;width:100%;outline:none;transition:border-color .3s;}
+    .menu-search-bar::placeholder{color:rgba(225,220,201,.5);}
+    .menu-search-bar:focus{border-color:#AF8F6F;}
+    .search-icon-wrap{position:relative;}
+    .search-icon-wrap .material-icons{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:rgba(175,143,111,.7);font-size:18px;pointer-events:none;}
+
+    /* Category bar inside modal */
+    .cat-bar-modal{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:4px 0 10px;}
+    .cat-bar-modal::-webkit-scrollbar{display:none;}
+    .cat-btn-modal{flex-shrink:0;padding:7px 16px;border-radius:24px;font-size:.78rem;font-weight:500;border:1.5px solid rgba(175,143,111,.4);background:transparent;color:#E1DCC9;cursor:pointer;transition:all .25s;white-space:nowrap;}
+    .cat-btn-modal:hover{border-color:#AF8F6F;color:#AF8F6F;}
+    .cat-btn-modal.active{background-color:#74512D;border-color:#74512D;color:#F8F4E1;}
+
+    /* Menu cards inside modal */
+    .menu-card-modal{background:rgba(225,220,201,.1);border:1px solid rgba(175,143,111,.25);border-radius:14px;overflow:hidden;height:100%;display:flex;flex-direction:column;transition:transform .22s,box-shadow .22s;backdrop-filter:blur(4px);}
+    .menu-card-modal:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,0,0,.4);}
+    .menu-img-modal{width:100%;height:180px;object-fit:cover;display:block;}
+    .menu-card-modal-body{padding:14px 16px;display:flex;flex-direction:column;flex:1;}
+    .menu-item-name-modal{font-family:'Playfair Display',serif;font-size:.95rem;font-weight:700;color:#F8F4E1;margin-bottom:4px;}
+    .menu-item-desc-modal{font-size:.75rem;color:rgba(225,220,201,.75);line-height:1.55;flex:1;margin-bottom:10px;}
+    .menu-price-modal{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:700;color:#AF8F6F;}
+    .cat-tag-modal{font-size:.62rem;font-weight:600;letter-spacing:.7px;text-transform:uppercase;background:rgba(116,81,45,.5);color:#F8F4E1;padding:2px 8px;border-radius:20px;display:inline-block;margin-bottom:8px;}
+    .btn-add-modal{width:100%;background-color:#74512D;color:#F8F4E1;border:none;border-radius:8px;padding:8px;font-size:.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background-color .25s;margin-top:8px;}
+    .btn-add-modal:hover{background-color:#543310;}
+    .admin-btns-modal{display:none;gap:6px;margin-top:8px;}
+    .btn-edit-modal{flex:1;background:transparent;border:1.5px solid rgba(175,143,111,.5);color:#E1DCC9;border-radius:8px;padding:7px;font-size:.75rem;font-weight:600;cursor:pointer;transition:background-color .2s;}
+    .btn-edit-modal:hover{background:rgba(175,143,111,.15);}
+    .btn-del-modal{background:rgba(192,57,43,.15);border:1.5px solid rgba(192,57,43,.4);color:#e74c3c;border-radius:8px;padding:7px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color .2s;}
+    .btn-del-modal:hover{background:rgba(192,57,43,.25);}
+    body.admin-active .admin-btns-modal{display:flex;}
+    body.admin-active .client-btn-modal{display:none;}
+
+    /* ── MENU CARDS (legacy - hidden, kept for compat) ── */
+    .menu-card{background-color:var(--bg-surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;transition:transform .22s,box-shadow .22s;height:100%;display:flex;flex-direction:column;}
+    .menu-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(84,51,16,.15);}
+    .menu-img-wrap{position:relative;overflow:hidden;}
+    .menu-img{width:100%;height:210px;object-fit:cover;display:block;transition:transform .35s;}
+    .menu-card:hover .menu-img{transform:scale(1.04);}
+    .menu-category-tag{position:absolute;bottom:10px;left:12px;font-size:.68rem;font-weight:600;letter-spacing:.8px;text-transform:uppercase;background-color:rgba(31,21,12,.72);color:#F8F4E1;padding:3px 10px;border-radius:20px;backdrop-filter:blur(4px);}
+    .menu-card-body{padding:18px 18px 16px;display:flex;flex-direction:column;flex:1;}
+    .menu-item-name{font-family:'Playfair Display',serif;font-size:1.05rem;font-weight:600;color:var(--text-main);margin-bottom:4px;}
+    .menu-item-desc{font-size:.8rem;color:var(--text-dim);line-height:1.6;flex:1;margin-bottom:12px;}
+    .menu-price{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--brand);}
+    .card-footer-actions{display:flex;gap:8px;margin-top:12px;}
+    .btn-add-order{flex:1;background-color:var(--brand);color:#F8F4E1;border:none;border-radius:10px;padding:9px 12px;font-size:.82rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background-color var(--transition);}
+    .btn-add-order:hover{background-color:var(--brand-dark);}
+    .admin-card-actions{display:none;gap:8px;margin-top:12px;}
+    .btn-edit-item{flex:1;background:transparent;border:1.5px solid var(--brand);color:var(--text-main);border-radius:10px;padding:9px 12px;font-size:.82rem;font-weight:600;cursor:pointer;transition:background-color var(--transition);}
+    .btn-edit-item:hover{background-color:var(--bg-surface-2);}
+    .btn-delete-item{background-color:rgba(192,57,43,.1);border:1.5px solid rgba(192,57,43,.35);color:#c0392b;border-radius:10px;padding:9px 11px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background-color var(--transition);}
+    .btn-delete-item:hover{background-color:rgba(192,57,43,.18);}
+    body.admin-active .admin-card-actions{display:flex;}
+    body.admin-active .client-card-actions{display:none;}
+    #addItemAdminBtn{display:none;}
+    body.admin-active #addItemAdminBtn{display:inline-flex;}
+
+    /* ── REVIEWS ── */
+    .reviews-section{background-color:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 0;}
+    .review-card{background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;padding:20px;height:100%;}
+    .review-avatar{width:38px;height:38px;border-radius:50%;background-color:var(--bg-surface-2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--brand);border:1.5px solid var(--border);flex-shrink:0;}
+    .review-stars{color:#d4a017;font-size:.9rem;letter-spacing:1px;}
+    .review-text{font-size:.875rem;color:var(--text-dim);line-height:1.65;margin:10px 0 0;}
+    .btn-delete-review{display:none;background:none;border:none;color:var(--admin-accent);cursor:pointer;padding:2px;border-radius:4px;}
+    body.admin-active .btn-delete-review{display:block;}
+    .star-rating-input{display:flex;flex-direction:row-reverse;gap:4px;justify-content:flex-end;}
+    .star-rating-input input{display:none;}
+    .star-rating-input label{cursor:pointer;font-size:1.5rem;color:var(--border);transition:color .15s;}
+    .star-rating-input input:checked ~ label,.star-rating-input label:hover,.star-rating-input label:hover ~ label{color:#d4a017;}
+
+    /* ── CAREERS ── */
+    .careers-card{background-color:var(--bg-surface);border:1px solid var(--border);border-radius:20px;padding:36px 28px;text-align:center;height:100%;transition:transform .22s,box-shadow .22s;}
+    .careers-card:hover{transform:translateY(-4px);box-shadow:0 12px 28px rgba(84,51,16,.13);}
+    .careers-icon{font-size:2.5rem;color:var(--brand);margin-bottom:16px;}
+
+    /* ── FOOTER ── */
+    .site-footer{background-color:var(--bg-surface);border-top:1px solid var(--border);padding:36px 0 24px;}
+    .footer-brand{font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--text-main);}
+    .footer-link{color:var(--text-dim);font-size:.82rem;text-decoration:none;transition:color var(--transition);}
+    .footer-link:hover{color:var(--brand);}
+
+    /* ── ORDER MODAL SCROLL FIX ── */
+    #orderModal .modal-content{display:flex;flex-direction:column;max-height:90vh;}
+    #orderModal .modal-body-custom{flex:1 1 auto;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;}
+    #orderModal .modal-footer-custom{flex-shrink:0;}
+    /* ── MODALS (order, cart, login, crud) ── */
+    .modal-content{background-color:var(--bg-body);color:var(--text-main);border:1px solid var(--border);border-radius:20px;}
+    .modal-header-custom{padding:22px 24px 0;display:flex;align-items:flex-start;justify-content:space-between;}
+    .modal-title-custom{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;color:var(--text-main);}
+    .modal-body-custom{padding:16px 24px;}
+    .modal-footer-custom{padding:0 24px 22px;}
+    .form-label-custom{font-size:.78rem;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px;}
+    .form-control-custom,.form-select-custom{background-color:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:10px;padding:10px 14px;font-size:.875rem;width:100%;outline:none;transition:border-color var(--transition);}
+    .form-control-custom:focus,.form-select-custom:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(116,81,45,.12);}
+    .form-control-custom::placeholder{color:var(--brand-light);opacity:.8;}
+    textarea.form-control-custom{min-height:80px;resize:vertical;}
+    .form-select-custom option{background-color:var(--bg-body);color:var(--text-main);}
+    .order-item-summary{display:flex;gap:14px;align-items:center;background-color:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
+    .order-item-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;}
+    .order-item-name{font-weight:600;font-size:.95rem;}
+    .order-item-base-price{font-size:.82rem;color:var(--text-dim);}
+    .addon-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(175,143,111,.2);font-size:.855rem;}
+    .addon-row:last-child{border-bottom:none;}
+    .addon-check{width:18px;height:18px;accent-color:var(--brand);cursor:pointer;flex-shrink:0;}
+    .addon-price{margin-left:auto;font-size:.8rem;color:var(--brand);font-weight:600;}
+    .seg-control{display:flex;background-color:var(--bg-surface);border:1.5px solid var(--border);border-radius:10px;overflow:hidden;}
+    .seg-control input[type="radio"]{display:none;}
+    .seg-control label{flex:1;padding:9px;text-align:center;font-size:.82rem;font-weight:600;color:var(--text-dim);cursor:pointer;transition:background-color var(--transition),color var(--transition);}
+    .seg-control input:checked + label{background-color:var(--brand);color:#F8F4E1;}
+    .size-row{display:flex;gap:8px;}
+    .size-row input[type="radio"]{display:none;}
+    .size-label{flex:1;text-align:center;padding:9px;border:1.5px solid var(--border);border-radius:10px;font-size:.8rem;font-weight:600;cursor:pointer;color:var(--text-dim);transition:all var(--transition);}
+    .size-row input:checked + .size-label{border-color:var(--brand);background-color:var(--brand);color:#F8F4E1;}
+    .order-total-row{display:flex;justify-content:space-between;align-items:center;background-color:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:12px;}
+    .order-total-label{font-size:.82rem;color:var(--text-dim);font-weight:600;}
+    .order-total-amount{font-family:'Playfair Display',serif;font-size:1.35rem;font-weight:700;color:var(--brand);}
+    .btn-primary-custom{width:100%;background-color:var(--brand);color:#F8F4E1;border:none;border-radius:12px;padding:13px;font-size:.9rem;font-weight:700;cursor:pointer;transition:background-color var(--transition);font-family:'Inter',sans-serif;letter-spacing:.3px;display:flex;align-items:center;justify-content:center;gap:6px;}
+    .btn-primary-custom:hover{background-color:var(--brand-dark);}
+    .btn-primary-custom:disabled{opacity:.6;cursor:not-allowed;}
+    .btn-outline-custom{background:transparent;border:1.5px solid var(--border);color:var(--text-main);border-radius:10px;padding:10px 18px;font-size:.85rem;font-weight:600;cursor:pointer;transition:all var(--transition);}
+    .btn-outline-custom:hover{border-color:var(--brand);background-color:var(--bg-surface);}
+    /* Cart continue btn */
+    .btn-continue-ordering{width:100%;background:transparent;color:var(--brand);border:1.5px solid var(--brand);border-radius:12px;padding:11px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;}
+    .btn-continue-ordering:hover{background-color:rgba(116,81,45,.08);}
+    /* Checkout success */
+    .checkout-success{display:none;text-align:center;padding:32px 16px;}
+    .checkout-success.visible{display:block;}
+    /* Input group icon */
+    .input-group-custom{position:relative;}
+    .input-group-custom .material-icons{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--brand-light);font-size:18px;pointer-events:none;}
+    .input-group-custom .form-control-custom{padding-left:38px;}
+    /* Cart badge */
+    .cart-count-badge{position:absolute;top:-5px;right:-5px;background-color:var(--brand);color:#F8F4E1;border-radius:50%;width:18px;height:18px;font-size:.65rem;font-weight:700;display:none;align-items:center;justify-content:center;}
+    .cart-count-badge.visible{display:flex;}
+    /* Toast */
+    .toast-custom{position:fixed;bottom:24px;right:24px;background-color:#1a7c4a;color:#fff;padding:12px 20px;border-radius:12px;font-size:.875rem;font-weight:600;z-index:99999;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);transform:translateY(100px);opacity:0;transition:transform .35s,opacity .35s;}
+    .toast-custom.show{transform:translateY(0);opacity:1;}
+    .toast-custom.error{background-color:#c0392b;}
+    /* Apply / Franchise modals */
+    .modal-backdrop.apply-backdrop{z-index:1055!important;}
+    /* Map embed */
+    .map-embed-wrap{border-radius:14px;overflow:hidden;border:1px solid var(--border);height:280px;}
+    .map-embed-wrap iframe{width:100%;height:100%;border:0;}
+    /* Navbar search */
+    .nav-search-wrap{position:relative;}
+    .nav-search-wrap .material-icons{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:17px;pointer-events:none;}
+    .nav-search-input{background:transparent;border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:7px 12px 7px 32px;font-size:.82rem;width:160px;outline:none;transition:border-color .3s,width .3s;}
+    .nav-search-input:focus{border-color:var(--brand);width:210px;}
+    .nav-search-input::placeholder{color:var(--text-dim);opacity:.7;}
+    /* Subscribe */
+    .subscribe-section{background-color:var(--bg-surface);padding:50px 0;}
+    /* Google profile popover */
+    .google-user-menu{position:absolute;top:calc(100% + 8px);right:0;background:var(--bg-body);border:1px solid var(--border);border-radius:14px;padding:12px;min-width:200px;z-index:1100;box-shadow:0 8px 24px rgba(0,0,0,.15);}
+    .google-user-menu p{margin:0;font-size:.82rem;color:var(--text-dim);}
+    .google-user-menu .u-name{font-weight:700;color:var(--text-main);font-size:.9rem;}
+    @media(max-width:576px){.hero-section{min-height:80vh;}.hero-title{font-size:2rem;}}
+    #fullMenuModal .modal-dialog {
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 1rem);
+}
+#fullMenuModal .modal-content {
+    max-height: 90vh; 
+    display: flex;
+    flex-direction: column;
+}
+#fullMenuModal .modal-body-custom {
+    flex: 1 1 auto;
+    overflow-y: auto; 
+    -webkit-overflow-scrolling: touch; 
+}
+.modal-body {
+  max-height: 65vh; 
+  overflow-y: auto; 
+  overflow-x: hidden;
+}
+</style>
+    
+  </style>
+</head>
+<body>
+
+<!-- ADMIN BANNER -->
+<div id="adminBanner">
+  <span class="material-icons align-middle me-2" style="font-size:14px;">shield</span>
+  Admin Mode Active — You are viewing the live menu as an administrator.
+  <button onclick="toggleClientPreview()" class="ms-3" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:.75rem;font-weight:600;border-radius:6px;padding:3px 10px;cursor:pointer;">Preview Client View</button>
+</div>
+
+<!-- ═══════════════════ NAVBAR ═══════════════════ -->
+<nav class="site-nav">
+  <div class="container d-flex align-items-center justify-content-between py-2 gap-2 flex-wrap">
+    <!-- Brand -->
+    <a class="navbar-brand-link" href="#home-section">
+      <img src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png" alt="Sip & Pulse" class="nav-logo"
+           onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=120&q=80';">
+      Sip & Pulse
+    </a>
+
+    <!-- Nav links -->
+    <div class="d-none d-lg-flex align-items-center gap-1">
+      <a href="#home-section" class="nav-link-item">Home</a>
+      <a href="#about-section" class="nav-link-item">About Us</a>
+      <a href="#menu-preview-section" class="nav-link-item">Menu</a>
+      <a href="#reviews-section" class="nav-link-item">Reviews</a>
+      <a href="#careers-section" class="nav-link-item">Careers</a>
+      <a href="#location-section" class="nav-link-item">Location</a>
+      <a href="#contact-section" class="nav-link-item">Contact Us</a>
+    </div>
+
+    <!-- Right controls -->
+    <div class="d-flex align-items-center gap-2 flex-wrap">
+      <!-- Search -->
+      <div class="nav-search-wrap d-none d-md-block">
+        <span class="material-icons">search</span>
+        <input class="nav-search-input" type="search" id="navSearchInput" placeholder="Search menu…" oninput="handleNavSearch(this.value)" onkeydown="if(event.key==='Enter'){handleNavSearch(this.value);document.getElementById('fullMenuModal') && new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
+      </div>
+
+      <!-- Google Login -->
+      <div class="position-relative" id="googleLoginWrap">
+        <button class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()">
+          <img src="https://www.google.com/favicon.ico" alt="G">
+          Sign in with Google
+        </button>
+        <div class="google-user-menu d-none" id="googleUserMenu">
+          <img id="googleUserAvatar" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;">
+          <p class="u-name" id="googleUserName"></p>
+          <p id="googleUserEmail" style="word-break:break-all;"></p>
+          <hr style="border-color:var(--border);margin:8px 0;">
+          <button onclick="handleGoogleLogout()" style="background:none;border:none;color:var(--admin-accent);font-size:.8rem;font-weight:600;cursor:pointer;padding:0;">Sign Out</button>
+        </div>
+      </div>
+
+      <!-- Cart -->
+      <div class="position-relative client-only-control">
+        <button class="btn-theme" id="cartOpenBtn" title="View cart">
+          <span class="material-icons" style="font-size:18px;">shopping_bag</span>
+        </button>
+        <span class="cart-count-badge" id="cartCountBadge">0</span>
+      </div>
+
+      <!-- Theme toggle -->
+      <button class="btn-theme" id="themeToggleBtn" title="Toggle dark/light mode">
+        <span class="material-icons" style="font-size:18px;">brightness_6</span>
+      </button>
+
+      <!-- Admin toggle -->
+      <div class="admin-toggle-wrap" id="adminToggleWrap" onclick="handleAdminToggleClick()">
+        <input type="checkbox" id="adminModeCheckbox" style="accent-color:var(--admin-accent);" onclick="event.preventDefault();">
+        <label for="adminModeCheckbox">
+          <span class="material-icons align-middle" style="font-size:14px;margin-right:3px;">manage_accounts</span>
+          Admin
+        </label>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════ HERO — VIDEO BG ═══════════════════ -->
+<section class="hero-section" id="home-section">
+  <video class="hero-video-bg" autoplay muted loop playsinline poster="https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?w=1800&q=80">
+    <source src="https://media.istockphoto.com/id/1347434388/video/4k-close-up-barista-hand-making-coffee-latte-in-coffee-cup.mp4?p=1&s=mp4-640x640-is&k=20&c=MESJtSAorWgVFfRx9TEWFTe4W0i9exjKmqwSqG0pt4A=" type="video/mp4">
+  </video>
+  <!-- Fallback static image when video can't load -->
+  <div class="hero-overlay"></div>
+  <div class="container hero-content py-5">
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <p class="hero-eyebrow">Sto. Tomas' Brew Stop Cafe</p>
+        <h1 class="hero-title">Fuel your pulse,<br><em>one sip at a time.</em></h1>
+        <p class="hero-subtitle mb-4">From craft espresso to hearty all-day meals — every item made with intention and served with warmth.</p>
+        <div class="d-flex gap-3 flex-wrap mb-5">
+          <a href="#menu-preview-section" class="btn-hero-primary">
+            <span class="material-icons" style="font-size:18px;">restaurant_menu</span> See Our Menu
+          </a>
+          <a href="#about-section" class="btn-hero-outline">Our Story</a>
+        </div>
+        <div class="d-flex gap-3 flex-wrap hero-stats-row">
+          <div class="hero-stat"><span class="stat-num">50+</span><span class="stat-label">Menu Items</span></div>
+          <div class="hero-stat"><span class="stat-num">4.8★</span><span class="stat-label">Avg Rating</span></div>
+          <div class="hero-stat"><span class="stat-num">2 min</span><span class="stat-label">Prep Time</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ABOUT ═══════════════════ -->
+<section id="about-section" class="py-5" style="background-color:var(--bg-body);">
+  <div class="container">
+    <div class="row align-items-center g-5">
+      <div class="col-md-6">
+        <img src="https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=800&q=80" class="img-fluid rounded-4 shadow-sm" alt="Cafe Interior">
+      </div>
+      <div class="col-md-6">
+        <p class="section-eyebrow">Our Story</p>
+        <h2 class="section-title">Sto. Tomas' Modern Brew Stop</h2>
+        <p style="color:var(--text-dim);line-height:1.75;margin-top:14px;">At Sip & Pulse, we believe in crafting the perfect cup of coffee while providing a warm, inviting atmosphere. Every bean is carefully selected to ensure that every pulse of flavor wakes you up and keeps you going throughout your day.</p>
+        <p style="color:var(--text-dim);line-height:1.75;">Whether you're looking for a quiet corner to study, a place to collaborate, or simply a great brew — our doors are always open.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ MENU PREVIEW (with bg image) ═══════════════════ -->
+<section id="menu-preview-section" class="menu-preview-section py-5">
+  <div class="menu-preview-bg"></div>
+  <div class="menu-preview-content container">
+    <div class="text-center mb-5">
+      <p class="section-eyebrow mb-1" style="color:#AF8F6F;">Taste the Magic</p>
+      <h2 class="section-title" style="color:#F8F4E1;">Menu Sneak Peek</h2>
+    </div>
+    <div class="row justify-content-center g-4 mb-5">
+      <div class="col-md-4">
+        <div class="preview-card">
+          <div class="preview-card-name">Signature Caramel Macchiato</div>
+          <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Espresso & Hot Brews</div>
+          <span class="preview-card-price">₱150.00</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="preview-card">
+          <div class="preview-card-name">Classic Beef Burger</div>
+          <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Burgers</div>
+          <span class="preview-card-price">₱180.00</span>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="preview-card">
+          <div class="preview-card-name">Blueberry Cheesecake</div>
+          <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Pastries & Baked Goods</div>
+          <span class="preview-card-price">₱145.00</span>
+        </div>
+      </div>
+    </div>
+    <div class="text-center">
+      <button class="btn-open-menu" id="openFullMenuBtn">
+        <span class="material-icons" style="font-size:20px;">menu_book</span>
+        Open Full Menu
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ REVIEWS ═══════════════════ -->
+<section class="reviews-section" id="reviews-section">
+  <div class="container">
+    <div class="mb-4">
+      <p class="section-eyebrow mb-1">Community</p>
+      <h2 class="section-title mb-0">What Our Guests Say</h2>
+    </div>
+    <div class="card mb-5" style="background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;">
+      <div class="card-body p-4">
+        <h6 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:16px;">Share Your Experience</h6>
+        <div class="mb-3">
+          <label class="form-label-custom">Your Rating</label>
+          <div class="star-rating-input">
+            <input type="radio" id="s5" name="rating" value="5"><label for="s5">★</label>
+            <input type="radio" id="s4" name="rating" value="4"><label for="s4">★</label>
+            <input type="radio" id="s3" name="rating" value="3"><label for="s3">★</label>
+            <input type="radio" id="s2" name="rating" value="2"><label for="s2">★</label>
+            <input type="radio" id="s1" name="rating" value="1"><label for="s1">★</label>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom">Your Name</label>
+          <div class="input-group-custom">
+            <span class="material-icons">person</span>
+            <input type="text" class="form-control-custom" id="reviewName" placeholder="e.g. Maria Santos">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom">Review</label>
+          <textarea class="form-control-custom" id="reviewComment" placeholder="Share your experience with our brews..."></textarea>
+        </div>
+        <div class="text-end">
+          <button class="btn-primary-custom" style="width:auto;padding:10px 28px;" onclick="submitReview()">Post Review</button>
+        </div>
+      </div>
+    </div>
+    <div class="row g-4" id="reviewsFeed"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════ CAREERS ═══════════════════ -->
+<section id="careers-section" class="py-5" style="background-color:var(--bg-body);">
+  <div class="container">
+    <div class="text-center mb-5">
+      <p class="section-eyebrow mb-1">Opportunities</p>
+      <h2 class="section-title">Careers</h2>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-md-5">
+        <div class="careers-card">
+          <div class="careers-icon"><span class="material-icons" style="font-size:3rem;">work</span></div>
+          <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:10px;">Get Hired!</h4>
+          <p style="color:var(--text-dim);font-size:.9rem;line-height:1.7;margin-bottom:24px;">We are looking for passionate Baristas, cashiers, and customer support staff. Bring your energy and join our growing team!</p>
+          <div style="display:flex;justify-content:center;">
+            <button class="btn-primary-custom" style="width:auto;padding:11px 32px;" data-bs-toggle="modal" data-bs-target="#applyModal">
+              <span class="material-icons" style="font-size:17px;">send</span> Apply Now!
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="careers-card">
+          <div class="careers-icon"><span class="material-icons" style="font-size:3rem;">store</span></div>
+          <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:10px;">Own a Cafe!</h4>
+          <p style="color:var(--text-dim);font-size:.9rem;line-height:1.7;margin-bottom:24px;">Dream of running your own Sip & Pulse outlet? Partner with us through our franchise program and start your entrepreneurial journey.</p>
+          <div style="display:flex;justify-content:center;">
+            <button class="btn-primary-custom" style="width:auto;padding:11px 32px;" data-bs-toggle="modal" data-bs-target="#franchiseModal">
+              <span class="material-icons" style="font-size:17px;">handshake</span> Franchise Now!
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ LOCATION ═══════════════════ -->
+<section id="location-section" class="py-5" style="background-color:var(--bg-surface);">
+  <div class="container text-center">
+    <p class="section-eyebrow mb-1">Find Us</p>
+    <h2 class="section-title">Location</h2>
+    <p style="color:var(--text-dim);font-size:1rem;line-height:1.75;margin:14px auto 0;max-width:520px;">
+      <span class="material-icons align-middle" style="color:var(--brand);font-size:1.5rem;">location_on</span>
+      <strong>Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas 4324, Batangas, Philippines</strong>
+    </p>
+  </div>
+</section>
+
+<!-- ═══════════════════ CONTACT + MAP ═══════════════════ -->
+<section class="container py-5" id="contact-section">
+  <div class="row g-4 align-items-start">
+    <div class="col-md-5">
+      <p class="section-eyebrow mb-1">Get in Touch</p>
+      <h2 class="section-title">Contact Us</h2>
+      <p style="color:var(--text-dim);font-size:.875rem;line-height:1.85;margin-top:14px;">
+        Have questions or inquiries? We'd love to hear from you.<br><br>
+        <strong>Hours:</strong> Everyday · 7:00 AM – 9:00 PM<br>
+        <strong>Phone:</strong> +63 912 345 6789<br>
+        <strong>Email:</strong> marketing@sipandpulse.ph
+      </p>
+    </div>
+    <div class="col-md-7">
+      <div class="map-embed-wrap">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ SUBSCRIBE ═══════════════════ -->
+<section class="subscribe-section">
+  <div class="container text-center">
+    <p class="section-eyebrow mb-2">Stay Updated</p>
+    <h3 class="section-title">Subscribe for more updates!</h3>
+    <p style="color:var(--text-dim);font-size:.875rem;">Promotions, new products and exclusive sales delivered straight to your inbox.</p>
+    <div class="row justify-content-center mt-4">
+      <div class="col-md-5">
+        <div class="d-flex gap-2">
+          <input type="email" class="form-control-custom" id="subscribeEmail" placeholder="My Email Address" style="flex:1;">
+          <button class="btn-primary-custom" style="width:auto;padding:10px 22px;flex-shrink:0;" onclick="handleSubscribe()">Subscribe</button>
+        </div>
+        <p class="subscribe-success-msg d-none mt-2" id="subscribeSuccess" style="color:#1a7c4a;font-size:.85rem;font-weight:600;">
+          <span class="material-icons align-middle" style="font-size:16px;">check_circle</span> Subscribed Successfully!
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer class="site-footer" id="footer-section">
+  <div class="container">
+    <div class="row g-4 mb-4">
+      <div class="col-md-4">
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <img src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png" style="width:34px;height:34px;border-radius:50%;object-fit:cover;"
+               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';" alt="Logo">
+          <span class="footer-brand">Sip & Pulse</span>
+        </div>
+        <p style="font-size:.82rem;color:var(--text-dim);margin-top:4px;">Your daily beat of flavor and energy.</p>
+      </div>
+      <div class="col-6 col-md-2">
+        <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px;">Menu</p>
+        <div class="d-flex flex-column gap-2">
+          <a href="#menu-preview-section" class="footer-link">Beverages</a>
+          <a href="#menu-preview-section" class="footer-link">Food & Meals</a>
+          <a href="#menu-preview-section" class="footer-link">Best Sellers</a>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px;">Info</p>
+        <div class="d-flex flex-column gap-2">
+          <a href="#about-section" class="footer-link">About Us</a>
+          <a href="#reviews-section" class="footer-link">Reviews</a>
+          <a href="#contact-section" class="footer-link">Contact</a>
+        </div>
+      </div>
+    </div>
+    <hr style="border-color:var(--border);opacity:1;">
+    <p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin:0;">© 2026 Sip & Pulse Cafe · All Rights Reserved.</p>
+  </div>
+</footer>
+
+
+<!-- ══════════════════════════════════════════════
+     FULL MENU MODAL (floating, with cafe bg image)
+     ══════════════════════════════════════════════ -->
+<div class="modal fade" id="fullMenuModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-fullscreen" style="margin:0;">
+    <div class="modal-content" style="border-radius:0;border:none;">
+      <div class="menu-modal-bg">
+        <div class="menu-modal-overlay">
+          <!-- Close button only (no nav bar) -->
+          <button class="menu-modal-close-btn" data-bs-dismiss="modal" title="Close menu">
+            <span class="material-icons">close</span>
+          </button>
+
+          <div class="container pt-4">
+            <!-- Header -->
+            <div class="text-center mb-4">
+              <p style="font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:6px;">Our Offerings</p>
+              <h2 style="font-family:'Playfair Display',serif;font-weight:700;color:#F8F4E1;font-size:2rem;">The Full Menu</h2>
+            </div>
+
+            <!-- Search bar -->
+            <div class="row justify-content-center mb-3">
+              <div class="col-md-6">
+                <div class="search-icon-wrap">
+                  <span class="material-icons">search</span>
+                  <input class="menu-search-bar" type="search" id="menuSearchInput" placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
+                </div>
+              </div>
+            </div>
+
+            <!-- Admin: Add item btn -->
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+              <div></div>
+              <button id="addItemAdminBtn" class="btn-primary-custom" style="width:auto;padding:10px 20px;background:#74512D;" onclick="openCrudModal('add')" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
+                <span class="material-icons" style="font-size:18px;">add_circle</span> Add Menu Item
+              </button>
+            </div>
+
+            <!-- Category bar -->
+            <div class="cat-bar-modal mb-4" id="categoryBarModal">
+              <button class="cat-btn-modal active" data-cat="all">All Items</button>
+              <button class="cat-btn-modal" data-cat="espresso">Espresso & Hot Brews</button>
+              <button class="cat-btn-modal" data-cat="iced">Iced & Cold Brews</button>
+              <button class="cat-btn-modal" data-cat="noncoffee">Non-Coffee</button>
+              <button class="cat-btn-modal" data-cat="milktea">Milktea & Frappe</button>
+              <button class="cat-btn-modal" data-cat="tea">Tea & Herbal Tea</button>
+              <button class="cat-btn-modal" data-cat="breakfast">All-Day Breakfast</button>
+              <button class="cat-btn-modal" data-cat="starters">Starters</button>
+              <button class="cat-btn-modal" data-cat="salad">Salad</button>
+              <button class="cat-btn-modal" data-cat="sandwiches">Sandwiches</button>
+              <button class="cat-btn-modal" data-cat="burgers">Burgers</button>
+              <button class="cat-btn-modal" data-cat="pizza">Pizzas</button>
+              <button class="cat-btn-modal" data-cat="pasta">Pasta</button>
+              <button class="cat-btn-modal" data-cat="rice">Rice Meals</button>
+              <button class="cat-btn-modal" data-cat="waffles">Waffles</button>
+              <button class="cat-btn-modal" data-cat="desserts">Desserts</button>
+              <button class="cat-btn-modal" data-cat="pastries">Pastries & Baked Goods</button>
+            </div>
+
+            <!-- Menu grid -->
+            <div class="row g-3" id="menuGridModal"></div>
+            <div id="emptyStateModal" class="text-center py-5 d-none">
+              <span class="material-icons" style="font-size:3rem;color:rgba(175,143,111,.5);">search_off</span>
+              <p style="color:rgba(225,220,201,.6);font-size:.9rem;margin-top:8px;">No items found.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN LOGIN MODAL ══ -->
+<div class="modal fade" id="adminLoginModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--admin-accent);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Secure Gateway</span>
+          <h5 class="modal-title-custom">Admin Sign In</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal" id="cancelAdminLogin">
+          <span class="material-icons" style="font-size:18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body-custom pt-3">
+        <div class="mb-3">
+          <label class="form-label-custom">Email</label>
+          <div class="input-group-custom">
+            <span class="material-icons">email</span>
+            <input type="email" class="form-control-custom" id="adminEmail" placeholder="admin@sipandpulse.com">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label-custom">Password</label>
+          <div class="input-group-custom">
+            <span class="material-icons">lock</span>
+            <input type="password" class="form-control-custom" id="adminPassword" placeholder="••••••••">
+          </div>
+        </div>
+        <button class="btn-primary-custom" onclick="handleAdminLogin()">
+          <span class="material-icons" style="font-size:17px;">login</span> Sign In
+        </button>
+        <p style="font-size:.73rem;color:var(--text-dim);text-align:center;margin-top:12px;margin-bottom:0;">Only registered admins can access this mode.</p>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ORDER CUSTOMIZATION MODAL ══ -->
+<div class="modal fade" id="orderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;" id="orderModalItemType">Customize</span>
+          <h5 class="modal-title-custom" id="orderModalTitle">Item</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal">
+          <span class="material-icons" style="font-size:18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="order-item-summary">
+          <img src="" alt="" class="order-item-thumb" id="orderModalThumb">
+          <div>
+            <p class="order-item-name mb-0" id="orderModalName"></p>
+            <p class="order-item-base-price mb-0">Base: <strong id="orderModalBasePrice" style="color:var(--brand);"></strong></p>
+          </div>
+        </div>
+        <div id="sizeSection" class="mb-4">
+          <label class="form-label-custom mb-2">Size</label>
+          <div class="size-row">
+            <input type="radio" name="orderSize" id="sizeS" value="Small">
+            <label class="size-label" for="sizeS">Small<br><small style="font-weight:400;">+₱0</small></label>
+            <input type="radio" name="orderSize" id="sizeM" value="Medium" checked>
+            <label class="size-label" for="sizeM">Medium<br><small style="font-weight:400;">+₱20</small></label>
+            <input type="radio" name="orderSize" id="sizeL" value="Large">
+            <label class="size-label" for="sizeL">Large<br><small style="font-weight:400;">+₱40</small></label>
+          </div>
+        </div>
+        <div id="drinkAdjustments" class="mb-4">
+          <label class="form-label-custom mb-2">Adjustments</label>
+          <div class="row g-2">
+            <div class="col-6">
+              <label class="form-label-custom" style="font-size:.72rem;">Sugar Level</label>
+              <select class="form-select-custom" id="sugarLevel">
+                <option value="100">100% (Normal)</option><option value="75">75%</option>
+                <option value="50">50%</option><option value="25">25%</option><option value="0">0% (None)</option>
+              </select>
+            </div>
+            <div class="col-6">
+              <label class="form-label-custom" style="font-size:.72rem;">Ice Level</label>
+              <select class="form-select-custom" id="iceLevel">
+                <option value="normal">Normal Ice</option><option value="less">Less Ice</option>
+                <option value="extra">Extra Ice</option><option value="none">No Ice</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="addonsSection" class="mb-4">
+          <label class="form-label-custom mb-2">Add-ons</label>
+          <div id="addonsList"></div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom mb-2">Fulfillment Method</label>
+          <div class="seg-control">
+            <input type="radio" name="fulfillment" id="pickup" value="pickup" checked>
+            <label for="pickup"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Pick-up</label>
+            <input type="radio" name="fulfillment" id="delivery" value="delivery">
+            <label for="delivery"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">delivery_dining</span>Delivery</label>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom">Special Notes (Optional)</label>
+          <textarea class="form-control-custom" id="orderNotes" placeholder="Any special requests?" style="min-height:60px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <div class="order-total-row">
+          <span class="order-total-label">Order Total</span>
+          <span class="order-total-amount" id="orderTotalDisplay">₱0.00</span>
+        </div>
+        <button class="btn-primary-custom" onclick="confirmOrder()">
+          <span class="material-icons" style="font-size:17px;">check_circle</span> Confirm & Add to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CART MODAL ══ -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Your Order</span>
+          <h5 class="modal-title-custom">Cart</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal">
+          <span class="material-icons" style="font-size:18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body-custom" id="cartBody">
+        <p style="color:var(--text-dim);font-size:.875rem;text-align:center;padding:24px 0;">Your cart is empty.</p>
+      </div>
+      <!-- Checkout success state -->
+      <div class="checkout-success" id="checkoutSuccess">
+        <span class="material-icons" style="font-size:3.5rem;color:#1a7c4a;">check_circle</span>
+        <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-top:12px;">Order Placed!</h4>
+        <p style="color:var(--text-dim);font-size:.875rem;">Thank you for choosing Sip & Pulse. Your order is being prepared ☕</p>
+        <button class="btn-primary-custom mt-3" style="width:auto;padding:10px 28px;" data-bs-dismiss="modal">Close</button>
+      </div>
+      <div class="modal-footer-custom" id="cartFooter">
+        <div class="order-total-row">
+          <span class="order-total-label">Grand Total</span>
+          <span class="order-total-amount" id="cartGrandTotal">₱0.00</span>
+        </div>
+        <button class="btn-primary-custom" id="placeOrderBtn" onclick="placeOrder()" disabled>
+          <span class="material-icons" style="font-size:17px;">lock</span> Secure Checkout
+        </button>
+        <button class="btn-continue-ordering" id="continueOrderingBtn" onclick="continueOrdering()">
+          <span class="material-icons" style="font-size:17px;">add_shopping_cart</span> Continue Ordering
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ ADMIN CRUD MODAL ══ -->
+<div class="modal fade" id="adminCrudModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--admin-accent);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Database Operation</span>
+          <h5 class="modal-title-custom" id="crudModalTitle">Add Menu Item</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal">
+          <span class="material-icons" style="font-size:18px;">close</span>
+        </button>
+      </div>
+      <div class="modal-body-custom">
+        <input type="hidden" id="crudItemId">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label-custom">Item Name</label><input type="text" class="form-control-custom" id="crudName" placeholder="e.g. Caramel Macchiato"></div>
+          <div class="col-6"><label class="form-label-custom">Base Price (₱)</label><input type="number" class="form-control-custom" id="crudPrice" placeholder="150" min="0" step="0.01"></div>
+          <div class="col-6">
+            <label class="form-label-custom">Category</label>
+            <select class="form-select-custom" id="crudCategory">
+              <optgroup label="Beverages">
+                <option value="espresso">Espresso & Hot Brews</option><option value="iced">Iced & Cold Brews</option>
+                <option value="noncoffee">Non-Coffee</option><option value="milktea">Milktea & Frappe</option><option value="tea">Tea & Herbal Tea</option>
+              </optgroup>
+              <optgroup label="Food & Meals">
+                <option value="breakfast">All-Day Breakfast</option><option value="starters">Starters</option><option value="salad">Salad</option>
+                <option value="sandwiches">Sandwiches</option><option value="burgers">Burgers</option><option value="pizza">Pizzas</option>
+                <option value="pasta">Pasta</option><option value="rice">Rice Meals</option><option value="waffles">Waffles</option>
+                <option value="desserts">Desserts</option><option value="pastries">Pastries & Baked Goods</option>
+              </optgroup>
+            </select>
+          </div>
+          <div class="col-12"><label class="form-label-custom">Description</label><textarea class="form-control-custom" id="crudDesc" placeholder="Brief description..."></textarea></div>
+          <div class="col-12"><label class="form-label-custom">Image URL</label><input type="url" class="form-control-custom" id="crudImage" placeholder="https://..."></div>
+          <div class="col-12"><div class="d-flex align-items-center gap-2"><input type="checkbox" id="crudAvailable" style="accent-color:var(--brand);width:16px;height:16px;" checked><label for="crudAvailable" style="font-size:.85rem;color:var(--text-dim);cursor:pointer;">Mark as Available</label></div></div>
+        </div>
+      </div>
+      <div class="modal-footer-custom pt-2">
+        <button class="btn-primary-custom" id="crudSaveBtn" onclick="saveCrudItem()">
+          <span class="material-icons" style="font-size:17px;">save</span> Save to Database
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <h5 class="modal-title-custom" style="color:var(--admin-accent);">Delete Item</h5>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="modal-body-custom">
+        <p style="font-size:.875rem;color:var(--text-dim);">Remove <strong id="deleteItemName" style="color:var(--text-main);"></strong> from the menu? This cannot be undone.</p>
+      </div>
+      <div class="modal-footer-custom d-flex gap-2">
+        <button class="btn-outline-custom" style="flex:1;" data-bs-dismiss="modal">Cancel</button>
+        <button class="btn-primary-custom" style="background-color:var(--admin-accent);flex:1;" onclick="confirmDelete()">Delete</button>
+      </div>
+      <div style="height:16px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ APPLY NOW MODAL ══ -->
+<div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Get Hired!</span>
+          <h5 class="modal-title-custom">Apply Now</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label-custom">Full Name</label><input type="text" class="form-control-custom" id="applyName" placeholder="Juan Dela Cruz"></div>
+          <div class="col-12"><label class="form-label-custom">Email Address</label><input type="email" class="form-control-custom" id="applyEmail" placeholder="juan@email.com"></div>
+          <div class="col-12"><label class="form-label-custom">Position Applied For</label>
+            <select class="form-select-custom" id="applyPosition">
+              <option>Barista</option><option>Cashier</option><option>Customer Support</option><option>Kitchen Staff</option><option>Delivery Rider</option>
+            </select>
+          </div>
+          <div class="col-12"><label class="form-label-custom">Cover Letter / Message</label><textarea class="form-control-custom" id="applyCover" placeholder="Tell us about yourself and why you want to join Sip & Pulse..."></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer-custom pt-2">
+        <button class="btn-primary-custom" onclick="submitApplication()">
+          <span class="material-icons" style="font-size:17px;">send</span> Submit Application
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FRANCHISE MODAL ══ -->
+<div class="modal fade" id="franchiseModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Own a Cafe!</span>
+          <h5 class="modal-title-custom">Franchise Now</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="modal-body-custom">
+        <p style="font-size:.875rem;color:var(--text-dim);margin-bottom:16px;line-height:1.7;">Partner with Sip & Pulse and bring our brand to your city! Fill in your details and our franchise team will reach out within 3–5 business days.</p>
+        <div class="row g-3">
+          <div class="col-12"><label class="form-label-custom">Full Name</label><input type="text" class="form-control-custom" id="franchiseName" placeholder="Maria Santos"></div>
+          <div class="col-12"><label class="form-label-custom">Email Address</label><input type="email" class="form-control-custom" id="franchiseEmail" placeholder="maria@email.com"></div>
+          <div class="col-12"><label class="form-label-custom">Preferred Location / City</label><input type="text" class="form-control-custom" id="franchiseCity" placeholder="e.g. Lipa City, Batangas"></div>
+          <div class="col-12"><label class="form-label-custom">Message / Inquiry</label><textarea class="form-control-custom" id="franchiseMsg" placeholder="Tell us more about your franchise plans..."></textarea></div>
+        </div>
+      </div>
+      <div class="modal-footer-custom pt-2">
+        <button class="btn-primary-custom" onclick="submitFranchise()">
+          <span class="material-icons" style="font-size:17px;">handshake</span> Submit Franchise Inquiry
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-custom" id="toastNotif">
+  <span class="material-icons" style="font-size:18px;" id="toastIcon">check_circle</span>
+  <span id="toastMessage">Done!</span>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+/* ════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════ */
+const state = {
+  isDark: false,
+  isAdminLoggedIn: false,
+  isAdminModeActive: false,
+  currentFilter: 'all',
+  searchQuery: '',
+  menuItems: [],
+  cart: [],
+  reviews: [],
+  currentOrderItem: null,
+  pendingDeleteId: null,
+  googleUser: null
+};
+
+/* ════════ DEMO MENU DATA ════════ */
+const DEMO_MENU = [
+  // ── ESPRESSO & HOT BREWS ──
+  { id:1,  name:"Caramel Macchiato",      desc:"Espresso with vanilla syrup, steamed milk, and caramel drizzle.",         price:150, cat:"espresso",   img:"https://images.unsplash.com/photo-1485808191679-5f86510bd9d4?w=500&q=80",  available:true, type:"drink" },
+  { id:2,  name:"Classic Americano",       desc:"Bold, smooth double espresso diluted with hot water.",                    price:120, cat:"espresso",   img:"https://images.unsplash.com/photo-1551030173-122aabc4489c?w=500&q=80",  available:true, type:"drink" },
+  { id:3,  name:"Spanish Latte",           desc:"Silky espresso with sweetened condensed milk and steamed milk.",          price:145, cat:"espresso",   img:"https://images.unsplash.com/photo-1561047029-3000c68339ca?w=500&q=80",  available:true, type:"drink" },
+  { id:4,  name:"Cappuccino",              desc:"Espresso topped with thick, velvety steamed milk foam.",                  price:130, cat:"espresso",   img:"https://images.unsplash.com/photo-1572442388796-11668a67e53d?w=500&q=80",  available:true, type:"drink" },
+  { id:5,  name:"Flat White",              desc:"Ristretto espresso with a thin layer of micro-foam steamed milk.",        price:140, cat:"espresso",   img:"https://images.unsplash.com/photo-1577968897966-3d4325b36b61?w=500&q=80",  available:true, type:"drink" },
+  // ── ICED & COLD BREWS ──
+  { id:6,  name:"Cold Brew",               desc:"12-hour steeped coffee — smooth, bold, naturally sweet over ice.",        price:140, cat:"iced",       img:"https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=500&q=80",  available:true, type:"drink" },
+  { id:7,  name:"Iced Brown Sugar Oat",    desc:"Espresso shaken with brown sugar syrup over oat milk and ice.",           price:165, cat:"iced",       img:"https://images.unsplash.com/photo-1592510395853-f56ef2cbf27c?w=500&q=80",  available:true, type:"drink" },
+  { id:8,  name:"Iced Caramel Latte",      desc:"Creamy iced latte swirled with rich house-made caramel sauce.",           price:155, cat:"iced",       img:"https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=500&q=80",  available:true, type:"drink" },
+  { id:9,  name:"Iced Americano",          desc:"Double espresso poured over ice — clean, bold, and refreshing.",          price:110, cat:"iced",       img:"https://images.unsplash.com/photo-1534040385115-33dcb3acba5b?w=500&q=80",  available:true, type:"drink" },
+  // ── NON-COFFEE ──
+  { id:10, name:"Strawberry Matcha",       desc:"Layered cold matcha latte with fresh strawberry compote.",                price:150, cat:"noncoffee",  img:"https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=500&q=80",  available:true, type:"drink" },
+  { id:11, name:"Hot Chocolate",           desc:"Rich, velvety Belgian cocoa dissolved in steamed whole milk.",            price:120, cat:"noncoffee",  img:"https://images.unsplash.com/photo-1542990253-0d0f5be5f0ed?w=500&q=80",  available:true, type:"drink" },
+  // ── MILKTEA & FRAPPE ──
+  { id:12, name:"Taro Milktea",            desc:"Creamy taro with silky milk tea and chewy boba pearls.",                  price:135, cat:"milktea",    img:"https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&q=80",  available:true, type:"drink" },
+  { id:13, name:"Matcha Frappe",           desc:"Velvety Japanese matcha blended with milk, ice, and whipped cream.",      price:155, cat:"milktea",    img:"https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=500&q=80",  available:true, type:"drink" },
+  { id:14, name:"Brown Sugar Milk Tea",    desc:"Classic black tea with caramelised brown sugar and fresh milk.",          price:140, cat:"milktea",    img:"https://images.unsplash.com/photo-1499638673689-79a0b5115d87?w=500&q=80",  available:true, type:"drink" },
+  { id:15, name:"Wintermelon Milktea",     desc:"Subtly sweet wintermelon tea paired with creamy fresh milk.",             price:130, cat:"milktea",    img:"https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500&q=80",  available:true, type:"drink" },
+  // ── TEA & HERBAL ──
+  { id:16, name:"Chamomile Honey Tea",     desc:"Soothing floral chamomile with a drizzle of organic honey.",             price:110, cat:"tea",        img:"https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=500&q=80",  available:true, type:"drink" },
+  { id:17, name:"Peppermint Tea",          desc:"Cool, refreshing peppermint leaves steeped to perfection.",              price:105, cat:"tea",        img:"https://images.unsplash.com/photo-1597481499666-3fce7db1b8f9?w=500&q=80",  available:true, type:"drink" },
+  { id:18, name:"Lemon Ginger Tea",        desc:"Zesty lemon and warming ginger — the perfect immunity booster.",          price:115, cat:"tea",        img:"https://images.unsplash.com/photo-1564890369478-c89ca6d9cde9?w=500&q=80",  available:true, type:"drink" },
+  // ── ALL-DAY BREAKFAST ──
+  { id:19, name:"Big Breakfast Plate",     desc:"Two eggs any style, bacon strips, buttered toast, and hash browns.",     price:195, cat:"breakfast",  img:"https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=500&q=80",  available:true, type:"food" },
+  { id:20, name:"Avocado Toast",           desc:"Smashed avocado on sourdough with feta, chili flakes, and poached egg.", price:170, cat:"breakfast",  img:"https://images.unsplash.com/photo-1541519227354-08fa5d50c820?w=500&q=80",  available:true, type:"food" },
+  { id:21, name:"Egg & Bacon Wrap",        desc:"Scrambled eggs and crispy bacon wrapped in a warm flour tortilla.",      price:160, cat:"breakfast",  img:"https://images.unsplash.com/photo-1504754524776-8f4f37790ca0?w=500&q=80",  available:true, type:"food" },
+  { id:22, name:"French Toast Stack",      desc:"Thick-cut brioche dipped in vanilla custard, topped with fresh berries.", price:175, cat:"breakfast",  img:"https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=500&q=80",  available:true, type:"food" },
+  // ── STARTERS ──
+  { id:23, name:"Nachos with Salsa",       desc:"Crunchy tortilla chips with house-made salsa, jalapeños, and cheese.",   price:140, cat:"starters",   img:"https://images.unsplash.com/photo-1513456852971-30c0b8199d4d?w=500&q=80",  available:true, type:"food" },
+  { id:24, name:"Chicken Wings",           desc:"Crispy fried chicken wings tossed in house buffalo or sweet BBQ sauce.", price:180, cat:"starters",   img:"https://images.unsplash.com/photo-1527477396000-e27163b481c2?w=500&q=80",  available:true, type:"food" },
+  { id:25, name:"Mozzarella Sticks",       desc:"Golden-fried mozzarella sticks served with marinara dipping sauce.",     price:160, cat:"starters",   img:"https://images.unsplash.com/photo-1548340748-6d2b7d7da280?w=500&q=80",  available:true, type:"food" },
+  // ── SALAD ──
+  { id:26, name:"Caesar Salad",            desc:"Romaine, shaved Parmesan, house croutons, and creamy Caesar dressing.",  price:165, cat:"salad",      img:"https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=500&q=80",  available:true, type:"food" },
+  { id:27, name:"Garden Fresh Salad",      desc:"Mixed greens, cherry tomatoes, cucumber, and balsamic vinaigrette.",     price:150, cat:"salad",      img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500&q=80",  available:true, type:"food" },
+  // ── SANDWICHES ──
+  { id:28, name:"Clubhouse Sandwich",      desc:"Triple-decker with grilled chicken, bacon, egg, lettuce, tomato.",       price:190, cat:"sandwiches", img:"https://images.unsplash.com/photo-1553909489-cd47e0907980?w=500&q=80",  available:true, type:"food" },
+  { id:29, name:"BLT Sandwich",            desc:"Crispy bacon, fresh lettuce, ripe tomato on toasted sourdough.",         price:165, cat:"sandwiches", img:"https://images.unsplash.com/photo-1528735602780-2552fd46c7af?w=500&q=80",  available:true, type:"food" },
+  { id:30, name:"Tuna Melt",               desc:"Creamy tuna salad on toasted bread with melted cheddar cheese.",         price:170, cat:"sandwiches", img:"https://images.unsplash.com/photo-1540713434306-58505cf1b6fc?w=500&q=80",  available:true, type:"food" },
+  // ── BURGERS ──
+  { id:31, name:"Classic Burger",          desc:"Pure beef patty, cheddar, fresh lettuce, tomato, pickles, and sauce.",   price:180, cat:"burgers",    img:"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80",  available:true, type:"food" },
+  { id:32, name:"Mushroom Swiss Burger",   desc:"Grilled patty, sautéed mushrooms, Swiss cheese, garlic aioli.",          price:220, cat:"burgers",    img:"https://images.unsplash.com/photo-1553979459-d2229ba7433b?w=500&q=80",  available:true, type:"food" },
+  { id:33, name:"Double Smash Burger",     desc:"Two smashed patties, double cheese, caramelised onions, house sauce.",   price:260, cat:"burgers",    img:"https://images.unsplash.com/photo-1550547660-d9450f859349?w=500&q=80",  available:true, type:"food" },
+  { id:34, name:"Spicy Crispy Chicken",    desc:"Crispy fried chicken fillet, sriracha aioli, coleslaw on a brioche bun.", price:200, cat:"burgers",    img:"https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?w=500&q=80",  available:true, type:"food" },
+  // ── PIZZAS ──
+  { id:35, name:"Margherita Pizza",        desc:"San Marzano tomato sauce, fresh mozzarella, and fragrant basil.",        price:280, cat:"pizza",      img:"https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=500&q=80",  available:true, type:"food" },
+  { id:36, name:"Pepperoni Pizza",         desc:"Classic pizza loaded with pepperoni slices and stretchy mozzarella.",    price:310, cat:"pizza",      img:"https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500&q=80",  available:true, type:"food" },
+  { id:37, name:"BBQ Chicken Pizza",       desc:"Smoky BBQ sauce, grilled chicken, red onion, and mozzarella.",           price:320, cat:"pizza",      img:"https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=500&q=80",  available:true, type:"food" },
+  // ── PASTA ──
+  { id:38, name:"Carbonara Pasta",         desc:"Spaghetti with pancetta, creamy egg yolk sauce, and Parmesan.",          price:210, cat:"pasta",      img:"https://images.unsplash.com/photo-1612874742237-6526221588e3?w=500&q=80",  available:true, type:"food" },
+  { id:39, name:"Pesto Pasta",             desc:"Al dente linguine tossed in basil pesto and toasted pine nuts.",         price:195, cat:"pasta",      img:"https://images.unsplash.com/photo-1563379926898-05f4575a45d8?w=500&q=80",  available:true, type:"food" },
+  { id:40, name:"Arrabbiata",              desc:"Penne in spicy tomato sauce with garlic and fresh chili.",               price:185, cat:"pasta",      img:"https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=500&q=80",  available:true, type:"food" },
+  // ── RICE MEALS ──
+  { id:41, name:"Garlic Butter Shrimp",    desc:"Sizzling shrimp in garlic butter sauce with steamed white rice.",        price:250, cat:"rice",       img:"https://images.unsplash.com/photo-1455619452474-d2be8b1e70cd?w=500&q=80",  available:true, type:"food" },
+  { id:42, name:"Beef Tapa Rice",          desc:"Cured marinated beef strips, garlic fried rice, fried egg, and atchara.", price:190, cat:"rice",       img:"https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500&q=80",  available:true, type:"food" },
+  { id:43, name:"Sisig Rice Bowl",         desc:"Sizzling pork sisig served over steamed garlic rice with a raw egg.",    price:210, cat:"rice",       img:"https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500&q=80",  available:true, type:"food" },
+  // ── WAFFLES ──
+  { id:44, name:"Belgian Waffle",          desc:"Golden crispy waffle with whipped cream, maple syrup, and fresh berries.", price:160, cat:"waffles",  img:"https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=500&q=80",  available:true, type:"food" },
+  { id:45, name:"Chocolate Waffle",        desc:"Rich chocolate waffle with Nutella drizzle and banana slices.",          price:175, cat:"waffles",    img:"https://images.unsplash.com/photo-1559622214-f8a9850965bb?w=500&q=80",  available:true, type:"food" },
+  { id:46, name:"Strawberry Cream Waffle", desc:"Classic waffle topped with strawberry compote and Chantilly cream.",     price:170, cat:"waffles",    img:"https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=500&q=80",  available:true, type:"food" },
+  // ── DESSERTS ──
+  { id:47, name:"Chocolate Lava Cake",     desc:"Warm chocolate cake with a molten fudge center and vanilla ice cream.",  price:175, cat:"desserts",   img:"https://images.unsplash.com/photo-1624353365286-3f8d62daad51?w=500&q=80",  available:true, type:"food" },
+  { id:48, name:"Mango Panna Cotta",       desc:"Silky Italian panna cotta topped with fresh Philippine mango coulis.",   price:145, cat:"desserts",   img:"https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500&q=80",  available:true, type:"food" },
+  { id:49, name:"Ice Cream Sundae",        desc:"Two scoops of premium ice cream with hot fudge, nuts, and a cherry.",    price:130, cat:"desserts",   img:"https://images.unsplash.com/photo-1563805042-7684c019e1cb?w=500&q=80",  available:true, type:"food" },
+  // ── PASTRIES & BAKED GOODS ──
+  { id:50, name:"Blueberry Cheesecake",    desc:"New York-style cheesecake with fresh blueberry compote.",               price:145, cat:"pastries",   img:"https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=500&q=80",  available:true, type:"food" },
+  { id:51, name:"Butter Croissant",        desc:"Flaky, buttery French croissant, baked fresh every morning.",           price:85,  cat:"pastries",   img:"https://images.unsplash.com/photo-1555507036-ab1f4038808a?w=500&q=80",  available:true, type:"food" },
+  { id:52, name:"Cinnamon Roll",           desc:"Soft, gooey cinnamon roll drizzled with cream cheese frosting.",        price:95,  cat:"pastries",   img:"https://images.unsplash.com/photo-1509365465985-25d11c17e812?w=500&q=80",  available:true, type:"food" },
+  { id:53, name:"Chocolate Muffin",        desc:"Rich double-chocolate muffin with chocolate chips baked into every bite.", price:75, cat:"pastries",  img:"https://images.unsplash.com/photo-1607958996333-41aef7caefaa?w=500&q=80",  available:true, type:"food" },
+];
+
+const DEMO_REVIEWS = [
+  { id:1, name:"Maria Santos", initials:"MS", rating:5, comment:"The Caramel Macchiato is hands-down the best I've had in Batangas. Cozy ambiance and friendly staff!", date:"June 2025" },
+  { id:2, name:"Jake Reyes",   initials:"JR", rating:4, comment:"Solid burgers and great cold brew. Love the vibe here. Definitely coming back!", date:"May 2025" },
+  { id:3, name:"Lia Cruz",     initials:"LC", rating:5, comment:"The Belgian Waffle is insanely good. Perfect study spot with fast Wi-Fi and great music!", date:"May 2025" }
+];
+
+const catLabels = {
+  espresso:"Espresso & Hot Brews", iced:"Iced & Cold Brews", noncoffee:"Non-Coffee",
+  milktea:"Milktea & Frappe", tea:"Tea & Herbal Tea", breakfast:"All-Day Breakfast",
+  starters:"Starters", salad:"Salad", sandwiches:"Sandwiches", burgers:"Burgers",
+  pizza:"Pizzas", pasta:"Pasta", rice:"Rice Meals", waffles:"Waffles",
+  desserts:"Desserts", pastries:"Pastries & Baked Goods"
+};
+
+const DRINK_ADDONS = [
+  { id:"extra_shot",    label:"Extra Espresso Shot",          price:25 },
+  { id:"oat_milk",      label:"Oat Milk Alternative",         price:30 },
+  { id:"almond_milk",   label:"Almond Milk",                  price:30 },
+  { id:"soy_milk",      label:"Soy Milk",                     price:25 },
+  { id:"vanilla_syrup", label:"Vanilla Syrup",                price:20 },
+  { id:"caramel_syrup", label:"Caramel Syrup",                price:20 },
+  { id:"hazelnut",      label:"Hazelnut Syrup",               price:20 },
+  { id:"mocha_syrup",   label:"Mocha Syrup",                  price:20 },
+  { id:"boba",          label:"Tapioca Pearls (Boba)",        price:30 },
+  { id:"coffee_jelly",  label:"Coffee Jelly",                 price:25 },
+  { id:"nata",          label:"Nata de Coco",                 price:20 },
+  { id:"popping_boba",  label:"Popping Boba",                 price:30 },
+  { id:"whipped",       label:"Whipped Cream",                price:20 },
+  { id:"sea_salt",      label:"Sea Salt Foam",                price:25 },
+  { id:"cream_cheese",  label:"Cream Cheese Puff",            price:25 },
+];
+const FOOD_ADDONS = [
+  { id:"extra_bacon",      label:"Extra Bacon",                   price:35 },
+  { id:"extra_ham",        label:"Extra Ham",                     price:30 },
+  { id:"grilled_chx",      label:"Grilled Chicken Slice",         price:45 },
+  { id:"extra_pepperoni",  label:"Extra Pepperoni",               price:35 },
+  { id:"extra_patty",      label:"Extra Patty",                   price:55 },
+  { id:"extra_egg_fried",  label:"Extra Egg (Fried)",             price:20 },
+  { id:"extra_egg_scr",    label:"Extra Egg (Scrambled)",         price:20 },
+  { id:"extra_egg_poa",    label:"Extra Egg (Poached)",           price:25 },
+  { id:"cheddar",          label:"Extra Cheddar Cheese",          price:25 },
+  { id:"mozzarella",       label:"Extra Mozzarella",              price:30 },
+  { id:"parmesan",         label:"Parmesan (Grated)",             price:25 },
+  { id:"extra_rice",       label:"Extra Plain Rice",              price:15 },
+  { id:"garlic_rice",      label:"Extra Garlic Rice",             price:20 },
+  { id:"gravy",            label:"Extra Gravy",                   price:15 },
+  { id:"mayo",             label:"Extra Mayo",                    price:10 },
+  { id:"ketchup",          label:"Extra Ketchup",                 price:10 },
+  { id:"salad_dressing",   label:"Extra Salad Dressing",          price:15 },
+  { id:"garlic_butter",    label:"Garlic Butter Dip",             price:15 },
+  { id:"ice_cream",        label:"Extra Scoop of Ice Cream",      price:40 },
+  { id:"choc_drizzle",     label:"Chocolate Drizzle",             price:20 },
+  { id:"caramel_drizzle",  label:"Caramel Drizzle",               price:20 },
+  { id:"crushed_cookies",  label:"Crushed Cookies",               price:20 },
+  { id:"fresh_fruits",     label:"Fresh Fruits (Banana/Strawberry)", price:30 },
+];
+
+/* ════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  state.menuItems = [...DEMO_MENU];
+  state.reviews   = [...DEMO_REVIEWS];
+  renderMenuModal();
+  renderReviews();
+  setupCategoryBarModal();
+  updateCartBadge();
+
+  // Open full menu button
+  document.getElementById('openFullMenuBtn').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('fullMenuModal')).show();
+  });
+
+  // Cart open button
+  document.getElementById('cartOpenBtn').addEventListener('click', () => {
+    const m = new bootstrap.Modal(document.getElementById('cartModal'));
+    m.show();
+  });
+  document.getElementById('cartModal').addEventListener('show.bs.modal', renderCart);
+
+  // Close google menu on outside click
+  document.addEventListener('click', (e) => {
+    if (!document.getElementById('googleLoginWrap').contains(e.target)) {
+      document.getElementById('googleUserMenu').classList.add('d-none');
+    }
+  });
+});
+
+/* ════════════════════════════════════════════
+   THEME TOGGLE
+   ════════════════════════════════════════════ */
+document.getElementById('themeToggleBtn').addEventListener('click', () => {
+  state.isDark = !state.isDark;
+  document.documentElement.setAttribute('data-bs-theme', state.isDark ? 'dark' : 'light');
+});
+
+/* ════════════════════════════════════════════
+   GOOGLE LOGIN (simulated)
+   ════════════════════════════════════════════ */
+function handleGoogleLogin() {
+  // In production: use Google Identity Services SDK
+  // window.google.accounts.id.initialize({ client_id: 'YOUR_CLIENT_ID', callback: onGoogleResponse });
+  // window.google.accounts.id.prompt();
+
+  // Simulated flow:
+  const mockUsers = [
+    { name:"Maria Santos", email:"maria.santos@gmail.com", avatar:"https://i.pravatar.cc/80?img=47" },
+    { name:"Jake Reyes",   email:"jake.reyes@gmail.com",   avatar:"https://i.pravatar.cc/80?img=12" },
+  ];
+  const u = mockUsers[Math.floor(Math.random()*mockUsers.length)];
+  state.googleUser = u;
+
+  document.getElementById('googleLoginBtn').style.display = 'none';
+  const menu = document.getElementById('googleUserMenu');
+  document.getElementById('googleUserAvatar').src = u.avatar;
+  document.getElementById('googleUserName').textContent = u.name;
+  document.getElementById('googleUserEmail').textContent = u.email;
+  showToast(`Welcome, ${u.name}! You are now signed in.`);
+}
+
+function toggleGoogleMenu() {
+  document.getElementById('googleUserMenu').classList.toggle('d-none');
+}
+
+function handleGoogleLogout() {
+  state.googleUser = null;
+  document.getElementById('googleLoginBtn').style.display = '';
+  document.getElementById('googleUserMenu').classList.add('d-none');
+  showToast('Signed out successfully.');
+}
+
+document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
+
+/* ════════════════════════════════════════════
+   ADMIN TOGGLE
+   ════════════════════════════════════════════ */
+function handleAdminToggleClick() {
+  const checkbox = document.getElementById('adminModeCheckbox');
+  if (!checkbox.checked) {
+    // Currently OFF → turn ON → need login
+    if (!state.isAdminLoggedIn) {
+      const modal = new bootstrap.Modal(document.getElementById('adminLoginModal'));
+      modal.show();
+    } else {
+      checkbox.checked = true;
+      activateAdminMode();
+    }
+  } else {
+    // Currently ON → turn OFF
+    checkbox.checked = false;
+    deactivateAdminMode();
+  }
+}
+
+function handleAdminLogin() {
+  const email    = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  if (!email || !password) { showToast('Please fill in all fields.', true); return; }
+  if (email === 'admin@sipandpulse.com' && password === 'admin123') {
+    state.isAdminLoggedIn = true;
+    bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
+    document.getElementById('adminModeCheckbox').checked = true;
+    activateAdminMode();
+    document.getElementById('adminEmail').value = '';
+    document.getElementById('adminPassword').value = '';
+  } else {
+    showToast('Invalid credentials. Use admin@sipandpulse.com / admin123', true);
+  }
+}
+
+function activateAdminMode() {
+  state.isAdminModeActive = true;
+  document.body.classList.add('admin-active');
+  document.getElementById('adminBanner').classList.add('visible');
+  document.getElementById('adminToggleWrap').classList.add('is-admin');
+  document.getElementById('modeBadge').textContent = 'Admin Mode';
+  document.getElementById('modeBadge').className = 'mode-badge admin';
+}
+function deactivateAdminMode() {
+  state.isAdminModeActive = false;
+  document.body.classList.remove('admin-active');
+  document.getElementById('adminBanner').classList.remove('visible');
+  document.getElementById('adminToggleWrap').classList.remove('is-admin');
+  document.getElementById('modeBadge').textContent = 'Client Mode';
+  document.getElementById('modeBadge').className = 'mode-badge client';
+}
+
+document.getElementById('cancelAdminLogin').addEventListener('click', () => {
+  document.getElementById('adminModeCheckbox').checked = false;
+});
+
+function toggleClientPreview() {
+  const banner = document.getElementById('adminBanner');
+  if (!document.body.classList.contains('admin-preview-client')) {
+    document.body.classList.add('admin-preview-client');
+    document.body.classList.remove('admin-active');
+    banner.innerHTML = `<span class="material-icons align-middle me-2" style="font-size:14px;">visibility</span>Previewing as Client.<button onclick="exitClientPreview()" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:.75rem;font-weight:600;border-radius:6px;padding:3px 10px;cursor:pointer;margin-left:12px;">Exit Preview</button>`;
+  }
+}
+function exitClientPreview() {
+  document.body.classList.remove('admin-preview-client');
+  document.body.classList.add('admin-active');
+  document.getElementById('adminBanner').innerHTML = `<span class="material-icons align-middle me-2" style="font-size:14px;">shield</span>Admin Mode Active — You are viewing the live menu as an administrator.<button onclick="toggleClientPreview()" class="ms-3" style="background:rgba(255,255,255,.2);border:none;color:#fff;font-size:.75rem;font-weight:600;border-radius:6px;padding:3px 10px;cursor:pointer;">Preview Client View</button>`;
+}
+
+/* ════════════════════════════════════════════
+   MENU (FULL MENU MODAL)
+   ════════════════════════════════════════════ */
+function renderMenuModal(query = '') {
+  const grid  = document.getElementById('menuGridModal');
+  const empty = document.getElementById('emptyStateModal');
+  let filtered = state.menuItems.filter(i => i.available);
+
+  if (state.currentFilter !== 'all') {
+    filtered = filtered.filter(i => i.cat === state.currentFilter);
+  }
+  if (query.trim()) {
+    const q = query.toLowerCase();
+    filtered = filtered.filter(i =>
+      i.name.toLowerCase().includes(q) ||
+      i.desc.toLowerCase().includes(q) ||
+      (catLabels[i.cat] || '').toLowerCase().includes(q)
+    );
+  }
+
+  if (filtered.length === 0) {
+    grid.innerHTML = '';
+    empty.classList.remove('d-none');
+    return;
+  }
+  empty.classList.add('d-none');
+
+  grid.innerHTML = filtered.map(item => `
+    <div class="col-6 col-md-4 col-lg-3" data-item-id="${item.id}">
+      <div class="menu-card-modal">
+        <img src="${item.img}" alt="${item.name}" class="menu-img-modal" loading="lazy"
+             onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
+        <div class="menu-card-modal-body">
+          <span class="cat-tag-modal">${catLabels[item.cat] || item.cat}</span>
+          <h5 class="menu-item-name-modal">${item.name}</h5>
+          <p class="menu-item-desc-modal">${item.desc}</p>
+          <div class="d-flex align-items-center justify-content-between">
+            <span class="menu-price-modal">₱${parseFloat(item.price).toFixed(2)}</span>
+          </div>
+          <!-- Client btn -->
+          <button class="btn-add-modal client-btn-modal" onclick="openOrderModal(${item.id})">
+            <span class="material-icons" style="font-size:15px;">add_shopping_cart</span> Add to Order
+          </button>
+          <!-- Admin btns -->
+          <div class="admin-btns-modal">
+            <button class="btn-edit-modal" onclick="openCrudModal('edit',${item.id})" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
+              <span class="material-icons" style="font-size:14px;margin-right:3px;">edit</span>Edit
+            </button>
+            <button class="btn-del-modal" onclick="openDeleteConfirm(${item.id})">
+              <span class="material-icons" style="font-size:16px;">delete</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function setupCategoryBarModal() {
+  document.getElementById('categoryBarModal').addEventListener('click', (e) => {
+    const btn = e.target.closest('.cat-btn-modal');
+    if (!btn) return;
+    document.querySelectorAll('.cat-btn-modal').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.currentFilter = btn.dataset.cat;
+    renderMenuModal(state.searchQuery);
+  });
+}
+
+function filterMenuBySearch(query) {
+  state.searchQuery = query;
+  renderMenuModal(query);
+}
+function handleNavSearch(query) {
+  state.searchQuery = query;
+  if (query.trim()) renderMenuModal(query);
+}
+
+/* ════════════════════════════════════════════
+   ORDER MODAL
+   ════════════════════════════════════════════ */
+function openOrderModal(itemId) {
+  const item = state.menuItems.find(i => i.id === itemId);
+  if (!item) return;
+  state.currentOrderItem = item;
+
+  document.getElementById('orderModalTitle').textContent    = item.name;
+  document.getElementById('orderModalItemType').textContent = item.type === 'drink' ? 'Customize Your Brew' : 'Customize Your Meal';
+  document.getElementById('orderModalName').textContent     = item.name;
+  document.getElementById('orderModalThumb').src            = item.img;
+  document.getElementById('orderModalBasePrice').textContent= `₱${parseFloat(item.price).toFixed(2)}`;
+
+  const isDrink = item.type === 'drink';
+  document.getElementById('drinkAdjustments').style.display = isDrink ? '' : 'none';
+  document.getElementById('sizeSection').style.display      = isDrink ? '' : 'none';
+
+  const addons = isDrink ? DRINK_ADDONS : FOOD_ADDONS;
+  document.getElementById('addonsList').innerHTML = addons.map(a => `
+    <div class="addon-row">
+      <input type="checkbox" class="addon-check" id="addon_${a.id}" data-price="${a.price}" onchange="recalcTotal()">
+      <label for="addon_${a.id}" style="cursor:pointer;flex:1;">${a.label}</label>
+      <span class="addon-price">+₱${a.price}</span>
+    </div>
+  `).join('');
+
+  // Reset selections
+  const medRadio = document.querySelector('input[name="orderSize"][value="Medium"]');
+  if (medRadio) medRadio.checked = true;
+  document.querySelectorAll('.addon-check').forEach(c => c.checked = false);
+  document.getElementById('orderNotes').value = '';
+  const pickupRadio = document.querySelector('input[name="fulfillment"][value="pickup"]');
+  if (pickupRadio) pickupRadio.checked = true;
+
+  recalcTotal();
+  const orderModal = new bootstrap.Modal(document.getElementById('orderModal'));
+  orderModal.show();
+}
+
+function recalcTotal() {
+  const item = state.currentOrderItem;
+  if (!item) return;
+  let total = parseFloat(item.price);
+  const sizeVal = document.querySelector('input[name="orderSize"]:checked')?.value;
+  if (sizeVal === 'Medium') total += 20;
+  if (sizeVal === 'Large')  total += 40;
+  document.querySelectorAll('.addon-check:checked').forEach(c => {
+    total += parseFloat(c.dataset.price);
+  });
+  document.getElementById('orderTotalDisplay').textContent = `₱${total.toFixed(2)}`;
+}
+
+// Size radio listeners
+document.querySelectorAll('input[name="orderSize"]').forEach(r => r.addEventListener('change', recalcTotal));
+
+function confirmOrder() {
+  const item = state.currentOrderItem;
+  if (!item) return;
+  const size        = document.querySelector('input[name="orderSize"]:checked')?.value || 'Medium';
+  const fulfillment = document.querySelector('input[name="fulfillment"]:checked')?.value || 'pickup';
+  const notes       = document.getElementById('orderNotes').value;
+  const addons = [];
+  let total = parseFloat(item.price);
+  if (size === 'Medium') total += 20;
+  if (size === 'Large')  total += 40;
+  document.querySelectorAll('.addon-check:checked').forEach(c => {
+    addons.push(c.nextElementSibling.textContent.trim());
+    total += parseFloat(c.dataset.price);
+  });
+  state.cart.push({ item, size, fulfillment, addons, notes, total, cartId: Date.now() });
+  updateCartBadge();
+  bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
+  showToast(`${item.name} added to your cart!`);
+}
+
+/* ════════════════════════════════════════════
+   CART
+   ════════════════════════════════════════════ */
+function updateCartBadge() {
+  const badge = document.getElementById('cartCountBadge');
+  badge.textContent = state.cart.length;
+  badge.classList.toggle('visible', state.cart.length > 0);
+}
+
+function renderCart() {
+  const body    = document.getElementById('cartBody');
+  const footer  = document.getElementById('cartFooter');
+  const success = document.getElementById('checkoutSuccess');
+  const placeBtn = document.getElementById('placeOrderBtn');
+
+  success.classList.remove('visible');
+  footer.style.display = '';
+  body.style.display   = '';
+
+  if (state.cart.length === 0) {
+    body.innerHTML = '<p style="color:var(--text-dim);font-size:.875rem;text-align:center;padding:24px 0;">Your cart is empty.</p>';
+    placeBtn.disabled = true;
+    document.getElementById('cartGrandTotal').textContent = '₱0.00';
+    return;
+  }
+  placeBtn.disabled = false;
+  let grand = 0;
+  body.innerHTML = state.cart.map(ci => {
+    grand += ci.total;
+    return `
+      <div class="order-item-summary mb-2" style="align-items:flex-start;flex-direction:column;gap:6px;">
+        <div style="display:flex;gap:12px;align-items:center;width:100%;">
+          <img src="${ci.item.img}" class="order-item-thumb" style="width:50px;height:50px;" alt="${ci.item.name}">
+          <div style="flex:1;">
+            <p class="order-item-name mb-0">${ci.item.name}</p>
+            <p style="font-size:.78rem;color:var(--text-dim);margin:2px 0 0;">${ci.size} · ${ci.fulfillment === 'pickup' ? 'Pick-up' : 'Delivery'}</p>
+          </div>
+          <span style="font-weight:700;color:var(--brand);font-size:.9rem;">₱${ci.total.toFixed(2)}</span>
+          <button onclick="removeFromCart(${ci.cartId})" style="background:none;border:none;cursor:pointer;color:#c0392b;padding:0 0 0 6px;">
+            <span class="material-icons" style="font-size:18px;">close</span>
+          </button>
+        </div>
+        ${ci.addons.length ? `<p style="font-size:.74rem;color:var(--text-dim);margin:0;padding-left:62px;">+ ${ci.addons.join(', ')}</p>` : ''}
+      </div>`;
+  }).join('');
+  document.getElementById('cartGrandTotal').textContent = `₱${grand.toFixed(2)}`;
+}
+
+function removeFromCart(cartId) {
+  state.cart = state.cart.filter(c => c.cartId !== cartId);
+  updateCartBadge();
+  renderCart();
+}
+
+function placeOrder() {
+  // Show checkout success inside modal
+  document.getElementById('cartBody').style.display   = 'none';
+  document.getElementById('cartFooter').style.display = 'none';
+  document.getElementById('checkoutSuccess').classList.add('visible');
+  state.cart = [];
+  updateCartBadge();
+}
+
+function continueOrdering() {
+  bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
+  // Open full menu
+  setTimeout(() => new bootstrap.Modal(document.getElementById('fullMenuModal')).show(), 350);
+}
+
+/* ════════════════════════════════════════════
+   ADMIN CRUD
+   ════════════════════════════════════════════ */
+function openCrudModal(mode, itemId = null) {
+  const title   = document.getElementById('crudModalTitle');
+  const saveBtn = document.getElementById('crudSaveBtn');
+  ['crudItemId','crudName','crudPrice','crudDesc','crudImage'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('crudAvailable').checked = true;
+  if (mode === 'add') {
+    title.textContent = 'Add New Menu Item';
+    saveBtn.innerHTML = '<span class="material-icons" style="font-size:17px;">add_circle</span> Insert to Database';
+  } else if (mode === 'edit' && itemId) {
+    const item = state.menuItems.find(i => i.id === itemId);
+    if (!item) return;
+    title.textContent = 'Edit Menu Item';
+    saveBtn.innerHTML = '<span class="material-icons" style="font-size:17px;">save</span> Update Database';
+    document.getElementById('crudItemId').value    = item.id;
+    document.getElementById('crudName').value      = item.name;
+    document.getElementById('crudPrice').value     = item.price;
+    document.getElementById('crudCategory').value  = item.cat;
+    document.getElementById('crudDesc').value      = item.desc;
+    document.getElementById('crudImage').value     = item.img;
+    document.getElementById('crudAvailable').checked = item.available;
+  }
+}
+
+function saveCrudItem() {
+  const id        = document.getElementById('crudItemId').value;
+  const name      = document.getElementById('crudName').value.trim();
+  const price     = parseFloat(document.getElementById('crudPrice').value);
+  const cat       = document.getElementById('crudCategory').value;
+  const desc      = document.getElementById('crudDesc').value.trim();
+  const img       = document.getElementById('crudImage').value.trim();
+  const available = document.getElementById('crudAvailable').checked;
+  if (!name || !price || !cat) { showToast('Please fill in all required fields.', true); return; }
+  if (id) {
+    const idx = state.menuItems.findIndex(i => i.id == id);
+    if (idx !== -1) state.menuItems[idx] = { ...state.menuItems[idx], name, price, cat, desc, img: img || state.menuItems[idx].img, available };
+    showToast(`"${name}" updated.`);
+  } else {
+    const newId = Math.max(...state.menuItems.map(i => i.id)) + 1;
+    const type  = ['espresso','iced','noncoffee','milktea','tea'].includes(cat) ? 'drink' : 'food';
+    state.menuItems.push({ id:newId, name, price, cat, desc, img: img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80', available, type });
+    showToast(`"${name}" added!`);
+  }
+  bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
+  renderMenuModal(state.searchQuery);
+}
+
+function openDeleteConfirm(itemId) {
+  const item = state.menuItems.find(i => i.id === itemId);
+  if (!item) return;
+  state.pendingDeleteId = itemId;
+  document.getElementById('deleteItemName').textContent = item.name;
+  new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
+}
+
+function confirmDelete() {
+  const item = state.menuItems.find(i => i.id === state.pendingDeleteId);
+  state.menuItems = state.menuItems.filter(i => i.id !== state.pendingDeleteId);
+  bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+  renderMenuModal(state.searchQuery);
+  showToast(`"${item?.name}" removed.`);
+  state.pendingDeleteId = null;
+}
+
+/* ════════════════════════════════════════════
+   REVIEWS
+   ════════════════════════════════════════════ */
+function renderReviews() {
+  document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => `
+    <div class="col-md-6 col-lg-4">
+      <div class="review-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <div class="d-flex align-items-center gap-2">
+            <div class="review-avatar">${r.initials}</div>
+            <div>
+              <p style="font-weight:600;font-size:.875rem;margin:0;">${r.name}</p>
+              <p style="font-size:.72rem;color:var(--text-dim);margin:0;">${r.date}</p>
+            </div>
+          </div>
+          <button class="btn-delete-review" onclick="deleteReview(${r.id})">
+            <span class="material-icons" style="font-size:17px;">delete</span>
+          </button>
+        </div>
+        <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        <p class="review-text">${r.comment}</p>
+      </div>
+    </div>
+  `).join('');
+}
+
+function submitReview() {
+  const name     = document.getElementById('reviewName').value.trim();
+  const comment  = document.getElementById('reviewComment').value.trim();
+  const ratingEl = document.querySelector('input[name="rating"]:checked');
+  if (!name || !comment || !ratingEl) { showToast('Please fill in all review fields and select a rating.', true); return; }
+  const rating   = parseInt(ratingEl.value);
+  const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+  state.reviews.unshift({ id:Date.now(), name, initials, rating, comment, date: new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'}) });
+  renderReviews();
+  document.getElementById('reviewName').value = '';
+  document.getElementById('reviewComment').value = '';
+  document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+  showToast('Your review has been posted. Thank you!');
+}
+
+function deleteReview(id) {
+  state.reviews = state.reviews.filter(r => r.id !== id);
+  renderReviews();
+  showToast('Review removed.');
+}
+
+/* ════════════════════════════════════════════
+   CAREERS
+   ════════════════════════════════════════════ */
+function submitApplication() {
+  const name     = document.getElementById('applyName').value.trim();
+  const email    = document.getElementById('applyEmail').value.trim();
+  const position = document.getElementById('applyPosition').value;
+  const cover    = document.getElementById('applyCover').value.trim();
+  if (!name || !email || !cover) { showToast('Please fill in all application fields.', true); return; }
+  // XAMPP: POST to php/apply.php
+  showToast(`Application for ${position} submitted! We'll be in touch, ${name}.`);
+  bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
+  ['applyName','applyEmail','applyCover'].forEach(id => document.getElementById(id).value='');
+}
+
+function submitFranchise() {
+  const name = document.getElementById('franchiseName').value.trim();
+  const email = document.getElementById('franchiseEmail').value.trim();
+  const city  = document.getElementById('franchiseCity').value.trim();
+  const msg   = document.getElementById('franchiseMsg').value.trim();
+  if (!name || !email || !city) { showToast('Please fill in all franchise inquiry fields.', true); return; }
+  // XAMPP: POST to php/franchise.php
+  showToast(`Franchise inquiry received! Our team will contact you within 3–5 business days.`);
+  bootstrap.Modal.getInstance(document.getElementById('franchiseModal')).hide();
+  ['franchiseName','franchiseEmail','franchiseCity','franchiseMsg'].forEach(id => document.getElementById(id).value='');
+}
+
+/* ════════════════════════════════════════════
+   SUBSCRIBE
+   ════════════════════════════════════════════ */
+function handleSubscribe() {
+  const email = document.getElementById('subscribeEmail').value.trim();
+  if (!email || !email.includes('@')) { showToast('Please enter a valid email address.', true); return; }
+  // XAMPP: POST to php/subscribe.php
+  document.getElementById('subscribeSuccess').classList.remove('d-none');
+  document.getElementById('subscribeEmail').value = '';
+  showToast('Subscribed Successfully!');
+  setTimeout(() => document.getElementById('subscribeSuccess').classList.add('d-none'), 4000);
+}
+
+/* ════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════ */
+let toastTimer;
+function showToast(message, isError = false) {
+  const toast = document.getElementById('toastNotif');
+  document.getElementById('toastIcon').textContent = isError ? 'error' : 'check_circle';
+  document.getElementById('toastMessage').textContent = message;
+  toast.classList.remove('show','error');
+  if (isError) toast.classList.add('error');
+  clearTimeout(toastTimer);
+  toast.classList.add('show');
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3800);
+}
+</script>
+</body>
+</html>
