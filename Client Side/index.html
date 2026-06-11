@@ -1560,6 +1560,137 @@ section.py-5 {
   padding: 14px 32px;
 }
 
+
+/* ════════ BENTO BOX MENU PREVIEW ════════ */
+.bento-card {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  cursor: pointer;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.1);
+  transform: translateZ(0); /* Hardware acceleration for smooth zoom */
+}
+
+[data-bs-theme="dark"] .bento-card {
+  box-shadow: 0 12px 36px rgba(0,0,0,0.4);
+}
+
+.featured-bento {
+  min-height: 520px;
+}
+.regular-bento {
+  min-height: 250px;
+}
+
+.bento-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.bento-card:hover .bento-img {
+  transform: scale(1.05);
+}
+
+/* Rich gradient overlay so text is ALWAYS legible */
+.bento-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(18, 12, 8, 0.95) 0%, rgba(18, 12, 8, 0.3) 50%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 32px;
+  transition: background 0.5s ease;
+}
+
+.bento-card:hover .bento-overlay {
+  background: linear-gradient(to top, rgba(18, 12, 8, 0.98) 0%, rgba(18, 12, 8, 0.5) 60%, transparent 100%);
+}
+
+.bento-content {
+  position: relative;
+  z-index: 2;
+  color: #F8F4E1; /* Force light text on the dark gradient */
+  transform: translateY(12px);
+  transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.bento-card:hover .bento-content {
+  transform: translateY(0);
+}
+
+.bento-cat {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #AF8F6F; /* Brand color */
+  margin-bottom: 8px;
+}
+
+.bento-title {
+  color: #ffffff;
+  margin-bottom: 0;
+  line-height: 1.15;
+}
+.featured-bento .bento-title { font-size: clamp(2rem, 4vw, 2.8rem); }
+.regular-bento .bento-title { font-size: 1.6rem; }
+
+.bento-price {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #AF8F6F;
+}
+
+/* Slick hover action button */
+.bento-action-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background-color: #74512D; /* Primary Brand */
+  color: #fff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(-15px);
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.bento-card:hover .bento-action-btn {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.bento-action-btn:hover {
+  background-color: #AF8F6F;
+}
+
+/* Glass Badge for the Featured Item */
+.bento-badge {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 30px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+
   </style>
 
   </style>
@@ -1739,44 +1870,75 @@ section.py-5 {
 </section>
 
   <!-- ═══════════════════ MENU PREVIEW (with bg image) ═══════════════════ -->
-  <section id="menu-preview-section" class="menu-preview-section py-5">
-    <div class="menu-preview-bg"></div>
-    <div class="menu-preview-content container">
-      <div class="text-center mb-5">
-        <p class="section-eyebrow mb-1" style="color:#AF8F6F;">Taste the Magic</p>
-        <h2 class="section-title" style="color:#F8F4E1;">Menu Sneak Peek</h2>
+ <section id="menu-preview-section" class="py-5" style="background-color: var(--bg-surface-2);">
+  <div class="container py-lg-4">
+    
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-5">
+      <div>
+        <p class="section-eyebrow mb-2">Taste the Magic</p>
+        <h2 class="section-title mb-0" style="font-size: clamp(2rem, 4vw, 2.75rem);">Crowd Favorites</h2>
       </div>
-      <div class="row justify-content-center g-4 mb-5">
-        <div class="col-md-4">
-          <div class="preview-card">
-            <div class="preview-card-name">Signature Caramel Macchiato</div>
-            <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Espresso & Hot Brews</div>
-            <span class="preview-card-price">₱150.00</span>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="preview-card">
-            <div class="preview-card-name">Classic Beef Burger</div>
-            <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Burgers</div>
-            <span class="preview-card-price">₱180.00</span>
-          </div>
-        </div>
-        <div class="col-md-4">
-          <div class="preview-card">
-            <div class="preview-card-name">Blueberry Cheesecake</div>
-            <div style="font-size:.78rem;color:rgba(225,220,201,.7);margin-bottom:10px;">Pastries & Baked Goods</div>
-            <span class="preview-card-price">₱145.00</span>
-          </div>
-        </div>
-      </div>
-      <div class="text-center">
-        <button class="btn-open-menu" id="openFullMenuBtn">
-          <span class="material-icons" style="font-size:20px;">menu_book</span>
-          Open Full Menu
-        </button>
-      </div>
+      <button class="btn-outline-custom mt-3 mt-md-0" id="openFullMenuBtn" style="border-radius: 30px; padding: 10px 24px;">
+        View Full Menu <span class="material-icons ms-2" style="font-size:18px; vertical-align:middle;">east</span>
+      </button>
     </div>
-  </section>
+
+    <div class="row g-4">
+      
+      <div class="col-lg-7">
+        <div class="bento-card featured-bento h-100">
+          <div class="bento-badge">Signature</div>
+          <img src="https://images.unsplash.com/photo-1551030173-122aabc4489c?w=1000&q=80" alt="Caramel Macchiato" class="bento-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1000&q=80';">         <div class="bento-overlay">
+            <div class="bento-content">
+              <p class="bento-cat">Espresso & Hot Brews</p>
+              <h3 class="bento-title display-font">Caramel Macchiato</h3>
+              <div class="d-flex align-items-center gap-3 mt-3">
+                <span class="bento-price">₱150.00</span>
+                <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="d-flex flex-column gap-4 h-100">
+          
+          <div class="bento-card regular-bento flex-grow-1">
+            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80" alt="Classic Beef Burger" class="bento-img">
+            <div class="bento-overlay">
+              <div class="bento-content">
+                <p class="bento-cat">Burgers</p>
+                <h4 class="bento-title display-font">Classic Beef Burger</h4>
+                <div class="d-flex align-items-center gap-3 mt-2">
+                  <span class="bento-price">₱180.00</span>
+                  <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bento-card regular-bento flex-grow-1">
+            <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800&q=80" alt="Blueberry Cheesecake" class="bento-img">
+            <div class="bento-overlay">
+              <div class="bento-content">
+                <p class="bento-cat">Pastries & Baked Goods</p>
+                <h4 class="bento-title display-font">Blueberry Cheesecake</h4>
+                <div class="d-flex align-items-center gap-3 mt-2">
+                  <span class="bento-price">₱145.00</span>
+                  <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
 
   <!-- ═══════════════════ REVIEWS ═══════════════════ -->
   <section class="reviews-section" id="reviews-section">
