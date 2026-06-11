@@ -345,33 +345,7 @@
     </div>
     <!-- Leave a review form — admins can also post -->
     <div class="card mb-5" style="background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;">
-      <div class="card-body p-4">
-        <h6 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:16px;">Share Your Experience</h6>
-        <div class="mb-3">
-          <label class="form-label-custom">Your Rating</label>
-          <div class="star-rating-input">
-            <input type="radio" id="s5" name="rating" value="5"><label for="s5">★</label>
-            <input type="radio" id="s4" name="rating" value="4"><label for="s4">★</label>
-            <input type="radio" id="s3" name="rating" value="3"><label for="s3">★</label>
-            <input type="radio" id="s2" name="rating" value="2"><label for="s2">★</label>
-            <input type="radio" id="s1" name="rating" value="1"><label for="s1">★</label>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-custom">Name</label>
-          <div class="input-group-custom">
-            <span class="material-icons">person</span>
-            <input type="text" class="form-control-custom" id="reviewName" placeholder="e.g. Maria Santos">
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-custom">Review</label>
-          <textarea class="form-control-custom" id="reviewComment" placeholder="Share your experience…"></textarea>
-        </div>
-        <div class="text-end">
-          <button class="btn-primary-custom" style="width:auto;padding:10px 28px;" onclick="submitReview()">Post Review</button>
-        </div>
-      </div>
+   
     </div>
     <div class="row g-4" id="reviewsFeed"></div>
   </div>
@@ -1209,11 +1183,15 @@ function confirmDelete(){
   state.pendingDeleteId=null;
 }
 
-/* ════════ REVIEWS ════════ */
+/* ════════ REVIEWS (ADMIN SIDE) ════════ */
 function renderReviews() {
-  document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => `
+  document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => {
+    // Check if an admin response already exists for this review
+    const hasReply = r.adminReply && r.adminReply.trim() !== '';
+
+    return `
     <div class="col-md-6 col-lg-4">
-      <div class="review-card">
+      <div class="review-card d-flex flex-column h-100">
         <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
             <div class="review-avatar">${r.initials}</div>
@@ -1226,25 +1204,64 @@ function renderReviews() {
             <span class="material-icons" style="font-size:15px;">delete</span> Remove
           </button>
         </div>
-        <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-        <p class="review-text">${r.comment}</p>
+        <div class="review-stars mb-2">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+        <p class="review-text flex-grow-1">${r.comment}</p>
+
+        <!-- ── ADMIN REPLY BOX ── -->
+        <div class="admin-reply-box mt-3 pt-3" style="border-top: 1px dashed var(--border);">
+          ${hasReply ? `
+            <!-- Shows if a reply has already been made -->
+            <div class="p-2 rounded" style="background-color: var(--bg-surface-2); font-size: 0.85rem;">
+              <strong style="color: var(--brand); display: block; margin-bottom: 2px;">
+                <span class="material-icons align-middle" style="font-size: 14px; margin-right: 2px;">reply</span>
+                Sip & Pulse Response:
+              </strong>
+              <p class="mb-0" style="color: var(--text-dim); font-style: italic;">"${r.adminReply}"</p>
+            </div>
+          ` : `
+            <!-- Form to write a new response -->
+            <label class="form-label-custom mb-1" style="font-size: 0.7rem; display: block;">Write Response</label>
+            <div class="d-flex gap-2">
+              <input type="text" class="form-control-custom py-1 px-2" style="font-size: 0.8rem; flex: 1;" 
+                     id="reply-input-${r.id}" placeholder="Thank them or address concerns...">
+              <button class="btn-primary-custom" style="width: auto; padding: 4px 12px; font-size: 0.75rem; border-radius: 8px;"
+                      onclick="submitAdminReply(${r.id})">
+                Reply
+              </button>
+            </div>
+          `}
+        </div>
+
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
-function submitReview(){
-  const name=document.getElementById('reviewName').value.trim(),
-        comment=document.getElementById('reviewComment').value.trim(),
-        ratingEl=document.querySelector('input[name="rating"]:checked');
-  if(!name||!comment||!ratingEl){showToast('Please fill in all review fields and select a rating.',true);return;}
-  const rating=parseInt(ratingEl.value),initials=name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
-  state.reviews.unshift({id:Date.now(),name,initials,rating,comment,date:new Date().toLocaleDateString('en-US',{month:'long',year:'numeric'})});
+
+function deleteReview(id) {
+  state.reviews = state.reviews.filter(r => r.id !== id);
   renderReviews();
-  document.getElementById('reviewName').value='';
-  document.getElementById('reviewComment').value='';
-  document.querySelectorAll('input[name="rating"]').forEach(r=>r.checked=false);
-  showToast('Review posted!');
+  showToast('Review removed.');
 }
-function deleteReview(id){state.reviews=state.reviews.filter(r=>r.id!==id);renderReviews();showToast('Review removed.');}
+
+function submitAdminReply(id) {
+  const inputField = document.getElementById(`reply-input-${id}`);
+  if (!inputField) return;
+
+  const replyText = inputField.value.trim();
+
+  if (!replyText) {
+    showToast('Please enter a response before submitting.', true);
+    return;
+  }
+
+  // Find the exact review object in your data state and update it
+  const targetReview = state.reviews.find(r => r.id === id);
+  if (targetReview) {
+    targetReview.adminReply = replyText;
+    renderReviews(); // Re-render the UI smoothly 
+    showToast('Response posted!');
+  }
+}
 
 /* ════════ CAREERS / FRANCHISE ════════ */
 function submitApplication(){
