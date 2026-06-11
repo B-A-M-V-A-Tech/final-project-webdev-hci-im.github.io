@@ -291,9 +291,6 @@
       <a href="#home-section" class="nav-link-item">Home</a>
       <a href="#about-section" class="nav-link-item">About Us</a>
       <a href="#menu-preview-section" class="nav-link-item">Menu</a>
-      <a href="#reviews-section" class="nav-link-item">Reviews</a>
-      <a href="#careers-section" class="nav-link-item">Careers</a>
-      <a href="#location-section" class="nav-link-item">Location</a>
       <a href="#contact-section" class="nav-link-item">Contact Us</a>
     </div>
 
@@ -508,7 +505,7 @@
 </section>
 
 <!-- ═══════════════════ LOCATION ═══════════════════ -->
-<section id="location-section" class="py-5" style="background-color:var(--bg-surface);">
+<section id="contact-section" class="py-5" style="background-color:var(--bg-surface);">
   <div class="container text-center">
     <p class="section-eyebrow mb-1">Find Us</p>
     <h2 class="section-title">Location</h2>
@@ -520,7 +517,7 @@
 </section>
 
 <!-- ═══════════════════ CONTACT + MAP ═══════════════════ -->
-<section class="container py-5" id="contact-section">
+<section class="container py-5" >
   <div class="row g-4 align-items-start">
     <div class="col-md-5">
       <p class="section-eyebrow mb-1">Get in Touch</p>
@@ -763,15 +760,28 @@
           <label class="form-label-custom mb-2">Add-ons</label>
           <div id="addonsList"></div>
         </div>
-        <div class="mb-3">
-          <label class="form-label-custom mb-2">Fulfillment Method</label>
-          <div class="seg-control">
-            <input type="radio" name="fulfillment" id="pickup" value="pickup" checked>
-            <label for="pickup"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Pick-up</label>
-            <input type="radio" name="fulfillment" id="delivery" value="delivery">
-            <label for="delivery"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">delivery_dining</span>Delivery</label>
-          </div>
-        </div>
+       <div class="mb-3">
+  <label class="form-label-custom mb-2">Fulfillment Method</label>
+  <div class="seg-control">
+    <input type="radio" name="fulfillment" id="pickup" value="pickup" checked>
+    <label for="pickup">
+      <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Pick-up
+    </label>
+    
+    <input type="radio" name="fulfillment" id="delivery" value="delivery">
+    <label for="delivery">
+      <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">delivery_dining</span>Delivery
+    </label>
+  </div>
+</div>
+
+<div id="delivery-location-container" class="mb-3" style="display: none;">
+  <label for="delivery-location" class="form-label-custom mb-2">Delivery Location</label>
+  <div class="input-group-custom">
+    <span class="material-icons">place</span>
+    <input type="text" id="delivery-location" class="form-control-custom" placeholder="Enter your full delivery address">
+  </div>
+</div>
         <div class="mb-3">
           <label class="form-label-custom">Special Notes (Optional)</label>
           <textarea class="form-control-custom" id="orderNotes" placeholder="Any special requests?" style="min-height:60px;"></textarea>
@@ -1677,6 +1687,30 @@ function showToast(message, isError = false) {
   toast.classList.add('show');
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3800);
 }
+document.addEventListener("DOMContentLoaded", () => {
+  const fulfillmentRadios = document.querySelectorAll('input[name="fulfillment"]');
+  const locationContainer = document.getElementById('delivery-location-container');
+  const locationInput = document.getElementById('delivery-location');
+
+  fulfillmentRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (e.target.value === 'delivery') {
+        // Show container and make input mandatory
+        locationContainer.style.display = 'block';
+        locationInput.setAttribute('required', 'true');
+        locationInput.focus(); // Smoothly shifts focus to the address input for the customer
+      } else {
+        // Hide container, remove mandatory requirement, and clear any entered text
+        locationContainer.style.display = 'none';
+        locationInput.removeAttribute('required');
+        locationInput.value = ''; 
+      }
+    });
+  });
+});
+
 </script>
+
+
 </body>
 </html>
