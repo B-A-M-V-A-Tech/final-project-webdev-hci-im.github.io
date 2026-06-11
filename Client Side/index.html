@@ -1468,13 +1468,40 @@ function removeFromCart(cartId) {
   renderCart();
 }
 
-function placeOrder() {
-  // Show checkout success inside modal
-  document.getElementById('cartBody').style.display   = 'none';
-  document.getElementById('cartFooter').style.display = 'none';
-  document.getElementById('checkoutSuccess').classList.add('visible');
-  state.cart = [];
-  updateCartBadge();
+async function placeOrder() {
+  let grandTotal = state.cart.reduce((sum, ci) => sum + ci.total, 0);
+
+  const newOrder = {
+    orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
+    items: state.cart,
+    total: grandTotal,
+    status: 'Pending'
+  };
+
+  try {
+    const response = await fetch('place_order.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newOrder)
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Kapag successful ang save sa database, ipakita ang Success UI
+      document.getElementById('cartBody').style.display = 'none';
+      document.getElementById('cartFooter').style.display = 'none';
+      document.getElementById('checkoutSuccess').classList.add('visible');
+      
+      state.cart = []; 
+      updateCartBadge();
+    } else {
+      showToast('Failed to save order to database.', true);
+    }
+  } catch (error) {
+    console.error('Database Connection Error:', error);
+    showToast('Server connection error.', true);
+  }
 }
 
 function continueOrdering() {
