@@ -25,8 +25,23 @@
     h1,h2,h3,.display-font{font-family:'Playfair Display',serif;}
 
     /* ── NAVBAR ── */
-    .site-nav{background-color:var(--bg-surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:1030;transition:background-color var(--transition);}
-    .navbar-brand-link{color:var(--text-main);font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;}
+    /* ── NAVBAR ── */
+.site-nav {
+  /* Mixes your current surface color with 25% transparency so it adapts to light/dark mode */
+  background-color: color-mix(in srgb, var(--bg-surface) 75%, transparent);
+  
+  /* The Glass Blur Effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px); /* Required for Safari */
+  
+  /* Optional: Making the border slightly transparent enhances the glass look */
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
+  
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  transition: background-color var(--transition), border-color var(--transition);
+}  .navbar-brand-link{color:var(--text-main);font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:700;text-decoration:none;display:flex;align-items:center;gap:8px;}
     .nav-logo{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--border);}
     .nav-link-item{color:var(--text-dim);font-size:0.84rem;font-weight:500;text-decoration:none;padding:6px 10px;border-radius:6px;transition:color var(--transition),background-color var(--transition);}
     .nav-link-item:hover,.nav-link-item.active{color:var(--brand);background-color:rgba(116,81,45,0.08);}
