@@ -217,9 +217,6 @@
       <a href="#home-section" class="nav-link-item">Home</a>
       <a href="#about-section" class="nav-link-item">About Us</a>
       <a href="#menu-preview-section" class="nav-link-item">Menu</a>
-      <a href="#reviews-section" class="nav-link-item">Reviews</a>
-      <a href="#careers-section" class="nav-link-item">Careers</a>
-      <a href="#location-section" class="nav-link-item">Location</a>
       <a href="#contact-section" class="nav-link-item">Contact Us</a>
     </div>
 
@@ -417,7 +414,7 @@
 </section>
 
 <!-- ═══════════════════ LOCATION ═══════════════════ -->
-<section id="location-section" class="py-5" style="background-color:var(--bg-surface);">
+<section  id="contact-section" mt="3" class="py-5" style="background-color:var(--bg-surface);">
   <div class="container text-center">
     <p class="section-eyebrow mb-1">Find Us</p>
     <h2 class="section-title">Location</h2>
@@ -429,7 +426,7 @@
 </section>
 
 <!-- ═══════════════════ CONTACT + MAP ═══════════════════ -->
-<section class="container py-5" id="contact-section">
+<section class="container py-5">
   <div class="row g-4 align-items-start">
     <div class="col-md-5">
       <p class="section-eyebrow mb-1">Get in Touch</p>
@@ -1041,9 +1038,6 @@ function renderMenuModal(query = '') {
               <span class="material-icons" style="font-size:16px;">delete</span>
             </button>
           </div>
-          <button style="width:100%;background-color:#74512D;color:#F8F4E1;border:none;border-radius:8px;padding:8px;font-size:.78rem;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:background-color .25s;margin-top:6px;" onclick="openOrderModal(${item.id})" onmouseover="this.style.background='#543310'" onmouseout="this.style.background='#74512D'">
-            <span class="material-icons" style="font-size:15px;">add_shopping_cart</span> Add to Order
-          </button>
         </div>
       </div>
     </div>
