@@ -1724,29 +1724,46 @@ section.py-5 {
   transform: translateY(0);
 }
 
-/* Make the modal feel 'thicker' and more premium */
-#orderModal .modal-content {
-  border: 1px solid rgba(175, 143, 111, 0.3); /* Subtle border */
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);  /* Deep shadow for 'thickness' */
-  border-radius: 24px;                         /* Softer, more tactile corners */
-  padding: 10px;                               /* Adds interior padding */
-}
-
-/* Blur the background when any modal is open */
+/* Target the Bootstrap modal backdrop to add a blur effect */
 .modal-backdrop.show {
   backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  background-color: rgba(31, 21, 12, 0.6); /* Slightly adjust transparency here */
+  -webkit-backdrop-filter: blur(8px); /* Safari support */
+  
+  /* Optional: Adjust the dark overlay to work better with the blur */
+  background-color: rgba(0, 0, 0, 0.4); 
+  opacity: 1 !important; /* Overrides Bootstrap's default opacity so the blur renders cleanly */
 }
 
-/* Ensure the modal animation feels smooth and substantial */
-.modal.fade .modal-dialog {
-  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-  transform: scale(0.95);
+/* When the modal opens, Bootstrap adds 'modal-open' to the body. 
+   This targets your menu container and blurs it. */
+body.modal-open #menuContainer {
+  filter: blur(8px);
+  pointer-events: none; /* Prevents clicking on the menu while it's blurred */
+  transition: filter 0.3s ease-in-out;
 }
-.modal.show .modal-dialog {
-  transform: scale(1);
+/* Darkens and blurs the full menu when the order modal opens */
+.modal-backdrop.show {
+  /* 1. The Blur Effect */
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari compatibility */
+  
+  /* 2. The Darkening Effect (Adjust the 0.65 to go darker or lighter) */
+  background-color: rgba(0, 0, 0, 0.65); 
+  
+  /* 3. Overrides Bootstrap's default low opacity so the blur displays cleanly */
+  opacity: 1 !important; 
+  
+  /* Smooth fade-in transition matching Bootstrap's timing */
+  transition: backdrop-filter 0.15s linear, background-color 0.15s linear;
 }
+
+/* When the order modal is active, target any OTHER open modal behind it */
+body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
+  filter: blur(6px) brightness(0.5); /* Blurs and darkens the menu modal */
+  pointer-events: none;              /* Disables clicking anything on the menu modal */
+  transition: filter 0.25s ease, brightness 0.25s ease;
+}
+
 
   </style>
 
@@ -2973,18 +2990,13 @@ section.py-5 {
           <div class="d-flex align-items-center justify-content-between">
             <span class="menu-price-modal">₱${parseFloat(item.price).toFixed(2)}</span>
           </div>
+
           <!-- Client btn -->
+
           <button class="btn-add-modal client-btn-modal" onclick="openOrderModal(${item.id})">
             <span class="material-icons" style="font-size:15px;">add_shopping_cart</span> Add to Order
           </button>
-          <!-- Admin btns -->
-          <div class="admin-btns-modal">
-            <button class="btn-edit-modal" onclick="openCrudModal('edit',${item.id})" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-              <span class="material-icons" style="font-size:14px;margin-right:3px;">edit</span>Edit
-            </button>
-            <button class="btn-del-modal" onclick="openDeleteConfirm(${item.id})">
-              <span class="material-icons" style="font-size:16px;">delete</span>
-            </button>
+          
           </div>
         </div>
       </div>
