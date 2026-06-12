@@ -2385,6 +2385,8 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
               </div>
             </div>
           </div>
+
+          
           <div id="addonsSection" class="mb-4">
             <label class="form-label-custom mb-2">Add-ons</label>
             <div id="addonsList"></div>
@@ -2761,48 +2763,56 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     };
 
     const DRINK_ADDONS = [
-      { id: "extra_shot", label: "Extra Espresso Shot", price: 25 },
-      { id: "oat_milk", label: "Oat Milk Alternative", price: 30 },
-      { id: "almond_milk", label: "Almond Milk", price: 30 },
-      { id: "soy_milk", label: "Soy Milk", price: 25 },
-      { id: "vanilla_syrup", label: "Vanilla Syrup", price: 20 },
-      { id: "caramel_syrup", label: "Caramel Syrup", price: 20 },
-      { id: "hazelnut", label: "Hazelnut Syrup", price: 20 },
-      { id: "mocha_syrup", label: "Mocha Syrup", price: 20 },
-      { id: "boba", label: "Tapioca Pearls (Boba)", price: 30 },
-      { id: "coffee_jelly", label: "Coffee Jelly", price: 25 },
-      { id: "nata", label: "Nata de Coco", price: 20 },
-      { id: "popping_boba", label: "Popping Boba", price: 30 },
-      { id: "whipped", label: "Whipped Cream", price: 20 },
-      { id: "sea_salt", label: "Sea Salt Foam", price: 25 },
-      { id: "cream_cheese", label: "Cream Cheese Puff", price: 25 },
-    ];
-    const FOOD_ADDONS = [
-      { id: "extra_bacon", label: "Extra Bacon", price: 35 },
-      { id: "extra_ham", label: "Extra Ham", price: 30 },
-      { id: "grilled_chx", label: "Grilled Chicken Slice", price: 45 },
-      { id: "extra_pepperoni", label: "Extra Pepperoni", price: 35 },
-      { id: "extra_patty", label: "Extra Patty", price: 55 },
-      { id: "extra_egg_fried", label: "Extra Egg (Fried)", price: 20 },
-      { id: "extra_egg_scr", label: "Extra Egg (Scrambled)", price: 20 },
-      { id: "extra_egg_poa", label: "Extra Egg (Poached)", price: 25 },
-      { id: "cheddar", label: "Extra Cheddar Cheese", price: 25 },
-      { id: "mozzarella", label: "Extra Mozzarella", price: 30 },
-      { id: "parmesan", label: "Parmesan (Grated)", price: 25 },
-      { id: "extra_rice", label: "Extra Plain Rice", price: 15 },
-      { id: "garlic_rice", label: "Extra Garlic Rice", price: 20 },
-      { id: "gravy", label: "Extra Gravy", price: 15 },
-      { id: "mayo", label: "Extra Mayo", price: 10 },
-      { id: "ketchup", label: "Extra Ketchup", price: 10 },
-      { id: "salad_dressing", label: "Extra Salad Dressing", price: 15 },
-      { id: "garlic_butter", label: "Garlic Butter Dip", price: 15 },
-      { id: "ice_cream", label: "Extra Scoop of Ice Cream", price: 40 },
-      { id: "choc_drizzle", label: "Chocolate Drizzle", price: 20 },
-      { id: "caramel_drizzle", label: "Caramel Drizzle", price: 20 },
-      { id: "crushed_cookies", label: "Crushed Cookies", price: 20 },
-      { id: "fresh_fruits", label: "Fresh Fruits (Banana/Strawberry)", price: 30 },
-    ];
+  // Base & Milk
+  { id: "extra_shot", label: "Extra Espresso Shot", price: 25, category: "Base & Milk" },
+  { id: "oat_milk", label: "Oat Milk Alternative", price: 30, category: "Base & Milk" },
+  { id: "almond_milk", label: "Almond Milk", price: 30, category: "Base & Milk" },
+  { id: "soy_milk", label: "Soy Milk", price: 25, category: "Base & Milk" },
+  // Syrups
+  { id: "vanilla_syrup", label: "Vanilla Syrup", price: 20, category: "Syrups" },
+  { id: "caramel_syrup", label: "Caramel Syrup", price: 20, category: "Syrups" },
+  { id: "hazelnut", label: "Hazelnut Syrup", price: 20, category: "Syrups" },
+  { id: "mocha_syrup", label: "Mocha Syrup", price: 20, category: "Syrups" },
+  // Sinkers
+  { id: "boba", label: "Tapioca Pearls (Boba)", price: 30, category: "Sinkers" },
+  { id: "coffee_jelly", label: "Coffee Jelly", price: 25, category: "Sinkers" },
+  { id: "nata", label: "Nata de Coco", price: 20, category: "Sinkers" },
+  { id: "popping_boba", label: "Popping Boba", price: 30, category: "Sinkers" },
+  // Toppings
+  { id: "whipped", label: "Whipped Cream", price: 20, category: "Toppings" },
+  { id: "sea_salt", label: "Sea Salt Foam", price: 25, category: "Toppings" },
+  { id: "cream_cheese", label: "Cream Cheese Puff", price: 25, category: "Toppings" },
+];
 
+const FOOD_ADDONS = [
+  // Meats & Proteins
+  { id: "extra_bacon", label: "Extra Bacon", price: 35, category: "Meats & Proteins" },
+  { id: "extra_ham", label: "Extra Ham", price: 30, category: "Meats & Proteins" },
+  { id: "grilled_chx", label: "Grilled Chicken Slice", price: 45, category: "Meats & Proteins" },
+  { id: "extra_pepperoni", label: "Extra Pepperoni", price: 35, category: "Meats & Proteins" },
+  { id: "extra_patty", label: "Extra Patty", price: 55, category: "Meats & Proteins" },
+  // Eggs & Dairy
+  { id: "extra_egg_fried", label: "Extra Egg (Fried)", price: 20, category: "Eggs & Dairy" },
+  { id: "extra_egg_scr", label: "Extra Egg (Scrambled)", price: 20, category: "Eggs & Dairy" },
+  { id: "extra_egg_poa", label: "Extra Egg (Poached)", price: 25, category: "Eggs & Dairy" },
+  { id: "cheddar", label: "Extra Cheddar Cheese", price: 25, category: "Eggs & Dairy" },
+  { id: "mozzarella", label: "Extra Mozzarella", price: 30, category: "Eggs & Dairy" },
+  { id: "parmesan", label: "Parmesan (Grated)", price: 25, category: "Eggs & Dairy" },
+  // Rice & Sides
+  { id: "extra_rice", label: "Extra Plain Rice", price: 15, category: "Rice & Sides" },
+  { id: "garlic_rice", label: "Extra Garlic Rice", price: 20, category: "Rice & Sides" },
+  { id: "gravy", label: "Extra Gravy", price: 15, category: "Rice & Sides" },
+  { id: "mayo", label: "Extra Mayo", price: 10, category: "Rice & Sides" },
+  { id: "ketchup", label: "Extra Ketchup", price: 10, category: "Rice & Sides" },
+  { id: "salad_dressing", label: "Extra Salad Dressing", price: 15, category: "Rice & Sides" },
+  { id: "garlic_butter", label: "Garlic Butter Dip", price: 15, category: "Rice & Sides" },
+  // Sweets & Drizzles
+  { id: "ice_cream", label: "Extra Scoop of Ice Cream", price: 40, category: "Sweets & Drizzles" },
+  { id: "choc_drizzle", label: "Chocolate Drizzle", price: 20, category: "Sweets & Drizzles" },
+  { id: "caramel_drizzle", label: "Caramel Drizzle", price: 20, category: "Sweets & Drizzles" },
+  { id: "crushed_cookies", label: "Crushed Cookies", price: 20, category: "Sweets & Drizzles" },
+  { id: "fresh_fruits", label: "Fresh Fruits", price: 30, category: "Sweets & Drizzles" },
+];
     /* ════════════════════════════════════════════
        INIT
        ════════════════════════════════════════════ */
@@ -3042,14 +3052,33 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       document.getElementById('drinkAdjustments').style.display = isDrink ? '' : 'none';
       document.getElementById('sizeSection').style.display = isDrink ? '' : 'none';
 
-      const addons = isDrink ? DRINK_ADDONS : FOOD_ADDONS;
-      document.getElementById('addonsList').innerHTML = addons.map(a => `
-    <div class="addon-row">
-      <input type="checkbox" class="addon-check" id="addon_${a.id}" data-price="${a.price}" onchange="recalcTotal()">
-      <label for="addon_${a.id}" style="cursor:pointer;flex:1;">${a.label}</label>
-      <span class="addon-price">+₱${a.price}</span>
-    </div>
-  `).join('');
+     const addons = isDrink ? DRINK_ADDONS : FOOD_ADDONS;
+      
+      // Group the addons by their category
+      const groupedAddons = addons.reduce((acc, addon) => {
+        if (!acc[addon.category]) acc[addon.category] = [];
+        acc[addon.category].push(addon);
+        return acc;
+      }, {});
+
+      // Build the HTML dynamically using a single vertical list
+      let addonsHTML = '';
+      for (const [category, items] of Object.entries(groupedAddons)) {
+        addonsHTML += `
+          <div class="mb-3">
+            <h6 style="font-size: .75rem; font-weight: 700; color: var(--brand); margin: 0 0 10px; text-transform: uppercase; letter-spacing: 1px;">${category}</h6>
+            ${items.map(a => `
+              <div class="addon-row">
+                <input type="checkbox" class="addon-check" id="addon_${a.id}" data-price="${a.price}" onchange="recalcTotal()">
+                <label for="addon_${a.id}" style="cursor:pointer;flex:1;">${a.label}</label>
+                <span class="addon-price">+₱${a.price}</span>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+      
+      document.getElementById('addonsList').innerHTML = addonsHTML;
 
       // Reset selections
       const medRadio = document.querySelector('input[name="orderSize"][value="Medium"]');
