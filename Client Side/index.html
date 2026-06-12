@@ -2116,61 +2116,52 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
   <!-- ═══════════════════ FOOTER ═══════════════════ -->
  <footer class="site-footer" id="contact-section" style="padding: 60px 0 30px; background-color: #0d0a08; color: #b0a89a;">
-  <div class="container">
-    
-    <div class="d-flex flex-wrap gap-5 align-items-start justify-content-between">
+    <div class="container">
       
-      <div style="flex: 1 1 350px;">
-        <div class="d-flex align-items-center gap-2 mb-3">
-          <img src="assets/logo.png" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" 
-               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';" alt="Logo">
-          <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: #F8F4E1;">Sip & Pulse</span>
-        </div>
+      <div class="d-flex flex-wrap gap-5 align-items-start justify-content-between">
         
-        <p style="font-size:.85rem; line-height:1.6; margin-bottom:15px; color: #b0a89a;">
-          <span class="material-icons align-middle me-1" style="font-size:16px;color:var(--brand);">location_on</span>
-          Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas, Batangas
-        </p>
-        
-        <div style="font-size:.82rem; line-height:2;">
-          <div style="color: #E1DCC9;"><strong>Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
-          <div><strong>Phone:</strong> +63 912 345 6789</div>
-          <div><strong>Email:</strong> marketing@sipandpulse.ph</div>
+        <div style="flex: 1 1 300px;">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <img src="assets/logo.png" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" 
+                 onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';" alt="Logo">
+            <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: #F8F4E1;">Sip & Pulse</span>
+          </div>
+          
+          <p style="font-size:.95rem; line-height:1.6; margin-bottom:20px; color: #b0a89a; max-width: 350px;">
+            <span class="material-icons align-middle me-1" style="font-size:16px;color:var(--brand);">location_on</span>
+            Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas, Batangas
+          </p>
+          
+          <div style="font-size:.85rem; line-height:2.2;">
+            <div style="color: #E1DCC9;"><strong>Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
+            <div><strong>Phone:</strong> +63 912 345 6789</div>
+            <div><strong>Email:</strong> marketing@sipandpulse.ph</div>
+          </div>
         </div>
+
+        <div style="flex: 0 0 600px; width: 100%;">
+          <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Find Us</p>
+          <div class="map-embed-wrap" style="height: 220px; border-radius: 12px; border: 1px solid #412D15; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+            <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph" allowfullscreen="" loading="lazy" style="width: 100%; height: 100%; border: 0;"></iframe>
+          </div>
+        </div>
+
       </div>
 
-      <div style="flex: 0 0 auto; text-align: center;">
-        <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Navigate</p>
-        <div class="d-flex gap-3 justify-content-center">
-          <a href="#home-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Home</a>
-          <a href="#about-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">About</a>
-          <a href="#menu-preview-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Menu</a>
-          <a href="#careers-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Jobs</a>
-        </div>
+      <hr style="border-color:#412D15; opacity:1; margin: 40px 0 20px;">
+      
+      <div class="d-flex justify-content-between align-items-center">
+        <p style="font-size:.75rem; color:#6b665c; margin:0;">© 2026 Sip & Pulse Cafe.</p>
+        <a href="#home-section" title="Back to top" 
+           style="background-color: transparent; color: #b0a89a; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; border: 1.5px solid #412D15; transition: all 0.3s;" 
+           onmouseover="this.style.backgroundColor='var(--brand)'; this.style.color='#F8F4E1';" 
+           onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b0a89a';">
+          <span class="material-icons" style="font-size: 18px;">arrow_upward</span>
+        </a>
       </div>
-
-      <div style="flex: 0 0 350px; width: 100%;">
-        <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Find Us</p>
-        <div class="map-embed-wrap" style="height: 140px; border-radius: 12px; border: 1px solid #412D15;">
-          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph" allowfullscreen="" loading="lazy" style="width: 100%; height: 100%; border: 0;"></iframe>
-        </div>
-      </div>
-
+      
     </div>
-
-    <hr style="border-color:#412D15; opacity:1; margin: 40px 0 20px;">
-    
-    <div class="d-flex justify-content-between align-items-center">
-      <p style="font-size:.75rem; color:#6b665c; margin:0;">© 2026 Sip & Pulse Cafe.</p>
-      <a href="#home-section" title="Back to top" style="color: #b0a89a; border: 1px solid #412D15; border-radius: 50%; padding: 8px; display: flex; align-items: center; justify-content: center; text-decoration:none; transition: all 0.3s;" 
-         onmouseover="this.style.backgroundColor='var(--brand)'; this.style.color='#F8F4E1';" 
-         onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b0a89a';">
-        <span class="material-icons" style="font-size: 18px;">arrow_upward</span>
-      </a>
-    </div>
-    
-  </div>
-</footer>
+  </footer>
  
     
 
