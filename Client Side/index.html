@@ -462,25 +462,32 @@
     }
 
     /* ── FULL MENU MODAL ── */
-    #fullMenuModal .modal-content {
-      border-radius: 0;
-      border: none;
-    }
+  
 
     #fullMenuModal .modal-dialog {
       margin: 0;
     }
 
-    .menu-modal-bg {
-      background: url('https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=1800&q=80') center/cover no-repeat fixed;
-      min-height: 100vh;
-    }
+   /* Ensure the modal content covers everything with a blur */
+#fullMenuModal .modal-content {
+  background: transparent; /* Make the modal container transparent */
+  border: none;
+}
 
-    .menu-modal-overlay {
-      background: rgba(31, 21, 12, .88);
-      min-height: 100vh;
-      padding: 20px 0 80px;
-    }
+.menu-modal-bg {
+  /* This creates the blur layer */
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  min-height: 100vh;
+  width: 100%;
+}
+
+.menu-modal-overlay {
+  /* Darker, more opaque overlay to hide the "busyness" underneath */
+  background: rgba(31, 21, 12, 0.92); 
+  min-height: 100vh;
+  padding: 20px 0 80px;
+}
 
     .menu-modal-close-btn {
       position: fixed;
@@ -1691,6 +1698,56 @@ section.py-5 {
   z-index: 2;
 }
 
+/* Custom Button Pop Effect */
+.btn-view-menu {
+  background-color: var(--brand); /* Uses your defined brown brand color */
+  color: #F8F4E1;
+  border: none;
+  border-radius: 30px;
+  padding: 14px 32px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 6px 20px rgba(116, 81, 45, 0.3);
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-view-menu:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(116, 81, 45, 0.5);
+  background-color: var(--brand-dark); /* Darker shade on hover */
+  color: #FFFFFF;
+}
+
+.btn-view-menu:active {
+  transform: translateY(0);
+}
+
+/* Make the modal feel 'thicker' and more premium */
+#orderModal .modal-content {
+  border: 1px solid rgba(175, 143, 111, 0.3); /* Subtle border */
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);  /* Deep shadow for 'thickness' */
+  border-radius: 24px;                         /* Softer, more tactile corners */
+  padding: 10px;                               /* Adds interior padding */
+}
+
+/* Blur the background when any modal is open */
+.modal-backdrop.show {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background-color: rgba(31, 21, 12, 0.6); /* Slightly adjust transparency here */
+}
+
+/* Ensure the modal animation feels smooth and substantial */
+.modal.fade .modal-dialog {
+  transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: scale(0.95);
+}
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+
   </style>
 
   </style>
@@ -1878,9 +1935,12 @@ section.py-5 {
         <p class="section-eyebrow mb-2">Taste the Magic</p>
         <h2 class="section-title mb-0" style="font-size: clamp(2rem, 4vw, 2.75rem);">Crowd Favorites</h2>
       </div>
-      <button class="btn-outline-custom mt-3 mt-md-0" id="openFullMenuBtn" style="border-radius: 30px; padding: 10px 24px;">
-        View Full Menu <span class="material-icons ms-2" style="font-size:18px; vertical-align:middle;">east</span>
-      </button>
+    
+
+     <button class="btn-view-menu mt-3 mt-md-0" id="openFullMenuBtn">
+  View Full Menu 
+  <span class="material-icons ms-2" style="font-size:18px; vertical-align:middle;">east</span>
+</button>
     </div>
 
     <div class="row g-4">
@@ -2130,52 +2190,37 @@ section.py-5 {
   </footer>
 
 
-  <!-- ══════════════════════════════════════════════
-     FULL MENU MODAL (floating, with cafe bg image)
-     ══════════════════════════════════════════════ -->
   <div class="modal fade" id="fullMenuModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen" style="margin:0;">
-      <div class="modal-content" style="border-radius:0;border:none;">
-        <div class="menu-modal-bg">
-          <div class="menu-modal-overlay">
-            <!-- Close button only (no nav bar) -->
-            <button class="menu-modal-close-btn" data-bs-dismiss="modal" title="Close menu">
-              <span class="material-icons">close</span>
-            </button>
+  <div class="modal-dialog modal-fullscreen" style="margin:0;">
+    <div class="modal-content" style="border-radius:0;border:none;">
+      <div class="menu-modal-bg">
+        <div class="menu-modal-overlay">
+          <button class="menu-modal-close-btn" data-bs-dismiss="modal" title="Close menu">
+            <span class="material-icons">close</span>
+          </button>
 
-            <div class="container pt-4">
-              <!-- Header -->
-              <div class="text-center mb-4">
-                <p
-                  style="font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:6px;">
-                  Our Offerings</p>
-                <h2 style="font-family:'Playfair Display',serif;font-weight:700;color:#F8F4E1;font-size:2rem;">The Full
-                  Menu</h2>
+          <div class="sticky-top" style="background: rgba(31, 21, 12, 0.98); padding-top: 20px; z-index: 10; border-bottom: 1px solid rgba(175, 143, 111, 0.2);">
+            <div class="container text-center">
+              <div class="mb-3">
+                <p style="font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:6px;">
+                  Our Offerings
+                </p>
+                <h2 style="font-family:'Playfair Display',serif;font-weight:700;color:#F8F4E1;font-size:2rem;margin-bottom:15px;">
+                  The Full Menu
+                </h2>
               </div>
 
-              <!-- Search bar -->
               <div class="row justify-content-center mb-3">
                 <div class="col-md-6">
                   <div class="search-icon-wrap">
                     <span class="material-icons">search</span>
-                    <input class="menu-search-bar" type="search" id="menuSearchInput" placeholder="Search menu items…"
-                      oninput="filterMenuBySearch(this.value)">
+                    <input class="menu-search-bar" type="search" id="menuSearchInput" 
+                           placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
                   </div>
                 </div>
               </div>
 
-              <!-- Admin: Add item btn -->
-              <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                <div></div>
-                <button id="addItemAdminBtn" class="btn-primary-custom"
-                  style="width:auto;padding:10px 20px;background:#74512D;" onclick="openCrudModal('add')"
-                  data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                  <span class="material-icons" style="font-size:18px;">add_circle</span> Add Menu Item
-                </button>
-              </div>
-
-              <!-- Category bar -->
-              <div class="cat-bar-modal mb-4" id="categoryBarModal">
+              <div class="cat-bar-modal mb-3" id="categoryBarModal" style="padding-bottom: 10px;">
                 <button class="cat-btn-modal active" data-cat="all">All Items</button>
                 <button class="cat-btn-modal" data-cat="espresso">Espresso & Hot Brews</button>
                 <button class="cat-btn-modal" data-cat="iced">Iced & Cold Brews</button>
@@ -2194,7 +2239,22 @@ section.py-5 {
                 <button class="cat-btn-modal" data-cat="desserts">Desserts</button>
                 <button class="cat-btn-modal" data-cat="pastries">Pastries & Baked Goods</button>
               </div>
+            </div>
+          </div>
 
+          <div class="container pt-3">
+            <div class="row g-3" id="menuGridModal"></div>
+            <div id="emptyStateModal" class="text-center py-5 d-none">
+              <span class="material-icons" style="font-size:3rem;color:rgba(175,143,111,.5);">search_off</span>
+              <p style="color:rgba(225,220,201,.6);font-size:.9rem;margin-top:8px;">No items found.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
               <!-- Menu grid -->
               <div class="row g-3" id="menuGridModal"></div>
               <div id="emptyStateModal" class="text-center py-5 d-none">
