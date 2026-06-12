@@ -2087,7 +2087,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <label class="form-label-custom">Your Name</label>
             <div class="input-group-custom">
               <span class="material-icons">person</span>
-              <input type="text" class="form-control-custom" id="reviewName" placeholder="e.g. Maria Santos">
+              
             </div>
           </div>
           <div class="mb-3">
@@ -2452,6 +2452,36 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <span class="material-icons" style="font-size:17px;">add_shopping_cart</span> Continue Ordering
           </button>
         </div>
+
+<!-- ══ LOG IN MODAL ══ -->
+        <div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+      <div class="modal-content" style="background-color: var(--bg-surface); border: 1px solid var(--border); border-radius: 16px;">
+        <div class="modal-header" style="border-bottom: 1px solid rgba(175, 143, 111, .3);">
+          <h5 class="modal-title section-title" style="font-size: 1.25rem;">Sign In Required</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body text-center p-4">
+          <span class="material-icons mb-3" style="font-size: 48px; color: var(--brand);">account_circle</span>
+          <p style="color: var(--text-dim); font-size: 0.9rem; margin-bottom: 24px;">Please log in with your account to add items to your cart and post public reviews.</p>
+          
+          <button class="btn w-100 mb-3 d-flex align-items-center justify-content-center gap-2" 
+                  style="background: #fff; border: 1px solid #ddd; border-radius: 30px; padding: 12px; font-weight: 600; color: #3c4043; transition: background 0.2s;" 
+                  onclick="simulateSocialLogin('Google')">
+            <img src="https://www.svgrepo.com/show/475656/google-color.svg" style="width: 20px; height: 20px;" alt="Google">
+            Continue with Google
+          </button>
+
+          <button class="btn w-100 d-flex align-items-center justify-content-center gap-2" 
+                  style="background: #1877F2; border: none; border-radius: 30px; padding: 12px; font-weight: 600; color: #fff; transition: opacity 0.2s;" 
+                  onclick="simulateSocialLogin('Facebook')">
+            <img src="https://www.svgrepo.com/show/475647/facebook-color.svg" style="width: 20px; height: 20px; filter: brightness(0) invert(1);" alt="Facebook">
+            Continue with Facebook
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ══ ADMIN CRUD MODAL ══ -->
   <div class="modal fade" id="adminCrudModal" tabindex="-1" aria-hidden="true">
