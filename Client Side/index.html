@@ -989,30 +989,7 @@
     }
 
     /* ── FOOTER ── */
-    .site-footer {
-      background-color: var(--bg-surface);
-      border-top: 1px solid var(--border);
-      padding: 36px 0 24px;
-    }
-
-    .footer-brand {
-      font-family: 'Playfair Display', serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--text-main);
-    }
-
-    .footer-link {
-      color: var(--text-dim);
-      font-size: .82rem;
-      text-decoration: none;
-      transition: color var(--transition);
-    }
-
-    .footer-link:hover {
-      color: var(--brand);
-    }
-
+   .site-footer
     /* ── ORDER MODAL SCROLL FIX ── */
     #orderModal .modal-content {
       display: flex;
@@ -1764,6 +1741,74 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
   transition: filter 0.25s ease, brightness 0.25s ease;
 }
 
+/* ── CUSTOM ANONYMOUS CHECKBOX ── */
+    .custom-checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: var(--bg-surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      transition: all var(--transition);
+    }
+
+    .custom-checkbox-wrap:hover {
+      border-color: var(--brand);
+      background-color: color-mix(in srgb, var(--brand) 5%, transparent);
+    }
+
+    .custom-checkbox-wrap input {
+      display: none; /* Hides the ugly default checkbox */
+    }
+
+    .custom-checkbox-box {
+      width: 20px;
+      height: 20px;
+      border: 1.5px solid var(--border);
+      border-radius: 6px;
+      background-color: var(--bg-body);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.25s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    /* The Checkmark */
+    .custom-checkbox-box::after {
+      content: "";
+      width: 5px;
+      height: 10px;
+      border: solid #F8F4E1; /* Light color for contrast */
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg) scale(0);
+      transition: transform 0.2s ease;
+      margin-bottom: 2px; /* Optical alignment */
+    }
+
+    /* Checked States */
+    .custom-checkbox-wrap input:checked + .custom-checkbox-box {
+      background-color: var(--brand);
+      border-color: var(--brand);
+    }
+
+    .custom-checkbox-wrap input:checked + .custom-checkbox-box::after {
+      transform: rotate(45deg) scale(1);
+    }
+
+    .custom-checkbox-label {
+      font-size: .85rem;
+      color: var(--text-dim);
+      font-weight: 600;
+      transition: color var(--transition);
+    }
+
+    .custom-checkbox-wrap input:checked ~ .custom-checkbox-label {
+      color: var(--brand);
+    }
 
   </style>
 
@@ -2050,161 +2095,84 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <textarea class="form-control-custom" id="reviewComment"
               placeholder="Share your experience with our brews..."></textarea>
           </div>
+            <label class="custom-checkbox-wrap mb-3">
+  <input type="checkbox" id="reviewAnonymous">
+  <div class="custom-checkbox-box"></div>
+  <span class="custom-checkbox-label">Post anonymously</span>
+</label>
           <div class="text-end">
             <button class="btn-primary-custom" style="width:auto;padding:10px 28px;" onclick="submitReview()">Post
               Review</button>
+           
+
           </div>
         </div>
       </div>
       <div class="row g-4" id="reviewsFeed"></div>
     </div>
   </section>
-
-  <!-- ═══════════════════ CAREERS ═══════════════════ -->
-  <section id="careers-section" class="py-5" style="background-color:var(--bg-body);">
-    <div class="container">
-      <div class="text-center mb-5">
-        <p class="section-eyebrow mb-1">Opportunities</p>
-        <h2 class="section-title">Careers</h2>
-      </div>
-      <div class="row g-4 justify-content-center">
-        <div class="col-md-5">
-          <div class="careers-card">
-            <div class="careers-icon"><span class="material-icons" style="font-size:3rem;">work</span></div>
-            <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:10px;">Get Hired!</h4>
-            <p style="color:var(--text-dim);font-size:.9rem;line-height:1.7;margin-bottom:24px;">We are looking for
-              passionate Baristas, cashiers, and customer support staff. Bring your energy and join our growing team!
-            </p>
-            <div style="display:flex;justify-content:center;">
-              <button class="btn-primary-custom" style="width:auto;padding:11px 32px;" data-bs-toggle="modal"
-                data-bs-target="#applyModal">
-                <span class="material-icons" style="font-size:17px;">send</span> Apply Now!
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="col-md-5">
-          <div class="careers-card">
-            <div class="careers-icon"><span class="material-icons" style="font-size:3rem;">store</span></div>
-            <h4 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:10px;">Own a Cafe!</h4>
-            <p style="color:var(--text-dim);font-size:.9rem;line-height:1.7;margin-bottom:24px;">Dream of running your
-              own Sip & Pulse outlet? Partner with us through our franchise program and start your entrepreneurial
-              journey.</p>
-            <div style="display:flex;justify-content:center;">
-              <button class="btn-primary-custom" style="width:auto;padding:11px 32px;" data-bs-toggle="modal"
-                data-bs-target="#franchiseModal">
-                <span class="material-icons" style="font-size:17px;">handshake</span> Franchise Now!
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════ LOCATION ═══════════════════ -->
-  <section id="contact-section" class="py-5" style="background-color:var(--bg-surface);">
-    <div class="container text-center">
-      <p class="section-eyebrow mb-1">Find Us</p>
-      <h2 class="section-title">Location</h2>
-      <p style="color:var(--text-dim);font-size:1rem;line-height:1.75;margin:14px auto 0;max-width:520px;">
-        <span class="material-icons align-middle" style="color:var(--brand);font-size:1.5rem;">location_on</span>
-        <strong>Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas 4324, Batangas,
-          Philippines</strong>
-      </p>
-    </div>
-  </section>
-
-  <!-- ═══════════════════ CONTACT + MAP ═══════════════════ -->
-  <section class="container py-5">
-    <div class="row g-4 align-items-start">
-      <div class="col-md-5">
-        <p class="section-eyebrow mb-1">Get in Touch</p>
-        <h2 class="section-title">Contact Us</h2>
-        <p style="color:var(--text-dim);font-size:.875rem;line-height:1.85;margin-top:14px;">
-          Have questions or inquiries? We'd love to hear from you.<br><br>
-          <strong>Hours:</strong> Everyday · 7:00 AM – 9:00 PM<br>
-          <strong>Phone:</strong> +63 912 345 6789<br>
-          <strong>Email:</strong> marketing@sipandpulse.ph
-        </p>
-      </div>
-      <div class="col-md-7">
-        <div class="map-embed-wrap">
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph"
-            allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade">
-          </iframe>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══════════════════ SUBSCRIBE ═══════════════════ -->
-  <section class="subscribe-section">
-    <div class="container text-center">
-      <p class="section-eyebrow mb-2">Stay Updated</p>
-      <h3 class="section-title">Subscribe for more updates!</h3>
-      <p style="color:var(--text-dim);font-size:.875rem;">Promotions, new products and exclusive sales delivered
-        straight to your inbox.</p>
-      <div class="row justify-content-center mt-4">
-        <div class="col-md-5">
-          <div class="d-flex gap-2">
-            <input type="email" class="form-control-custom" id="subscribeEmail" placeholder="My Email Address"
-              style="flex:1;">
-            <button class="btn-primary-custom" style="width:auto;padding:10px 22px;flex-shrink:0;"
-              onclick="handleSubscribe()">Subscribe</button>
-          </div>
-          <p class="subscribe-success-msg d-none mt-2" id="subscribeSuccess"
-            style="color:#1a7c4a;font-size:.85rem;font-weight:600;">
-            <span class="material-icons align-middle" style="font-size:16px;">check_circle</span> Subscribed
-            Successfully!
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
+ 
+  
 
   <!-- ═══════════════════ FOOTER ═══════════════════ -->
-  <footer class="site-footer" id="footer-section">
-    <div class="container">
-      <div class="row g-4 mb-4">
-        <div class="col-md-4">
-          <div class="d-flex align-items-center gap-2 mb-2">
-            <img
-              src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png"
-              style="width:34px;height:34px;border-radius:50%;object-fit:cover;"
-              onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';"
-              alt="Logo">
-            <span class="footer-brand">Sip & Pulse</span>
-          </div>
-          <p style="font-size:.82rem;color:var(--text-dim);margin-top:4px;">Your daily beat of flavor and energy.</p>
+ <footer class="site-footer" id="contact-section" style="padding: 60px 0 30px; background-color: #0d0a08; color: #b0a89a;">
+  <div class="container">
+    
+    <div class="d-flex flex-wrap gap-5 align-items-start justify-content-between">
+      
+      <div style="flex: 1 1 350px;">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <img src="assets/logo.png" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" 
+               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';" alt="Logo">
+          <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: #F8F4E1;">Sip & Pulse</span>
         </div>
-        <div class="col-6 col-md-2">
-          <p
-            style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px;">
-            Menu</p>
-          <div class="d-flex flex-column gap-2">
-            <a href="#menu-preview-section" class="footer-link">Beverages</a>
-            <a href="#menu-preview-section" class="footer-link">Food & Meals</a>
-            <a href="#menu-preview-section" class="footer-link">Best Sellers</a>
-          </div>
-        </div>
-        <div class="col-6 col-md-2">
-          <p
-            style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin-bottom:10px;">
-            Info</p>
-          <div class="d-flex flex-column gap-2">
-            <a href="#about-section" class="footer-link">About Us</a>
-            <a href="#reviews-section" class="footer-link">Reviews</a>
-            <a href="#contact-section" class="footer-link">Contact</a>
-          </div>
+        
+        <p style="font-size:.85rem; line-height:1.6; margin-bottom:15px; color: #b0a89a;">
+          <span class="material-icons align-middle me-1" style="font-size:16px;color:var(--brand);">location_on</span>
+          Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas, Batangas
+        </p>
+        
+        <div style="font-size:.82rem; line-height:2;">
+          <div style="color: #E1DCC9;"><strong>Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
+          <div><strong>Phone:</strong> +63 912 345 6789</div>
+          <div><strong>Email:</strong> marketing@sipandpulse.ph</div>
         </div>
       </div>
-      <hr style="border-color:var(--border);opacity:1;">
-      <p style="font-size:.78rem;color:var(--text-dim);text-align:center;margin:0;">© 2026 Sip & Pulse Cafe · All Rights
-        Reserved.</p>
+
+      <div style="flex: 0 0 auto; text-align: center;">
+        <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Navigate</p>
+        <div class="d-flex gap-3 justify-content-center">
+          <a href="#home-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Home</a>
+          <a href="#about-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">About</a>
+          <a href="#menu-preview-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Menu</a>
+          <a href="#careers-section" style="text-decoration:none; color:#b0a89a; font-size: 0.85rem;">Jobs</a>
+        </div>
+      </div>
+
+      <div style="flex: 0 0 350px; width: 100%;">
+        <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Find Us</p>
+        <div class="map-embed-wrap" style="height: 140px; border-radius: 12px; border: 1px solid #412D15;">
+          <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph" allowfullscreen="" loading="lazy" style="width: 100%; height: 100%; border: 0;"></iframe>
+        </div>
+      </div>
+
     </div>
-  </footer>
+
+    <hr style="border-color:#412D15; opacity:1; margin: 40px 0 20px;">
+    
+    <div class="d-flex justify-content-between align-items-center">
+      <p style="font-size:.75rem; color:#6b665c; margin:0;">© 2026 Sip & Pulse Cafe.</p>
+      <a href="#home-section" title="Back to top" style="color: #b0a89a; border: 1px solid #412D15; border-radius: 50%; padding: 8px; display: flex; align-items: center; justify-content: center; text-decoration:none; transition: all 0.3s;" 
+         onmouseover="this.style.backgroundColor='var(--brand)'; this.style.color='#F8F4E1';" 
+         onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b0a89a';">
+        <span class="material-icons" style="font-size: 18px;">arrow_upward</span>
+      </a>
+    </div>
+    
+  </div>
+</footer>
+ 
+    
 
 
   <div class="modal fade" id="fullMenuModal" tabindex="-1" aria-hidden="true">
@@ -2462,11 +2430,30 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
           <button class="btn-primary-custom mt-3" style="width:auto;padding:10px 28px;"
             data-bs-dismiss="modal">Close</button>
         </div>
+
+
         <div class="modal-footer-custom" id="cartFooter">
-          <div class="order-total-row">
+          
+          <div class="mb-3 w-100 text-start" id="paymentMethodContainer">
+            <label class="form-label-custom mb-2">Payment Method</label>
+            <div class="seg-control">
+              <input type="radio" name="payment" id="pay_cash" value="Cash" checked>
+              <label for="pay_cash">
+                <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">payments</span>Cash
+              </label>
+
+              <input type="radio" name="payment" id="pay_gcash" value="E-Wallet">
+              <label for="pay_gcash">
+                <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">account_balance_wallet</span>GCash / Maya
+              </label>
+            </div>
+          </div>
+
+          <div class="order-total-row w-100">
             <span class="order-total-label">Grand Total</span>
             <span class="order-total-amount" id="cartGrandTotal">₱0.00</span>
           </div>
+          
           <button class="btn-primary-custom" id="placeOrderBtn" onclick="placeOrder()" disabled>
             <span class="material-icons" style="font-size:17px;">lock</span> Secure Checkout
           </button>
@@ -2474,9 +2461,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <span class="material-icons" style="font-size:17px;">add_shopping_cart</span> Continue Ordering
           </button>
         </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ══ ADMIN CRUD MODAL ══ -->
   <div class="modal fade" id="adminCrudModal" tabindex="-1" aria-hidden="true">
@@ -3185,11 +3169,15 @@ const FOOD_ADDONS = [
 
     async function placeOrder() {
       let grandTotal = state.cart.reduce((sum, ci) => sum + ci.total, 0);
+      
+      // Grab the selected payment method from the radio buttons
+      const selectedPayment = document.querySelector('input[name="payment"]:checked').value;
 
       const newOrder = {
         orderId: 'ORD-' + Math.floor(100000 + Math.random() * 900000),
         items: state.cart,
         total: grandTotal,
+        paymentMethod: selectedPayment, // Included payment method here!
         status: 'Pending'
       };
 
@@ -3203,7 +3191,7 @@ const FOOD_ADDONS = [
         const result = await response.json();
 
         if (result.success) {
-          // Kapag successful ang save sa database, ipakita ang Success UI
+          // Hide cart details and show the Success UI
           document.getElementById('cartBody').style.display = 'none';
           document.getElementById('cartFooter').style.display = 'none';
           document.getElementById('checkoutSuccess').classList.add('visible');
@@ -3217,12 +3205,6 @@ const FOOD_ADDONS = [
         console.error('Database Connection Error:', error);
         showToast('Server connection error.', true);
       }
-    }
-
-    function continueOrdering() {
-      bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
-      // Open full menu
-      setTimeout(() => new bootstrap.Modal(document.getElementById('fullMenuModal')).show(), 350);
     }
 
     /* ════════════════════════════════════════════
@@ -3317,18 +3299,47 @@ const FOOD_ADDONS = [
   `).join('');
     }
 
-    function submitReview() {
-      const name = document.getElementById('reviewName').value.trim();
+   function submitReview() {
+      let name = document.getElementById('reviewName').value.trim();
       const comment = document.getElementById('reviewComment').value.trim();
       const ratingEl = document.querySelector('input[name="rating"]:checked');
-      if (!name || !comment || !ratingEl) { showToast('Please fill in all review fields and select a rating.', true); return; }
+      const isAnonymous = document.getElementById('reviewAnonymous').checked;
+
+      // Validate: Require comment & rating. Require name ONLY if not anonymous.
+      if (!comment || !ratingEl || (!name && !isAnonymous)) { 
+        showToast('Please fill in all review fields and select a rating.', true); 
+        return; 
+      }
+
       const rating = parseInt(ratingEl.value);
-      const initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-      state.reviews.unshift({ id: Date.now(), name, initials, rating, comment, date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) });
+      let initials;
+
+      // Handle Anonymous vs Named logic
+      if (isAnonymous) {
+        name = "Anonymous";
+        initials = "AN";
+      } else {
+        initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      state.reviews.unshift({ 
+        id: Date.now(), 
+        name, 
+        initials, 
+        rating, 
+        comment, 
+        date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
+      });
+
       renderReviews();
+
+      // Reset the form
       document.getElementById('reviewName').value = '';
       document.getElementById('reviewComment').value = '';
+      document.getElementById('reviewAnonymous').checked = false;
+      document.getElementById('reviewName').disabled = false; // Reset disabled state
       document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
+      
       showToast('Your review has been posted. Thank you!');
     }
 
@@ -3338,46 +3349,7 @@ const FOOD_ADDONS = [
       showToast('Review removed.');
     }
 
-    /* ════════════════════════════════════════════
-       CAREERS
-       ════════════════════════════════════════════ */
-    function submitApplication() {
-      const name = document.getElementById('applyName').value.trim();
-      const email = document.getElementById('applyEmail').value.trim();
-      const position = document.getElementById('applyPosition').value;
-      const cover = document.getElementById('applyCover').value.trim();
-      if (!name || !email || !cover) { showToast('Please fill in all application fields.', true); return; }
-      // XAMPP: POST to php/apply.php
-      showToast(`Application for ${position} submitted! We'll be in touch, ${name}.`);
-      bootstrap.Modal.getInstance(document.getElementById('applyModal')).hide();
-      ['applyName', 'applyEmail', 'applyCover'].forEach(id => document.getElementById(id).value = '');
-    }
-
-    function submitFranchise() {
-      const name = document.getElementById('franchiseName').value.trim();
-      const email = document.getElementById('franchiseEmail').value.trim();
-      const city = document.getElementById('franchiseCity').value.trim();
-      const msg = document.getElementById('franchiseMsg').value.trim();
-      if (!name || !email || !city) { showToast('Please fill in all franchise inquiry fields.', true); return; }
-      // XAMPP: POST to php/franchise.php
-      showToast(`Franchise inquiry received! Our team will contact you within 3–5 business days.`);
-      bootstrap.Modal.getInstance(document.getElementById('franchiseModal')).hide();
-      ['franchiseName', 'franchiseEmail', 'franchiseCity', 'franchiseMsg'].forEach(id => document.getElementById(id).value = '');
-    }
-
-    /* ════════════════════════════════════════════
-       SUBSCRIBE
-       ════════════════════════════════════════════ */
-    function handleSubscribe() {
-      const email = document.getElementById('subscribeEmail').value.trim();
-      if (!email || !email.includes('@')) { showToast('Please enter a valid email address.', true); return; }
-      // XAMPP: POST to php/subscribe.php
-      document.getElementById('subscribeSuccess').classList.remove('d-none');
-      document.getElementById('subscribeEmail').value = '';
-      showToast('Subscribed Successfully!');
-      setTimeout(() => document.getElementById('subscribeSuccess').classList.add('d-none'), 4000);
-    }
-
+   
     /* ════════════════════════════════════════════
        TOAST
        ════════════════════════════════════════════ */
