@@ -3775,17 +3775,43 @@ const FOOD_ADDONS = [
       const fulfillment = document.querySelector('input[name="fulfillment"]:checked')?.value || 'pickup';
       const notes = document.getElementById('orderNotes').value;
       const addons = [];
-      let total = parseFloat(item.price);
-      if (size === 'Medium') total += 20;
-      if (size === 'Large') total += 40;
+      let unitTotal = parseFloat(item.price);
+      if (size === 'Medium') unitTotal += 20;
+      if (size === 'Large') unitTotal += 40;
       document.querySelectorAll('.addon-check:checked').forEach(c => {
         addons.push(c.nextElementSibling.textContent.trim());
-        total += parseFloat(c.dataset.price);
+        unitTotal += parseFloat(c.dataset.price);
       });
-      state.cart.push({ item, size, fulfillment, addons, notes, total, cartId: Date.now() });
-      updateCartBadge();
-      bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
-      showToast(`${item.name} added to your cart!`);
+
+      // Reset confirm button label
+      const confirmBtn = document.querySelector('#orderModal .btn-primary-custom');
+      if (confirmBtn) {
+        confirmBtn.innerHTML = '<span class="material-icons" style="font-size:17px;">check_circle</span> Confirm & Add to Cart';
+      }
+
+      if (state.editingCartId !== null && state.editingCartId !== undefined) {
+        // UPDATE existing cart item
+        const idx = state.cart.findIndex(c => c.cartId === state.editingCartId);
+        if (idx !== -1) {
+          const qty = state.cart[idx].qty || 1;
+          state.cart[idx] = { ...state.cart[idx], size, fulfillment, addons, notes, total: parseFloat((unitTotal * qty).toFixed(2)) };
+        }
+        state.editingCartId = null;
+        updateCartBadge();
+        bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
+        showToast(`${item.name} updated in your cart!`);
+        // Re-open cart modal after order modal closes
+        setTimeout(() => {
+          const cartModal = new bootstrap.Modal(document.getElementById('cartModal'));
+          cartModal.show();
+        }, 350);
+      } else {
+        // ADD new cart item
+        state.cart.push({ item, size, fulfillment, addons, notes, total: parseFloat(unitTotal.toFixed(2)), qty: 1, cartId: Date.now() });
+        updateCartBadge();
+        bootstrap.Modal.getInstance(document.getElementById('orderModal')).hide();
+        showToast(`${item.name} added to your cart!`);
+      }
     }
 
     /* ════════════════════════════════════════════
@@ -3816,24 +3842,125 @@ const FOOD_ADDONS = [
       placeBtn.disabled = false;
       let grand = 0;
       body.innerHTML = state.cart.map(ci => {
+        const unitPrice = ci.total / (ci.qty || 1);
         grand += ci.total;
+        const addonsSummary = ci.addons.length ? ci.addons.join(', ') : '';
+        const fulfillmentLabel = ci.fulfillment === 'pickup' ? 'Pick-up' : 'Delivery';
+        const metaParts = [ci.item.type === 'drink' ? ci.size : null, fulfillmentLabel].filter(Boolean).join(' · ');
         return `
-      <div class="order-item-summary mb-2" style="align-items:flex-start;flex-direction:column;gap:6px;">
-        <div style="display:flex;gap:12px;align-items:center;width:100%;">
-          <img src="${ci.item.img}" class="order-item-thumb" style="width:50px;height:50px;" alt="${ci.item.name}">
-          <div style="flex:1;">
-            <p class="order-item-name mb-0">${ci.item.name}</p>
-            <p style="font-size:.78rem;color:var(--text-dim);margin:2px 0 0;">${ci.size} · ${ci.fulfillment === 'pickup' ? 'Pick-up' : 'Delivery'}</p>
+      <div class="cart-item-row">
+        <div class="cart-item-top">
+          <img src="${ci.item.img}" class="cart-item-thumb" alt="${ci.item.name}"
+               onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
+          <div class="cart-item-info">
+            <p class="cart-item-name">${ci.item.name}</p>
+            <p class="cart-item-meta">${metaParts}</p>
+            ${addonsSummary ? `<p class="cart-addons-line">+ ${addonsSummary}</p>` : ''}
           </div>
-          <span style="font-weight:700;color:var(--brand);font-size:.9rem;">₱${ci.total.toFixed(2)}</span>
-          <button onclick="removeFromCart(${ci.cartId})" style="background:none;border:none;cursor:pointer;color:#c0392b;padding:0 0 0 6px;">
-            <span class="material-icons" style="font-size:18px;">close</span>
+          <span class="cart-item-price">₱${ci.total.toFixed(2)}</span>
+        </div>
+        <div class="cart-item-actions">
+          <div class="qty-stepper">
+            <button class="qty-btn" onclick="updateCartItemQty(${ci.cartId}, -1)" title="Decrease quantity">−</button>
+            <span class="qty-display">${ci.qty || 1}</span>
+            <button class="qty-btn" onclick="updateCartItemQty(${ci.cartId}, 1)" title="Increase quantity">+</button>
+          </div>
+          <button class="cart-edit-btn" onclick="editCartItem(${ci.cartId})">
+            <span class="material-icons" style="font-size:14px;">edit</span> Edit
+          </button>
+          <button class="cart-remove-btn" onclick="removeFromCart(${ci.cartId})">
+            <span class="material-icons" style="font-size:14px;">delete</span> Remove
           </button>
         </div>
-        ${ci.addons.length ? `<p style="font-size:.74rem;color:var(--text-dim);margin:0;padding-left:62px;">+ ${ci.addons.join(', ')}</p>` : ''}
       </div>`;
       }).join('');
       document.getElementById('cartGrandTotal').textContent = `₱${grand.toFixed(2)}`;
+    }
+
+    function updateCartItemQty(cartId, delta) {
+      const ci = state.cart.find(c => c.cartId === cartId);
+      if (!ci) return;
+      const unitPrice = ci.total / (ci.qty || 1);
+      ci.qty = Math.max(1, (ci.qty || 1) + delta);
+      ci.total = parseFloat((unitPrice * ci.qty).toFixed(2));
+      renderCart();
+      updateCartBadge();
+    }
+
+    function editCartItem(cartId) {
+      const ci = state.cart.find(c => c.cartId === cartId);
+      if (!ci) return;
+      // Store which cart item is being edited
+      state.editingCartId = cartId;
+
+      const item = ci.item;
+      state.currentOrderItem = item;
+
+      document.getElementById('orderModalTitle').textContent = item.name;
+      document.getElementById('orderModalItemType').textContent = item.type === 'drink' ? 'Customize Your Brew' : 'Customize Your Meal';
+      document.getElementById('orderModalName').textContent = item.name;
+      document.getElementById('orderModalThumb').src = item.img;
+      document.getElementById('orderModalBasePrice').textContent = `₱${parseFloat(item.price).toFixed(2)}`;
+
+      const isDrink = item.type === 'drink';
+      document.getElementById('drinkAdjustments').style.display = isDrink ? '' : 'none';
+      document.getElementById('sizeSection').style.display = isDrink ? '' : 'none';
+
+      const addons = isDrink ? DRINK_ADDONS : FOOD_ADDONS;
+      const groupedAddons = addons.reduce((acc, addon) => {
+        if (!acc[addon.category]) acc[addon.category] = [];
+        acc[addon.category].push(addon);
+        return acc;
+      }, {});
+      let addonsHTML = '';
+      for (const [category, items] of Object.entries(groupedAddons)) {
+        addonsHTML += `
+          <div class="mb-3">
+            <h6 style="font-size:.75rem;font-weight:700;color:var(--brand);margin:0 0 10px;text-transform:uppercase;letter-spacing:1px;">${category}</h6>
+            ${items.map(a => `
+              <div class="addon-row">
+                <input type="checkbox" class="addon-check" id="addon_${a.id}" data-price="${a.price}" onchange="recalcTotal()">
+                <label for="addon_${a.id}" style="cursor:pointer;flex:1;">${a.label}</label>
+                <span class="addon-price">+₱${a.price}</span>
+              </div>
+            `).join('')}
+          </div>`;
+      }
+      document.getElementById('addonsList').innerHTML = addonsHTML;
+
+      // Restore previous selections
+      const sizeRadio = document.querySelector(`input[name="orderSize"][value="${ci.size}"]`);
+      if (sizeRadio) sizeRadio.checked = true;
+
+      // Re-check previously selected add-ons by matching labels
+      document.querySelectorAll('.addon-check').forEach(c => {
+        const label = c.nextElementSibling?.textContent?.trim();
+        c.checked = ci.addons.includes(label);
+      });
+
+      document.getElementById('orderNotes').value = ci.notes || '';
+      const fulfillmentRadio = document.querySelector(`input[name="fulfillment"][value="${ci.fulfillment}"]`);
+      if (fulfillmentRadio) fulfillmentRadio.checked = true;
+      // Show/hide delivery location field
+      const locContainer = document.getElementById('delivery-location-container');
+      if (locContainer) locContainer.style.display = ci.fulfillment === 'delivery' ? 'block' : 'none';
+
+      recalcTotal();
+
+      // Change button label to indicate update
+      const confirmBtn = document.querySelector('#orderModal .btn-primary-custom');
+      if (confirmBtn) {
+        confirmBtn.innerHTML = '<span class="material-icons" style="font-size:17px;">update</span> Update Cart Item';
+      }
+
+      // Close cart modal first, then open order modal
+      const cartModalEl = document.getElementById('cartModal');
+      const cartModalInstance = bootstrap.Modal.getInstance(cartModalEl);
+      if (cartModalInstance) cartModalInstance.hide();
+
+      setTimeout(() => {
+        new bootstrap.Modal(document.getElementById('orderModal')).show();
+      }, 300);
     }
 
     function removeFromCart(cartId) {
