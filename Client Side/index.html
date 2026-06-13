@@ -26,16 +26,16 @@
     }
 
     [data-bs-theme="dark"] {
-      /* Swapped #000000 for a deep, warm espresso off-black */
-      --bg-body: #120C08;
-      --bg-surface: #1F150C;
-      --bg-surface-2: #2a1d10;
+      /* Warm espresso dark — lighter and more readable */
+      --bg-body: #2b1f14;
+      --bg-surface: #3a2a1c;
+      --bg-surface-2: #4a3826;
       --text-main: #F8F4E1;
-      --text-dim: #E1DCC9;
-      --brand: #AF8F6F;
-      --brand-dark: #74512D;
-      --brand-light: #74512D;
-      --border: #412D15;
+      --text-dim: #d4c9b8;
+      --brand: #c9a87a;
+      --brand-dark: #AF8F6F;
+      --brand-light: #AF8F6F;
+      --border: #6b4f35;
     }
 
     *,
@@ -1810,6 +1810,51 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       color: var(--brand);
     }
 
+    /* ── REVIEW ADMIN REPLY ── */
+    .review-admin-reply {
+      background: color-mix(in srgb, var(--brand) 8%, var(--bg-surface));
+      border-left: 3px solid var(--brand);
+      border-radius: 0 8px 8px 0;
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: .8rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+    .review-admin-reply .reply-label {
+      font-size: .68rem;
+      font-weight: 700;
+      color: var(--brand);
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 4px;
+    }
+
+    /* ── CLICKABLE REVIEW CARD ── */
+    .review-card {
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+    }
+    .review-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 20px rgba(116, 81, 45, .12);
+      border-color: var(--brand);
+    }
+
+    /* ── REVIEW DETAIL MODAL ── */
+    .review-detail-comment {
+      font-size: .95rem;
+      color: var(--text-dim);
+      line-height: 1.75;
+      font-style: italic;
+      border-left: 3px solid var(--brand);
+      padding-left: 16px;
+      margin: 16px 0;
+    }
+
   </style>
 
   </style>
@@ -1843,6 +1888,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
         <a href="#home-section" class="nav-link-item">Home</a>
         <a href="#about-section" class="nav-link-item">About Us</a>
         <a href="#menu-preview-section" class="nav-link-item">Menu</a>
+        <a href="#reviews-section" class="nav-link-item">Reviews</a>
         <a href="#contact-section" class="nav-link-item">Contact Us</a>
       </div>
 
@@ -2127,15 +2173,20 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: #F8F4E1;">Sip & Pulse</span>
           </div>
           
-          <p style="font-size:.95rem; line-height:1.6; margin-bottom:20px; color: #b0a89a; max-width: 350px;">
-            <span class="material-icons align-middle me-1" style="font-size:16px;color:var(--brand);">location_on</span>
-            Ground Floor, Beside Goldilocks Store, The Lifestyle Trip, San Antonio, Santo Tomas, Batangas
+          <p style="font-size:.95rem; line-height:1.7; margin-bottom: 16px; color: #d0c8bc; font-style: italic;">
+            Your daily beat of flavor and energy — brewed with love in Sto. Tomas, Batangas.
           </p>
+
+          <div style="margin-bottom: 20px;">
+            <p style="font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color: var(--brand); margin-bottom: 4px;">Get in Touch</p>
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:#F8F4E1; margin-bottom:6px;">Contact Us</h3>
+            <p style="font-size:.85rem; color:#b0a89a; line-height:1.7; margin-bottom: 12px;">Have questions or inquiries? We'd love to hear from you.</p>
+          </div>
           
           <div style="font-size:.85rem; line-height:2.2;">
             <div style="color: #E1DCC9;"><strong>Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
             <div><strong>Phone:</strong> +63 912 345 6789</div>
-            <div><strong>Email:</strong> marketing@sipandpulse.ph</div>
+            <div><strong>Email:</strong> <a href="mailto:marketing@sipandpulse.ph" style="color:#AF8F6F;text-decoration:none;">marketing@sipandpulse.ph</a></div>
           </div>
         </div>
 
@@ -2175,7 +2226,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <span class="material-icons">close</span>
           </button>
 
-          <div class="sticky-top" style="background: rgba(31, 21, 12, 0.98); padding-top: 20px; z-index: 10; border-bottom: 1px solid rgba(175, 143, 111, 0.2);">
+          <div class="sticky-top" style="background: rgba(18, 12, 8, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding-top: 20px; z-index: 10; border-bottom: 1px solid rgba(175, 143, 111, 0.2);">
             <div class="container text-center">
               <div class="mb-3">
                 <p style="font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:6px;">
@@ -2187,16 +2238,45 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
               </div>
 
               <div class="row justify-content-center mb-3">
-                <div class="col-md-6">
-                  <div class="search-icon-wrap">
-                    <span class="material-icons">search</span>
-                    <input class="menu-search-bar" type="search" id="menuSearchInput" 
-                           placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
+                <div class="col-md-8">
+                  <div class="d-flex gap-2 align-items-center">
+                    <div class="search-icon-wrap" style="flex:1;">
+                      <span class="material-icons">search</span>
+                      <input class="menu-search-bar" type="search" id="menuSearchInput" 
+                             placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
+                    </div>
+                    <div style="position:relative;">
+                      <select id="categoryDropdownModal" onchange="selectCategoryFromDropdown(this.value)"
+                        style="background:rgba(225,220,201,.12);border:1.5px solid rgba(175,143,111,.4);border-radius:30px;padding:11px 36px 11px 16px;color:#F8F4E1;font-size:.85rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;transition:border-color .3s;">
+                        <option value="all" style="background:#1f150c;">All Categories</option>
+                        <optgroup label="☕ Beverages" style="background:#1f150c;">
+                          <option value="espresso" style="background:#1f150c;">Espresso & Hot Brews</option>
+                          <option value="iced" style="background:#1f150c;">Iced & Cold Brews</option>
+                          <option value="noncoffee" style="background:#1f150c;">Non-Coffee</option>
+                          <option value="milktea" style="background:#1f150c;">Milktea & Frappe</option>
+                          <option value="tea" style="background:#1f150c;">Tea & Herbal Tea</option>
+                        </optgroup>
+                        <optgroup label="🍽 Food & Meals" style="background:#1f150c;">
+                          <option value="breakfast" style="background:#1f150c;">All-Day Breakfast</option>
+                          <option value="starters" style="background:#1f150c;">Starters</option>
+                          <option value="salad" style="background:#1f150c;">Salad</option>
+                          <option value="sandwiches" style="background:#1f150c;">Sandwiches</option>
+                          <option value="burgers" style="background:#1f150c;">Burgers</option>
+                          <option value="pizza" style="background:#1f150c;">Pizzas</option>
+                          <option value="pasta" style="background:#1f150c;">Pasta</option>
+                          <option value="rice" style="background:#1f150c;">Rice Meals</option>
+                          <option value="waffles" style="background:#1f150c;">Waffles</option>
+                          <option value="desserts" style="background:#1f150c;">Desserts</option>
+                          <option value="pastries" style="background:#1f150c;">Pastries & Baked Goods</option>
+                        </optgroup>
+                      </select>
+                      <span class="material-icons" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(175,143,111,.7);font-size:16px;pointer-events:none;">expand_more</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div class="cat-bar-modal mb-3" id="categoryBarModal" style="padding-bottom: 10px;">
+              <div class="cat-bar-modal mb-3 d-none" id="categoryBarModal" style="padding-bottom: 10px;">
                 <button class="cat-btn-modal active" data-cat="all">All Items</button>
                 <button class="cat-btn-modal" data-cat="espresso">Espresso & Hot Brews</button>
                 <button class="cat-btn-modal" data-cat="iced">Iced & Cold Brews</button>
@@ -2240,6 +2320,66 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ REVIEW DETAIL MODAL ══ -->
+  <div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header-custom">
+          <div>
+            <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Guest Review</span>
+            <h5 class="modal-title-custom" id="reviewDetailName">Review</h5>
+          </div>
+          <button type="button" class="btn-theme" data-bs-dismiss="modal">
+            <span class="material-icons" style="font-size:18px;">close</span>
+          </button>
+        </div>
+        <div class="modal-body-custom">
+          <div class="d-flex align-items-center gap-3 mb-2">
+            <div class="review-avatar" id="reviewDetailInitials" style="width:48px;height:48px;font-size:1.1rem;"></div>
+            <div>
+              <p style="font-weight:700;margin:0;" id="reviewDetailNameSub"></p>
+              <p style="font-size:.72rem;color:var(--text-dim);margin:0;" id="reviewDetailDate"></p>
+            </div>
+          </div>
+          <div class="review-stars" id="reviewDetailStars" style="font-size:1.1rem;"></div>
+          <p class="review-detail-comment" id="reviewDetailComment"></p>
+          <div id="reviewDetailAdminReply"></div>
+        </div>
+        <div style="height:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LOGIN REQUIRED MODAL (shown when adding to cart without login) ══ -->
+  <div class="modal fade" id="loginRequiredModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header-custom">
+          <div>
+            <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Sign In Required</span>
+            <h5 class="modal-title-custom">Please Sign In to Order</h5>
+          </div>
+          <button type="button" class="btn-theme" data-bs-dismiss="modal">
+            <span class="material-icons" style="font-size:18px;">close</span>
+          </button>
+        </div>
+        <div class="modal-body-custom pt-3">
+          <p style="font-size:.875rem;color:var(--text-dim);line-height:1.7;margin-bottom:20px;">You need to be signed in to add items to your cart and place an order.</p>
+          <button class="btn-primary-custom mb-3" onclick="handleGoogleLoginFromModal()" style="background:#fff;color:#3c4043;border:1.5px solid #ddd;justify-content:center;gap:10px;">
+            <img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;" alt="G">
+            Sign in with Google
+          </button>
+          <button class="btn-primary-custom" onclick="handleFacebookLogin()" style="background:#1877F2;justify-content:center;gap:10px;">
+            <span class="material-icons" style="font-size:18px;">people</span>
+            Continue with Facebook
+          </button>
+          <p style="font-size:.72rem;color:var(--text-dim);text-align:center;margin-top:14px;margin-bottom:0;">Your order will be saved after signing in.</p>
+        </div>
+        <div style="height:16px;"></div>
       </div>
     </div>
   </div>
@@ -2677,6 +2817,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       reviews: [],
       currentOrderItem: null,
       pendingDeleteId: null,
+      pendingOrderItemId: null,
       googleUser: null
     };
 
@@ -2754,9 +2895,9 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     ];
 
     const DEMO_REVIEWS = [
-      { id: 1, name: "Maria Santos", initials: "MS", rating: 5, comment: "The Caramel Macchiato is hands-down the best I've had in Batangas. Cozy ambiance and friendly staff!", date: "June 2025" },
-      { id: 2, name: "Jake Reyes", initials: "JR", rating: 4, comment: "Solid burgers and great cold brew. Love the vibe here. Definitely coming back!", date: "May 2025" },
-      { id: 3, name: "Lia Cruz", initials: "LC", rating: 5, comment: "The Belgian Waffle is insanely good. Perfect study spot with fast Wi-Fi and great music!", date: "May 2025" }
+      { id: 1, name: "Maria Santos", initials: "MS", rating: 5, comment: "The Caramel Macchiato is hands-down the best I've had in Batangas. Cozy ambiance and friendly staff!", date: "June 2025", adminReply: "Thank you so much, Maria! We're so happy to hear that. We'll pass your kind words to our baristas! 🤎" },
+      { id: 2, name: "Jake Reyes", initials: "JR", rating: 4, comment: "Solid burgers and great cold brew. Love the vibe here. Definitely coming back!", date: "May 2025", adminReply: "" },
+      { id: 3, name: "Lia Cruz", initials: "LC", rating: 5, comment: "The Belgian Waffle is insanely good. Perfect study spot with fast Wi-Fi and great music!", date: "May 2025", adminReply: "Lia, that means the world to us! Come back soon — we just added new waffle toppings! ☕" }
     ];
 
     const catLabels = {
@@ -2879,6 +3020,7 @@ const FOOD_ADDONS = [
       document.getElementById('googleUserName').textContent = u.name;
       document.getElementById('googleUserEmail').textContent = u.email;
       showToast(`Welcome, ${u.name}! You are now signed in.`);
+      renderReviews(); // refresh to auto-fill name in form
     }
 
     function toggleGoogleMenu() {
@@ -2890,6 +3032,42 @@ const FOOD_ADDONS = [
       document.getElementById('googleLoginBtn').style.display = '';
       document.getElementById('googleUserMenu').classList.add('d-none');
       showToast('Signed out successfully.');
+    }
+
+    function handleGoogleLoginFromModal() {
+      bootstrap.Modal.getInstance(document.getElementById('loginRequiredModal')).hide();
+      handleGoogleLogin();
+      // After login, open the pending order if any
+      setTimeout(() => {
+        if (state.pendingOrderItemId !== null) {
+          const id = state.pendingOrderItemId;
+          state.pendingOrderItemId = null;
+          openOrderModal(id);
+        }
+      }, 600);
+    }
+
+    function handleFacebookLogin() {
+      // Simulated Facebook login
+      const mockFBUsers = [
+        { name: "Ana Dela Cruz", email: "ana.delacruz@facebook.com", avatar: "https://i.pravatar.cc/80?img=32" },
+        { name: "Carlo Reyes", email: "carlo.reyes@facebook.com", avatar: "https://i.pravatar.cc/80?img=22" },
+      ];
+      const u = mockFBUsers[Math.floor(Math.random() * mockFBUsers.length)];
+      state.googleUser = u;
+      bootstrap.Modal.getInstance(document.getElementById('loginRequiredModal')).hide();
+      document.getElementById('googleLoginBtn').style.display = 'none';
+      document.getElementById('googleUserAvatar').src = u.avatar;
+      document.getElementById('googleUserName').textContent = u.name;
+      document.getElementById('googleUserEmail').textContent = u.email;
+      showToast(`Welcome, ${u.name}! Signed in via Facebook.`);
+      setTimeout(() => {
+        if (state.pendingOrderItemId !== null) {
+          const id = state.pendingOrderItemId;
+          state.pendingOrderItemId = null;
+          openOrderModal(id);
+        }
+      }, 600);
     }
 
     document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
@@ -3038,11 +3216,21 @@ const FOOD_ADDONS = [
       state.searchQuery = query;
       if (query.trim()) renderMenuModal(query);
     }
+    function selectCategoryFromDropdown(cat) {
+      state.currentFilter = cat;
+      renderMenuModal(state.searchQuery);
+    }
 
     /* ════════════════════════════════════════════
        ORDER MODAL
        ════════════════════════════════════════════ */
     function openOrderModal(itemId) {
+      // REQUIRE LOGIN before adding to cart
+      if (!state.googleUser) {
+        state.pendingOrderItemId = itemId; // save for after login
+        new bootstrap.Modal(document.getElementById('loginRequiredModal')).show();
+        return;
+      }
       const item = state.menuItems.find(i => i.id === itemId);
       if (!item) return;
       state.currentOrderItem = item;
@@ -3298,9 +3486,21 @@ const FOOD_ADDONS = [
        REVIEWS
        ════════════════════════════════════════════ */
     function renderReviews() {
+      // Auto-fill name if Google user is logged in
+      const nameInput = document.getElementById('reviewName');
+      if (nameInput && state.googleUser) {
+        nameInput.value = state.googleUser.name;
+        nameInput.readOnly = true;
+        nameInput.style.opacity = '0.75';
+        nameInput.title = 'Using your Google account name';
+      } else if (nameInput) {
+        nameInput.readOnly = false;
+        nameInput.style.opacity = '';
+      }
+
       document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => `
     <div class="col-md-6 col-lg-4">
-      <div class="review-card">
+      <div class="review-card" onclick="openReviewDetail(${r.id})" title="Click to read full review">
         <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
             <div class="review-avatar">${r.initials}</div>
@@ -3309,15 +3509,37 @@ const FOOD_ADDONS = [
               <p style="font-size:.72rem;color:var(--text-dim);margin:0;">${r.date}</p>
             </div>
           </div>
-          <button class="btn-delete-review" onclick="deleteReview(${r.id})">
+          <button class="btn-delete-review" onclick="event.stopPropagation();deleteReview(${r.id})">
             <span class="material-icons" style="font-size:17px;">delete</span>
           </button>
         </div>
         <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
         <p class="review-text">${r.comment}</p>
+        ${r.adminReply ? `
+        <div class="review-admin-reply">
+          <div class="reply-label"><span class="material-icons" style="font-size:13px;">storefront</span> Sip & Pulse replied</div>
+          ${r.adminReply}
+        </div>` : ''}
       </div>
     </div>
   `).join('');
+    }
+
+    function openReviewDetail(id) {
+      const r = state.reviews.find(rv => rv.id === id);
+      if (!r) return;
+      document.getElementById('reviewDetailName').textContent = `${r.name}'s Review`;
+      document.getElementById('reviewDetailNameSub').textContent = r.name;
+      document.getElementById('reviewDetailInitials').textContent = r.initials;
+      document.getElementById('reviewDetailDate').textContent = r.date;
+      document.getElementById('reviewDetailStars').textContent = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+      document.getElementById('reviewDetailComment').textContent = `"${r.comment}"`;
+      document.getElementById('reviewDetailAdminReply').innerHTML = r.adminReply ? `
+        <div class="review-admin-reply">
+          <div class="reply-label"><span class="material-icons" style="font-size:13px;">storefront</span> Sip & Pulse replied</div>
+          ${r.adminReply}
+        </div>` : '';
+      new bootstrap.Modal(document.getElementById('reviewDetailModal')).show();
     }
 
    function submitReview() {
@@ -3325,6 +3547,11 @@ const FOOD_ADDONS = [
       const comment = document.getElementById('reviewComment').value.trim();
       const ratingEl = document.querySelector('input[name="rating"]:checked');
       const isAnonymous = document.getElementById('reviewAnonymous').checked;
+
+      // If Google user is logged in, always use their real name (unless anonymous)
+      if (state.googleUser && !isAnonymous) {
+        name = state.googleUser.name;
+      }
 
       // Validate: Require comment & rating. Require name ONLY if not anonymous.
       if (!comment || !ratingEl || (!name && !isAnonymous)) { 
@@ -3349,15 +3576,18 @@ const FOOD_ADDONS = [
         initials, 
         rating, 
         comment, 
+        adminReply: '',
         date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
       });
 
       renderReviews();
 
       // Reset the form
-      document.getElementById('reviewName').value = '';
       document.getElementById('reviewComment').value = '';
       document.getElementById('reviewAnonymous').checked = false;
+      if (!state.googleUser) {
+        document.getElementById('reviewName').value = '';
+      }
       document.getElementById('reviewName').disabled = false; // Reset disabled state
       document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
       

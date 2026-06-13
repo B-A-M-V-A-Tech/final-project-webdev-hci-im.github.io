@@ -411,6 +411,13 @@
         <h2 class="section-title mb-0">Menu Management</h2>
       </div>
       <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Search bar for menu management -->
+        <div style="position:relative;">
+          <span class="material-icons" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:17px;pointer-events:none;">search</span>
+          <input type="search" id="mgmtSearchInput" placeholder="Search items…" oninput="renderMgmtGrid()"
+            style="background:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:8px 14px 8px 34px;font-size:.82rem;width:180px;outline:none;transition:border-color .3s,width .3s;"
+            onfocus="this.style.width='230px';this.style.borderColor='var(--brand)'" onblur="this.style.width='180px';this.style.borderColor='var(--border)'">
+        </div>
         <select class="cat-dropdown" id="mgmtCatFilter" onchange="renderMgmtGrid()">
           <option value="all">All Categories</option>
           <optgroup label="Beverages">
@@ -622,21 +629,44 @@
             </div>
             <!-- Search -->
             <div class="row justify-content-center mb-3">
-              <div class="col-md-6">
-                <div class="search-icon-wrap">
-                  <span class="material-icons">search</span>
-                  <input class="menu-search-bar" type="search" id="menuSearchInput" placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
+              <div class="col-md-8">
+                <div class="d-flex gap-2 align-items-center">
+                  <div class="search-icon-wrap" style="flex:1;">
+                    <span class="material-icons">search</span>
+                    <input class="menu-search-bar" type="search" id="menuSearchInput" placeholder="Search menu items…" oninput="filterMenuBySearch(this.value)">
+                  </div>
+                  <div style="position:relative;">
+                    <select id="categoryDropdownModal" onchange="selectCategoryFromDropdown(this.value)"
+                      style="background:rgba(225,220,201,.12);border:1.5px solid rgba(175,143,111,.4);border-radius:30px;padding:11px 36px 11px 16px;color:#F8F4E1;font-size:.85rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;transition:border-color .3s;">
+                      <option value="all" style="background:#2b1f14;">All Categories</option>
+                      <optgroup label="☕ Beverages" style="background:#2b1f14;">
+                        <option value="espresso" style="background:#2b1f14;">Espresso & Hot Brews</option>
+                        <option value="iced" style="background:#2b1f14;">Iced & Cold Brews</option>
+                        <option value="noncoffee" style="background:#2b1f14;">Non-Coffee</option>
+                        <option value="milktea" style="background:#2b1f14;">Milktea & Frappe</option>
+                        <option value="tea" style="background:#2b1f14;">Tea & Herbal Tea</option>
+                      </optgroup>
+                      <optgroup label="🍽 Food & Meals" style="background:#2b1f14;">
+                        <option value="breakfast" style="background:#2b1f14;">All-Day Breakfast</option>
+                        <option value="starters" style="background:#2b1f14;">Starters</option>
+                        <option value="salad" style="background:#2b1f14;">Salad</option>
+                        <option value="sandwiches" style="background:#2b1f14;">Sandwiches</option>
+                        <option value="burgers" style="background:#2b1f14;">Burgers</option>
+                        <option value="pizza" style="background:#2b1f14;">Pizzas</option>
+                        <option value="pasta" style="background:#2b1f14;">Pasta</option>
+                        <option value="rice" style="background:#2b1f14;">Rice Meals</option>
+                        <option value="waffles" style="background:#2b1f14;">Waffles</option>
+                        <option value="desserts" style="background:#2b1f14;">Desserts</option>
+                        <option value="pastries" style="background:#2b1f14;">Pastries & Baked Goods</option>
+                      </optgroup>
+                    </select>
+                    <span class="material-icons" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:rgba(175,143,111,.7);font-size:16px;pointer-events:none;">expand_more</span>
+                  </div>
                 </div>
               </div>
             </div>
-            <!-- Admin: Add item -->
-            <div class="d-flex justify-content-end mb-3">
-              <button class="btn-admin-nav" onclick="openCrudModal('add')" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                <span class="material-icons" style="font-size:17px;">add_circle</span> Add Menu Item
-              </button>
-            </div>
-            <!-- Category bar -->
-            <div class="cat-bar-modal mb-4" id="categoryBarModal">
+            <!-- Category bar (hidden, kept for JS compat) -->
+            <div class="cat-bar-modal mb-4 d-none" id="categoryBarModal">
               <button class="cat-btn-modal active" data-cat="all">All Items</button>
               <button class="cat-btn-modal" data-cat="espresso">Espresso & Hot Brews</button>
               <button class="cat-btn-modal" data-cat="iced">Iced & Cold Brews</button>
@@ -1043,9 +1073,9 @@ const DEMO_MENU = [
 ];
 
 const DEMO_REVIEWS = [
-  { id:1, name:"Maria Santos", initials:"MS", rating:5, comment:"The Caramel Macchiato is hands-down the best I've had in Batangas. Cozy ambiance and friendly staff!", date:"June 2025" },
-  { id:2, name:"Jake Reyes",   initials:"JR", rating:4, comment:"Solid burgers and great cold brew. Love the vibe here. Definitely coming back!", date:"May 2025" },
-  { id:3, name:"Lia Cruz",     initials:"LC", rating:5, comment:"The Belgian Waffle is insanely good. Perfect study spot with fast Wi-Fi and great music!", date:"May 2025" }
+  { id:1, name:"Maria Santos", initials:"MS", rating:5, comment:"The Caramel Macchiato is hands-down the best I've had in Batangas. Cozy ambiance and friendly staff!", date:"June 2025", adminReply:"Thank you so much, Maria! We're so happy to hear that. We'll pass your kind words to our baristas! 🤎" },
+  { id:2, name:"Jake Reyes",   initials:"JR", rating:4, comment:"Solid burgers and great cold brew. Love the vibe here. Definitely coming back!", date:"May 2025", adminReply:"" },
+  { id:3, name:"Lia Cruz",     initials:"LC", rating:5, comment:"The Belgian Waffle is insanely good. Perfect study spot with fast Wi-Fi and great music!", date:"May 2025", adminReply:"Lia, that means the world to us! Come back soon — we just added new waffle toppings! ☕" }
 ];
 
 const catLabels = {
@@ -1158,6 +1188,7 @@ function setupCategoryBarModal() {
 }
 function filterMenuBySearch(q) { state.searchQuery=q; renderMenuModal(q); }
 function handleNavSearch(q) { state.searchQuery=q; if(q.trim()) renderMenuModal(q); }
+function selectCategoryFromDropdown(cat) { state.currentFilter=cat; renderMenuModal(state.searchQuery); }
 
 /* ════════ ORDER MODAL ════════ */
 function openOrderModal(itemId) {
@@ -1489,10 +1520,19 @@ function addDemoOrder() {
 /* ════════ MENU MANAGEMENT GRID ════════ */
 function renderMgmtGrid() {
   const filter = document.getElementById('mgmtCatFilter') ? document.getElementById('mgmtCatFilter').value : 'all';
+  const searchEl = document.getElementById('mgmtSearchInput');
+  const query = searchEl ? searchEl.value.trim().toLowerCase() : '';
   const grid = document.getElementById('mgmtGrid');
   if (!grid) return;
-  const items = filter === 'all' ? state.menuItems : state.menuItems.filter(i => i.cat === filter);
-  if (!items.length) { grid.innerHTML = '<div class="col-12"><p style="color:var(--text-dim);font-size:.875rem;">No items in this category.</p></div>'; return; }
+  let items = filter === 'all' ? state.menuItems : state.menuItems.filter(i => i.cat === filter);
+  if (query) {
+    items = items.filter(i =>
+      i.name.toLowerCase().includes(query) ||
+      i.desc.toLowerCase().includes(query) ||
+      (catLabels[i.cat]||'').toLowerCase().includes(query)
+    );
+  }
+  if (!items.length) { grid.innerHTML = '<div class="col-12"><p style="color:var(--text-dim);font-size:.875rem;">No items match your search.</p></div>'; return; }
   grid.innerHTML = items.map(item => `
     <div class="col-6 col-md-4 col-lg-3">
       <div class="mgmt-card">
