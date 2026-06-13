@@ -700,85 +700,6 @@
         </button>
       </div>
     </div>
-    <!-- Featured Sneak Peek (moved from Taste the Magic section) -->
-    <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="mgmt-card">
-          <img src="https://images.unsplash.com/photo-1485808191679-5f86510bd9d4?w=500&q=80" alt="Signature Caramel Macchiato" class="mgmt-card-img"
-               onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
-          <div class="mgmt-card-body">
-            <div class="mgmt-card-cat">Espresso &amp; Hot Brews</div>
-            <div class="mgmt-card-name">Signature Caramel Macchiato</div>
-            <div class="menu-price-color" style="font-size:.9rem;margin-top:4px;">₱150.00</div>
-            <div class="mgmt-card-btns">
-              <button class="btn-mgmt-edit" onclick="openCrudModal('edit',1)" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                <span class="material-icons" style="font-size:13px;">edit</span> Edit
-              </button>
-              <button class="btn-mgmt-del" onclick="openDeleteConfirm(1)" title="Delete">
-                <span class="material-icons" style="font-size:14px;">delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="mgmt-card">
-          <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80" alt="Classic Beef Burger" class="mgmt-card-img"
-               onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
-          <div class="mgmt-card-body">
-            <div class="mgmt-card-cat">Burgers</div>
-            <div class="mgmt-card-name">Classic Beef Burger</div>
-            <div class="menu-price-color" style="font-size:.9rem;margin-top:4px;">₱180.00</div>
-            <div class="mgmt-card-btns">
-              <button class="btn-mgmt-edit" onclick="openCrudModal('edit',31)" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                <span class="material-icons" style="font-size:13px;">edit</span> Edit
-              </button>
-              <button class="btn-mgmt-del" onclick="openDeleteConfirm(31)" title="Delete">
-                <span class="material-icons" style="font-size:14px;">delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="mgmt-card">
-          <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=500&q=80" alt="Blueberry Cheesecake" class="mgmt-card-img"
-               onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
-          <div class="mgmt-card-body">
-            <div class="mgmt-card-cat">Pastries &amp; Baked Goods</div>
-            <div class="mgmt-card-name">Blueberry Cheesecake</div>
-            <div class="menu-price-color" style="font-size:.9rem;margin-top:4px;">₱145.00</div>
-            <div class="mgmt-card-btns">
-              <button class="btn-mgmt-edit" onclick="openCrudModal('edit',50)" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                <span class="material-icons" style="font-size:13px;">edit</span> Edit
-              </button>
-              <button class="btn-mgmt-del" onclick="openDeleteConfirm(50)" title="Delete">
-                <span class="material-icons" style="font-size:14px;">delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="col-6 col-md-4 col-lg-3">
-        <div class="mgmt-card">
-          <img src="https://images.unsplash.com/photo-1562376552-0d160a2f238d?w=500&q=80" alt="Belgian Waffle" class="mgmt-card-img"
-               onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
-          <div class="mgmt-card-body">
-            <div class="mgmt-card-cat">Waffles</div>
-            <div class="mgmt-card-name">Belgian Waffle</div>
-            <div class="menu-price-color" style="font-size:.9rem;margin-top:4px;">₱160.00</div>
-            <div class="mgmt-card-btns">
-              <button class="btn-mgmt-edit" onclick="openCrudModal('edit',44)" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
-                <span class="material-icons" style="font-size:13px;">edit</span> Edit
-              </button>
-              <button class="btn-mgmt-del" onclick="openDeleteConfirm(44)" title="Delete">
-                <span class="material-icons" style="font-size:14px;">delete</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
     <div class="row g-3" id="mgmtGrid"></div>
   </div>
 </section>
@@ -1365,11 +1286,44 @@ const FOOD_ADDONS = [
 ];
 
 /* ════════════════════════════════════
+   SHARED MENU STORAGE (localStorage)
+   Same keys as index.html — one source of truth.
+   ════════════════════════════════════ */
+const STORAGE_KEY = 'sipandpulse_menu';
+const REVIEWS_KEY = 'sipandpulse_reviews';
+
+function loadMenuFromStorage() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
+  } catch(e) {}
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_MENU));
+  return [...DEMO_MENU];
+}
+
+function saveMenuToStorage() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
+}
+
+function loadReviewsFromStorage() {
+  try {
+    const raw = localStorage.getItem(REVIEWS_KEY);
+    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; }
+  } catch(e) {}
+  localStorage.setItem(REVIEWS_KEY, JSON.stringify(DEMO_REVIEWS));
+  return [...DEMO_REVIEWS];
+}
+
+function saveReviewsToStorage() {
+  try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
+}
+
+/* ════════════════════════════════════
    INIT
    ════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
-  state.menuItems = [...DEMO_MENU];
-  state.reviews   = [...DEMO_REVIEWS];
+  state.menuItems = loadMenuFromStorage();
+  state.reviews   = loadReviewsFromStorage();
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
@@ -1583,6 +1537,7 @@ function saveCrudItem() {
     state.menuItems.push({id:newId,name,price,cat,desc,img:img||'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',available,type});
     showToast(`"${name}" added!`);
   }
+  saveMenuToStorage();
   document.getElementById('statMenuCount').textContent=state.menuItems.length;
   bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
   renderMenuModal(state.searchQuery);
@@ -1598,6 +1553,7 @@ function openDeleteConfirm(itemId){
 function confirmDelete(){
   const item=state.menuItems.find(i=>i.id===state.pendingDeleteId);
   state.menuItems=state.menuItems.filter(i=>i.id!==state.pendingDeleteId);
+  saveMenuToStorage();
   bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
   renderMenuModal(state.searchQuery);
   renderMgmtGrid();
@@ -1663,6 +1619,7 @@ function renderReviews() {
 
 function deleteReview(id) {
   state.reviews = state.reviews.filter(r => r.id !== id);
+  saveReviewsToStorage();
   renderReviews();
   showToast('Review removed.');
 }
@@ -1682,6 +1639,7 @@ function submitAdminReply(id) {
   const targetReview = state.reviews.find(r => r.id === id);
   if (targetReview) {
     targetReview.adminReply = replyText;
+    saveReviewsToStorage();
     renderReviews(); // Re-render the UI smoothly 
     showToast('Response posted!');
   }

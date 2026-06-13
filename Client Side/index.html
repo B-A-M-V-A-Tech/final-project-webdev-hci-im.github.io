@@ -2134,6 +2134,105 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       #adminBanner button { margin-left: 6px !important; }
     }
 
+    /* ── CART ITEM EDIT CONTROLS ── */
+    .cart-item-row {
+      background-color: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+    }
+    .cart-item-top {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+    }
+    .cart-item-thumb {
+      width: 52px;
+      height: 52px;
+      border-radius: 10px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    .cart-item-info { flex: 1; min-width: 0; }
+    .cart-item-name { font-weight: 600; font-size: .9rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .cart-item-meta { font-size: .74rem; color: var(--text-dim); margin: 2px 0 0; }
+    .cart-item-price { font-weight: 700; color: var(--brand); font-size: .9rem; white-space: nowrap; }
+    .cart-item-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(175,143,111,.2);
+      gap: 8px;
+    }
+    .qty-stepper {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      background: var(--bg-body);
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .qty-btn {
+      background: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--brand);
+      font-size: 1.1rem;
+      font-weight: 700;
+      transition: background-color .2s;
+      flex-shrink: 0;
+    }
+    .qty-btn:hover { background: var(--bg-surface-2); }
+    .qty-display {
+      min-width: 28px;
+      text-align: center;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--text-main);
+      user-select: none;
+    }
+    .cart-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .cart-edit-btn:hover { border-color: var(--brand); color: var(--brand); background: rgba(116,81,45,.06); }
+    .cart-remove-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 1.5px solid rgba(192,57,43,.35);
+      color: #c0392b;
+      border-radius: 8px;
+      padding: 5px 10px;
+      font-size: .75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .cart-remove-btn:hover { background: rgba(192,57,43,.08); }
+    .cart-addons-line { font-size: .72rem; color: var(--text-dim); margin: 4px 0 0; line-height: 1.5; }
+
   </style>
 
   </style>
@@ -2393,13 +2492,14 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       <div class="col-lg-7">
         <div class="bento-card featured-bento h-100">
           <div class="bento-badge">Signature</div>
-          <img src="https://images.unsplash.com/photo-1551030173-122aabc4489c?w=1000&q=80" alt="Caramel Macchiato" class="bento-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1000&q=80';">         <div class="bento-overlay">
+          <img src="https://images.unsplash.com/photo-1551030173-122aabc4489c?w=1000&q=80" alt="Caramel Macchiato" class="bento-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1000&q=80';">
+          <div class="bento-overlay">
             <div class="bento-content">
               <p class="bento-cat">Espresso & Hot Brews</p>
               <h3 class="bento-title display-font">Caramel Macchiato</h3>
               <div class="d-flex align-items-center gap-3 mt-3">
                 <span class="bento-price">₱150.00</span>
-                <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                <button class="bento-action-btn" onclick="openOrderModal(1)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
               </div>
             </div>
           </div>
@@ -2417,7 +2517,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
                 <h4 class="bento-title display-font">Classic Beef Burger</h4>
                 <div class="d-flex align-items-center gap-3 mt-2">
                   <span class="bento-price">₱180.00</span>
-                  <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                  <button class="bento-action-btn" onclick="openOrderModal(31)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
                 </div>
               </div>
             </div>
@@ -2431,7 +2531,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
                 <h4 class="bento-title display-font">Blueberry Cheesecake</h4>
                 <div class="d-flex align-items-center gap-3 mt-2">
                   <span class="bento-price">₱145.00</span>
-                  <button class="bento-action-btn"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                  <button class="bento-action-btn" onclick="openOrderModal(50)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
                 </div>
               </div>
             </div>
@@ -3298,11 +3398,36 @@ const FOOD_ADDONS = [
   { id: "fresh_fruits", label: "Fresh Fruits", price: 30, category: "Sweets & Drizzles" },
 ];
     /* ════════════════════════════════════════════
+       SHARED MENU STORAGE (localStorage)
+       Admin writes to the same key, client reads it.
+       ════════════════════════════════════════════ */
+    const STORAGE_KEY = 'sipandpulse_menu';
+    const REVIEWS_KEY = 'sipandpulse_reviews';
+
+    function loadMenuFromStorage() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) { const p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
+      } catch(e) {}
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(DEMO_MENU));
+      return [...DEMO_MENU];
+    }
+
+    function loadReviewsFromStorage() {
+      try {
+        const raw = localStorage.getItem(REVIEWS_KEY);
+        if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; }
+      } catch(e) {}
+      localStorage.setItem(REVIEWS_KEY, JSON.stringify(DEMO_REVIEWS));
+      return [...DEMO_REVIEWS];
+    }
+
+    /* ════════════════════════════════════════════
        INIT
        ════════════════════════════════════════════ */
     document.addEventListener('DOMContentLoaded', () => {
-      state.menuItems = [...DEMO_MENU];
-      state.reviews = [...DEMO_REVIEWS];
+      state.menuItems = loadMenuFromStorage();
+      state.reviews   = loadReviewsFromStorage();
       renderMenuModal();
       renderReviews();
       setupCategoryBarModal();
@@ -3521,13 +3646,16 @@ const FOOD_ADDONS = [
           <div class="d-flex align-items-center justify-content-between">
             <span class="menu-price-modal">₱${parseFloat(item.price).toFixed(2)}</span>
           </div>
-
-          <!-- Client btn -->
-
           <button class="btn-add-modal client-btn-modal" onclick="openOrderModal(${item.id})">
             <span class="material-icons" style="font-size:15px;">add_shopping_cart</span> Add to Order
           </button>
-          
+          <div class="admin-btns-modal">
+            <button class="btn-edit-modal" onclick="openCrudModal('edit',${item.id})" data-bs-toggle="modal" data-bs-target="#adminCrudModal">
+              <span class="material-icons" style="font-size:13px;">edit</span> Edit
+            </button>
+            <button class="btn-del-modal" onclick="openDeleteConfirm(${item.id})" title="Delete">
+              <span class="material-icons" style="font-size:16px;">delete</span>
+            </button>
           </div>
         </div>
       </div>
@@ -3799,6 +3927,7 @@ const FOOD_ADDONS = [
         state.menuItems.push({ id: newId, name, price, cat, desc, img: img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80', available, type });
         showToast(`"${name}" added!`);
       }
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
       bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
       renderMenuModal(state.searchQuery);
     }
@@ -3814,6 +3943,7 @@ const FOOD_ADDONS = [
     function confirmDelete() {
       const item = state.menuItems.find(i => i.id === state.pendingDeleteId);
       state.menuItems = state.menuItems.filter(i => i.id !== state.pendingDeleteId);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
       bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
       renderMenuModal(state.searchQuery);
       showToast(`"${item?.name}" removed.`);
@@ -3918,6 +4048,7 @@ const FOOD_ADDONS = [
         date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
       });
 
+      try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
       renderReviews();
 
       // Reset the form
@@ -3934,6 +4065,7 @@ const FOOD_ADDONS = [
 
     function deleteReview(id) {
       state.reviews = state.reviews.filter(r => r.id !== id);
+      try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
       renderReviews();
       showToast('Review removed.');
     }
