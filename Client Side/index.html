@@ -2455,11 +2455,11 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
           <span class="material-icons" style="font-size:18px;">brightness_6</span>
         </button>
 
-        <!-- Google Login Button (styled like admin buttons) -->
+        <!-- Google Login Button (styled like original Google button) -->
         <div class="position-relative d-none d-lg-block" id="googleLoginWrap">
-          <button class="btn-admin-nav" id="googleLoginBtn" onclick="handleGoogleLogin()" style="background:#fff;color:#3c4043;border:1.5px solid #ddd;">
-            <img src="https://www.google.com/favicon.ico" alt="G" style="width:14px;height:14px;">
-            Sign In
+          <button class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()">
+            <img src="https://www.google.com/favicon.ico" alt="G">
+            Sign in with Google
           </button>
           <div class="google-user-menu d-none" id="googleUserMenu">
             <img id="googleUserAvatar" src="" alt=""
@@ -2534,14 +2534,8 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     <div class="mobile-nav-divider"></div>
 
     <div class="mobile-nav-controls">
-      <!-- Google Login for Mobile -->
-      <button class="btn-admin-nav w-100" style="width:100%!important;border-radius:10px;height:auto;padding:10px 14px;background:#fff;color:#3c4043;border:1.5px solid #ddd;display:flex;align-items:center;justify-content:center;gap:8px;" id="mobileGoogleLoginBtn" onclick="handleGoogleLogin();closeMobileNav()">
-        <img src="https://www.google.com/favicon.ico" alt="G" style="width:14px;height:14px;">
-        <span style="font-size:.82rem;font-weight:600;">Sign In with Google</span>
-      </button>
-
       <!-- Admin toggle for Mobile -->
-      <div class="admin-toggle-wrap w-100" style="width:100%!important;padding:10px 14px;margin-top:10px;border-radius:10px;" id="mobileAdminToggleWrap" onclick="handleAdminToggleClick()">
+      <div class="admin-toggle-wrap w-100" style="width:100%!important;padding:10px 14px;border-radius:10px;" id="mobileAdminToggleWrap" onclick="handleAdminToggleClick()">
         <input type="checkbox" id="mobileAdminModeCheckbox" style="accent-color:var(--admin-accent);" onclick="event.preventDefault();">
         <label for="mobileAdminModeCheckbox" style="cursor:pointer;width:100%;">
           <span class="material-icons" style="font-size:16px;">manage_accounts</span>
@@ -2981,10 +2975,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <img src="https://www.google.com/favicon.ico" style="width:18px;height:18px;" alt="G">
             Sign in with Google
           </button>
-          <button class="btn-primary-custom" onclick="handleFacebookLogin()" style="background:#1877F2;justify-content:center;gap:10px;">
-            <span class="material-icons" style="font-size:18px;">people</span>
-            Continue with Facebook
-          </button>
           <p style="font-size:.72rem;color:var(--text-dim);text-align:center;margin-top:14px;margin-bottom:0;">Your order will be saved after signing in.</p>
         </div>
         <div style="height:16px;"></div>
@@ -3061,11 +3051,11 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <label class="form-label-custom mb-2">Size</label>
             <div class="size-row">
               <input type="radio" name="orderSize" id="sizeS" value="Small">
-              <label class="size-label" for="sizeS">Small<br><small style="font-weight:400;">+₱0</small></label>
+              <label class="size-label" for="sizeS">Small<br><small style="font-weight:600;color:var(--brand);">+₱0</small></label>
               <input type="radio" name="orderSize" id="sizeM" value="Medium" checked>
-              <label class="size-label" for="sizeM">Medium<br><small style="font-weight:400;">+₱20</small></label>
+              <label class="size-label" for="sizeM">Medium<br><small style="font-weight:600;color:var(--brand);">+₱20</small></label>
               <input type="radio" name="orderSize" id="sizeL" value="Large">
-              <label class="size-label" for="sizeL">Large<br><small style="font-weight:400;">+₱40</small></label>
+              <label class="size-label" for="sizeL">Large<br><small style="font-weight:600;color:var(--brand);">+₱40</small></label>
             </div>
           </div>
           <div id="drinkAdjustments" class="mb-4">
@@ -3908,8 +3898,8 @@ const FOOD_ADDONS = [
       document.getElementById('addonsList').innerHTML = addonsHTML;
 
       // Reset selections
-      const medRadio = document.querySelector('input[name="orderSize"][value="Medium"]');
-      if (medRadio) medRadio.checked = true;
+      const smallRadio = document.querySelector('input[name="orderSize"][value="Small"]');
+      if (smallRadio) smallRadio.checked = true;
       document.querySelectorAll('.addon-check').forEach(c => c.checked = false);
       document.getElementById('orderNotes').value = '';
       const pickupRadio = document.querySelector('input[name="fulfillment"][value="pickup"]');

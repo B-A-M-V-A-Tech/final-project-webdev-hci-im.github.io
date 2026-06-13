@@ -597,14 +597,6 @@
 
     <!-- Right controls -->
     <div class="d-flex align-items-center gap-2 flex-wrap">
-      <!-- Search -->
-      <div class="nav-search-wrap d-none d-md-block">
-        <span class="material-icons">search</span>
-        <input class="nav-search-input" type="search" id="navSearchInput" placeholder="Search menu…"
-               oninput="handleNavSearch(this.value)"
-               onkeydown="if(event.key==='Enter'){handleNavSearch(this.value);new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
-      </div>
-
       <!-- Cart -->
       <div class="position-relative">
 
@@ -649,14 +641,6 @@
     <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
       <span class="material-icons" style="font-size:18px;">close</span>
     </button>
-  </div>
-
-  <!-- Mobile search -->
-  <div class="mobile-search-wrap mt-3">
-    <span class="material-icons">search</span>
-    <input class="mobile-search-input" type="search" placeholder="Search menu…"
-      oninput="handleNavSearch(this.value)"
-      onkeydown="if(event.key==='Enter'){closeMobileNav();handleNavSearch(this.value);new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
   </div>
 
   <nav class="mobile-nav-links mt-2">
