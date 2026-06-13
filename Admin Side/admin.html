@@ -757,8 +757,8 @@
         <p class="section-eyebrow mb-0">Live</p>
         <h2 class="section-title mb-0">Order Queue</h2>
       </div>
-      <button class="btn-admin-nav" onclick="addDemoOrder()">
-        <span class="material-icons" style="font-size:15px;">add</span> Simulate Order
+      <button class="btn-admin-nav" data-bs-toggle="modal" data-bs-target="#addOrderModal" onclick="state.editingOrderId=null;document.querySelector('#addOrderModal .modal-title-custom').textContent='Add New Order'">
+        <span class="material-icons" style="font-size:15px;">add</span> Add to Order
       </button>
     </div>
     <div style="overflow-x:auto;">
@@ -771,6 +771,7 @@
             <th>Total</th>
             <th>Status</th>
             <th>Action</th>
+            <th>Manage</th>
           </tr>
         </thead>
         <tbody id="queueBody">
@@ -1232,6 +1233,47 @@
   </div>
 </div>
 
+<!-- ══ ADD TO ORDER MODAL (Admin Manual Order) ══ -->
+<div class="modal fade" id="addOrderModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Queue Management</span>
+          <h5 class="modal-title-custom">Add New Order</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="modal-body-custom">
+        <div class="mb-3">
+          <label class="form-label-custom">Items Ordered</label>
+          <textarea class="form-control-custom" id="addOrderItemsInput" placeholder="e.g., 2x Caramel Macchiato, 1x Avocado Toast" style="height:60px;resize:none;"></textarea>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom">Fulfillment Method</label>
+          <select class="form-select-custom" id="addOrderMethodSelect">
+            <option value="pickup">Pick-up</option>
+            <option value="delivery">Delivery</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom">Order Total (₱)</label>
+          <input type="number" class="form-control-custom" id="addOrderTotalInput" placeholder="0.00" step="0.01" min="0">
+        </div>
+        <div class="mb-4">
+          <label class="form-label-custom">Customer Name</label>
+          <input type="text" class="form-control-custom" id="addOrderCustomerInput" placeholder="Walk-in Customer">
+        </div>
+      </div>
+      <div class="modal-footer-custom pt-2">
+        <button class="btn-primary-custom" onclick="saveManualOrder()">
+          <span class="material-icons" style="font-size:17px;">add_circle</span> Add Order
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ APPLY NOW MODAL ══ -->
 <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
@@ -1312,7 +1354,8 @@ const state = {
   cart: [],
   reviews: [],
   currentOrderItem: null,
-  pendingDeleteId: null
+  pendingDeleteId: null,
+  queue: []
 };
 
 /* ════════ MENU DATA (same as client) ════════ */
@@ -1449,6 +1492,7 @@ function saveReviewsToStorage() {
 document.addEventListener('DOMContentLoaded', () => {
   state.menuItems = loadMenuFromStorage();
   state.reviews   = loadReviewsFromStorage();
+  loadOrderQueue(); // Load orders from shared queue
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
@@ -1796,15 +1840,131 @@ function syncDashboard() {
   if (sm) sm.textContent = state.menuItems.length;
 }
 
+/* ════════ SHARED QUEUE SYSTEM ════════ */
+const QUEUE_STORAGE_KEY = 'sipAndPulse_orderQueue';
+const ORDER_COUNTER_KEY = 'sipAndPulse_orderCounter';
+
+function loadOrderQueue() {
+  try {
+    const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
+    state.queue = queue ? JSON.parse(queue) : [];
+  } catch(e) {
+    state.queue = [];
+  }
+}
+
+function saveOrderQueue() {
+  try {
+    localStorage.setItem(QUEUE_STORAGE_KEY, JSON.stringify(state.queue));
+  } catch(e) {
+    console.error('Error saving queue:', e);
+  }
+}
+
+function getAvailableOrderNumber() {
+  // Find first available number in 1001+ range
+  try {
+    const usedNumbers = state.queue.filter(o => o.status !== 'done').map(o => o.num);
+    let num = 1001;
+    while(usedNumbers.includes(num)) {
+      num++;
+    }
+    return num;
+  } catch(e) {
+    return Math.floor(1001 + Math.random() * 9000);
+  }
+}
+
+function editQueueOrder(id) {
+  const order = state.queue.find(o => o.id === id);
+  if (!order) return;
+  
+  // Populate form with order data
+  document.getElementById('addOrderItemsInput').value = order.items;
+  document.getElementById('addOrderMethodSelect').value = order.method === 'Delivery' ? 'delivery' : 'pickup';
+  document.getElementById('addOrderTotalInput').value = order.total;
+  document.getElementById('addOrderCustomerInput').value = order.customerName || '';
+  
+  // Store current editing order
+  state.editingOrderId = id;
+  const btnText = document.querySelector('#addOrderModal .modal-title-custom');
+  if (btnText) btnText.textContent = `Edit Order #${order.num}`;
+  new bootstrap.Modal(document.getElementById('addOrderModal')).show();
+}
+
+function saveManualOrder() {
+  const items = document.getElementById('addOrderItemsInput').value.trim();
+  const method = document.getElementById('addOrderMethodSelect').value;
+  const total = parseFloat(document.getElementById('addOrderTotalInput').value);
+  const customerName = document.getElementById('addOrderCustomerInput').value.trim() || 'Walk-in Customer';
+  
+  if (!items || !total || isNaN(total)) {
+    showToast('Please fill in all order details.', true);
+    return;
+  }
+  
+  if (state.editingOrderId) {
+    // Update existing order
+    const idx = state.queue.findIndex(o => o.id === state.editingOrderId);
+    if (idx !== -1) {
+      state.queue[idx] = {
+        ...state.queue[idx],
+        items,
+        method: method === 'delivery' ? 'Delivery' : 'Pick-up',
+        total,
+        customerName
+      };
+      showToast(`Order #${state.queue[idx].num} updated.`);
+    }
+    state.editingOrderId = null;
+  } else {
+    // Add new order
+    const orderNum = getAvailableOrderNumber();
+    state.queue.push({
+      id: Date.now(),
+      num: orderNum,
+      items,
+      method: method === 'delivery' ? 'Delivery' : 'Pick-up',
+      total,
+      status: 'new',
+      customerName,
+      customerEmail: '',
+      timestamp: new Date().toISOString()
+    });
+    showToast(`New order #${orderNum} added to queue.`);
+  }
+  
+  saveOrderQueue();
+  renderQueue();
+  bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
+  
+  // Reset form
+  document.getElementById('addOrderItemsInput').value = '';
+  document.getElementById('addOrderMethodSelect').value = 'pickup';
+  document.getElementById('addOrderTotalInput').value = '';
+  document.getElementById('addOrderCustomerInput').value = '';
+}
+
+function deleteQueueOrder(id) {
+  const order = state.queue.find(o => o.id === id);
+  if (!order) return;
+  
+  if (confirm(`Delete Order #${order.num}? This order number can be reused.`)) {
+    state.queue = state.queue.filter(o => o.id !== id);
+    saveOrderQueue();
+    renderQueue();
+    showToast(`Order #${order.num} deleted. Number can be reused.`);
+  }
+}
+
 /* ════════ QUEUE ════════ */
-state.queue = [];
 let queueCounter = 1000;
 
 function renderQueue() {
   const tbody = document.getElementById('queueBody');
   const active = state.queue.filter(o => o.status !== 'done');
   if (!active.length) {
-    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-dim);padding:24px;font-size:.85rem;">No active orders in queue.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:24px;font-size:.85rem;">No active orders in queue.</td></tr>';
     syncDashboard(); return;
   }
   tbody.innerHTML = active.map(o => `
@@ -1819,6 +1979,10 @@ function renderQueue() {
         ${o.status === 'preparing' ? `<button class="btn-queue-done" onclick="advanceQueue(${o.id})">Ready</button>` : ''}
         ${o.status === 'ready' ? `<button class="btn-queue-done" onclick="completeQueue(${o.id})">Done</button>` : ''}
       </td>
+      <td style="font-size:.75rem;white-space:nowrap;">
+        <button class="btn-queue-done" onclick="editQueueOrder(${o.id})" style="background:rgba(116,81,45,.1);border-color:rgba(116,81,45,.4);color:var(--brand);padding:2px 6px;font-size:.7rem;margin-right:2px;"><span class="material-icons" style="font-size:12px;">edit</span></button>
+        <button class="btn-queue-done" onclick="deleteQueueOrder(${o.id})" style="background:rgba(169,64,48,.1);border-color:rgba(169,64,48,.4);color:#c0392b;padding:2px 6px;font-size:.7rem;"><span class="material-icons" style="font-size:12px;">delete</span></button>
+      </td>
     </tr>
   `).join('');
   syncDashboard();
@@ -1828,6 +1992,7 @@ function advanceQueue(id) {
   const o = state.queue.find(x => x.id === id);
   if (!o) return;
   o.status = o.status === 'new' ? 'preparing' : 'ready';
+  saveOrderQueue();
   renderQueue();
 }
 
@@ -1835,6 +2000,7 @@ function completeQueue(id) {
   const o = state.queue.find(x => x.id === id);
   if (!o) return;
   o.status = 'done';
+  saveOrderQueue();
   showToast(`Order #${o.num} marked as done.`);
   renderQueue();
 }
