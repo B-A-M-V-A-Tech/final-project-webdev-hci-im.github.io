@@ -195,6 +195,20 @@
     .nav-search-input::placeholder{color:var(--text-dim);opacity:.7;}
     @media(max-width:576px){.hero-section{min-height:80vh;}.hero-title{font-size:2rem;}}
 
+    /* ── TOTAL ORDERS HISTORY ── */
+    .total-orders-section{padding:48px 0;background-color:var(--bg-body);}
+    .orders-stat-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:box-shadow .2s;}
+    .orders-stat-card:hover{box-shadow:0 6px 20px rgba(116,81,45,.12);}
+    .orders-stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .orders-stat-icon .material-icons{font-size:20px;}
+    .orders-stat-num{font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--text-main);line-height:1;}
+    .orders-stat-label{font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-top:3px;}
+    .oh-status-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.68rem;font-weight:700;letter-spacing:.4px;text-transform:uppercase;}
+    .oh-status-badge.new{background:rgba(116,81,45,.15);color:var(--brand);}
+    .oh-status-badge.preparing{background:rgba(212,160,23,.15);color:#b8870a;}
+    .oh-status-badge.ready{background:rgba(26,124,74,.15);color:#1a7c4a;}
+    .oh-status-badge.done{background:rgba(52,152,219,.13);color:#2471a3;}
+
     /* ── DASHBOARD ── */
     .dashboard-section{background-color:var(--bg-body);padding:48px 0 32px;}
     .dash-card{background:var(--bg-surface);border:1px solid var(--border);border-radius:14px;padding:22px 24px;display:flex;align-items:center;gap:18px;transition:box-shadow .2s;}
@@ -740,7 +754,7 @@
         <div class="dash-card">
           <div class="dash-icon"><span class="material-icons">star</span></div>
           <div>
-            <div class="dash-num">4.8</div>
+            <div class="dash-num" id="dashAvgRating">4.8</div>
             <div class="dash-label">Avg Rating</div>
           </div>
         </div>
@@ -757,7 +771,7 @@
         <p class="section-eyebrow mb-0">Live</p>
         <h2 class="section-title mb-0">Order Queue</h2>
       </div>
-      <button class="btn-admin-nav" data-bs-toggle="modal" data-bs-target="#addOrderModal" onclick="state.editingOrderId=null;document.querySelector('#addOrderModal .modal-title-custom').textContent='Add New Order'">
+      <button class="btn-admin-nav" data-bs-toggle="modal" data-bs-target="#addOrderModal" onclick="state.editingOrderId=null;resetAddOrderModal();document.querySelector('#addOrderModal .modal-title-custom').textContent='Add New Order'">
         <span class="material-icons" style="font-size:15px;">add</span> Add to Order
       </button>
     </div>
@@ -779,6 +793,145 @@
         </tbody>
       </table>
     </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TOTAL ORDERS HISTORY ═══════════════════ -->
+<section class="total-orders-section" id="total-orders-section">
+  <div class="container">
+
+    <!-- Header row -->
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
+      <div>
+        <p class="section-eyebrow mb-0">Records</p>
+        <h2 class="section-title mb-0">Total Orders History</h2>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <!-- Search -->
+        <div style="position:relative;">
+          <span class="material-icons" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-dim);font-size:17px;pointer-events:none;">search</span>
+          <input type="search" id="ordersHistorySearch" placeholder="Search orders…"
+            oninput="renderOrdersHistory()"
+            style="background:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:8px 14px 8px 34px;font-size:.82rem;width:180px;outline:none;transition:border-color .3s,width .3s;"
+            onfocus="this.style.width='230px';this.style.borderColor='var(--brand)'" onblur="this.style.width='180px';this.style.borderColor='var(--border)'">
+        </div>
+        <!-- Status filter -->
+        <select id="ordersHistoryFilter" onchange="renderOrdersHistory()"
+          style="background:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:8px 16px;font-size:.82rem;outline:none;cursor:pointer;">
+          <option value="all">All Statuses</option>
+          <option value="new">New</option>
+          <option value="preparing">Preparing</option>
+          <option value="ready">Ready</option>
+          <option value="done">Completed</option>
+        </select>
+        <!-- Method filter -->
+        <select id="ordersHistoryMethod" onchange="renderOrdersHistory()"
+          style="background:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:8px 16px;font-size:.82rem;outline:none;cursor:pointer;">
+          <option value="all">All Methods</option>
+          <option value="Pick-up">Pick-up</option>
+          <option value="Delivery">Delivery</option>
+        </select>
+        <!-- Source filter -->
+        <select id="ordersHistorySource" onchange="renderOrdersHistory()"
+          style="background:var(--bg-surface);border:1.5px solid var(--border);color:var(--text-main);border-radius:20px;padding:8px 16px;font-size:.82rem;outline:none;cursor:pointer;">
+          <option value="all">All Sources</option>
+          <option value="F">Walk-in (F####)</option>
+          <option value="O">Online (O####)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Summary stat cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(116,81,45,.12);">
+            <span class="material-icons" style="color:var(--brand);">receipt_long</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohTotalOrders">0</div>
+            <div class="orders-stat-label">Total Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(26,124,74,.12);">
+            <span class="material-icons" style="color:#1a7c4a;">payments</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohTotalRevenue">₱0</div>
+            <div class="orders-stat-label">Total Revenue</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(52,152,219,.12);">
+            <span class="material-icons" style="color:#2980b9;">store</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohPickup">0</div>
+            <div class="orders-stat-label">Pick-up Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(155,89,182,.12);">
+            <span class="material-icons" style="color:#8e44ad;">delivery_dining</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohDelivery">0</div>
+            <div class="orders-stat-label">Delivery Orders</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(116,81,45,.12);">
+            <span class="material-icons" style="color:var(--brand);">storefront</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohWalkin">0</div>
+            <div class="orders-stat-label">Walk-in (F####)</div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="orders-stat-card">
+          <div class="orders-stat-icon" style="background:rgba(52,152,219,.12);">
+            <span class="material-icons" style="color:#2471a3;">smartphone</span>
+          </div>
+          <div>
+            <div class="orders-stat-num" id="ohOnline">0</div>
+            <div class="orders-stat-label">Online (O####)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Orders table -->
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--border);">
+      <table class="queue-table w-100" id="ordersHistoryTable">
+        <thead>
+          <tr>
+            <th>Order #</th>
+            <th>Customer</th>
+            <th>Item(s)</th>
+            <th>Method</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Date & Time</th>
+          </tr>
+        </thead>
+        <tbody id="ordersHistoryBody">
+          <tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:24px;font-size:.85rem;">No orders recorded yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p id="ordersHistoryCount" style="font-size:.76rem;color:var(--text-dim);margin-top:10px;text-align:right;"></p>
+
   </div>
 </section>
 
@@ -859,9 +1012,35 @@
       <p class="section-eyebrow mb-1">Community</p>
       <h2 class="section-title mb-0">What Our Guests Say</h2>
     </div>
-    <!-- Leave a review form — admins can also post -->
+    <!-- Admin reviews summary panel -->
     <div class="card mb-5" style="background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;">
-   
+      <div class="card-body p-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <h6 style="font-family:'Playfair Display',serif;font-weight:700;margin-bottom:4px;">
+              <span class="material-icons align-middle me-1" style="font-size:18px;color:var(--brand);">rate_review</span>
+              Guest Reviews
+            </h6>
+            <p style="font-size:.82rem;color:var(--text-dim);margin:0;">
+              Reviews submitted by clients appear here in real-time. Reply to each review below.
+            </p>
+          </div>
+          <div class="d-flex gap-3 flex-wrap">
+            <div style="text-align:center;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+              <div id="adminReviewCount" style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--brand);line-height:1;">0</div>
+              <div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-top:2px;">Total Reviews</div>
+            </div>
+            <div style="text-align:center;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+              <div id="adminPendingReplyCount" style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:var(--admin-accent);line-height:1;">0</div>
+              <div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-top:2px;">Needs Reply</div>
+            </div>
+            <div style="text-align:center;background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px 20px;">
+              <div id="adminAvgRating" style="font-family:'Playfair Display',serif;font-size:1.5rem;font-weight:700;color:#d4a017;line-height:1;">&#x2014;</div>
+              <div style="font-size:.68rem;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-top:2px;">Avg Rating</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
     <div class="row g-4" id="reviewsFeed"></div>
   </div>
@@ -1235,7 +1414,7 @@
 
 <!-- ══ ADD TO ORDER MODAL (Admin Manual Order) ══ -->
 <div class="modal fade" id="addOrderModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:560px;">
     <div class="modal-content">
       <div class="modal-header-custom">
         <div>
@@ -1245,29 +1424,111 @@
         <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
       </div>
       <div class="modal-body-custom">
+
+        <!-- ── ORDER SOURCE (Walk-in F / Online O) ── -->
         <div class="mb-3">
-          <label class="form-label-custom">Items Ordered</label>
-          <textarea class="form-control-custom" id="addOrderItemsInput" placeholder="e.g., 2x Caramel Macchiato, 1x Avocado Toast" style="height:60px;resize:none;"></textarea>
+          <label class="form-label-custom">Order Source</label>
+          <div class="seg-control">
+            <input type="radio" name="addOrderSource" id="srcWalkin" value="F" checked onchange="updateAddOrderPrefix()">
+            <label for="srcWalkin"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Walk-in <span style="opacity:.7;font-size:.75em;">(F####)</span></label>
+            <input type="radio" name="addOrderSource" id="srcOnline" value="O" onchange="updateAddOrderPrefix()">
+            <label for="srcOnline"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">smartphone</span>Online <span style="opacity:.7;font-size:.75em;">(O####)</span></label>
+          </div>
+          <p id="addOrderNumPreview" style="font-size:.75rem;color:var(--brand);font-weight:700;margin:6px 0 0;letter-spacing:.5px;">Order will be assigned: F1001</p>
         </div>
+
+        <!-- ── CUSTOMER NAME ── -->
         <div class="mb-3">
-          <label class="form-label-custom">Fulfillment Method</label>
-          <select class="form-select-custom" id="addOrderMethodSelect">
-            <option value="pickup">Pick-up</option>
-            <option value="delivery">Delivery</option>
-          </select>
-        </div>
-        <div class="mb-3">
-          <label class="form-label-custom">Order Total (₱)</label>
-          <input type="number" class="form-control-custom" id="addOrderTotalInput" placeholder="0.00" step="0.01" min="0">
-        </div>
-        <div class="mb-4">
           <label class="form-label-custom">Customer Name</label>
           <input type="text" class="form-control-custom" id="addOrderCustomerInput" placeholder="Walk-in Customer">
         </div>
+
+        <!-- ── ITEM SEARCH FROM MENU ── -->
+        <div class="mb-2">
+          <label class="form-label-custom">Search & Select Item</label>
+          <div style="position:relative;">
+            <span class="material-icons" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--brand-light);font-size:17px;pointer-events:none;">search</span>
+            <input type="text" class="form-control-custom" id="addOrderItemSearch" placeholder="Type item name…" oninput="filterAddOrderItems(this.value)" style="padding-left:38px;">
+          </div>
+          <div id="addOrderItemDropdown" style="display:none;max-height:180px;overflow-y:auto;border:1.5px solid var(--border);border-radius:10px;margin-top:4px;background:var(--bg-surface);z-index:9999;position:relative;"></div>
+        </div>
+
+        <!-- ── SELECTED ITEMS SUMMARY ── -->
+        <div id="addOrderSelectedItems" style="display:none;margin-bottom:12px;">
+          <label class="form-label-custom">Selected Items</label>
+          <div id="addOrderItemsList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <!-- ── CUSTOMIZATION PANEL (shown when item selected) ── -->
+        <div id="addOrderCustomPanel" style="display:none;border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px;background:var(--bg-surface);">
+          <p id="addOrderCustomTitle" style="font-size:.8rem;font-weight:700;color:var(--text-main);margin:0 0 10px;"></p>
+
+          <!-- Size (drinks only) -->
+          <div id="addOrderSizeSection" style="display:none;margin-bottom:10px;">
+            <label class="form-label-custom mb-1">Size</label>
+            <div class="size-row">
+              <input type="radio" name="addOrderSize" id="addSizeS" value="Small"><label class="size-label" for="addSizeS">Small</label>
+              <input type="radio" name="addOrderSize" id="addSizeM" value="Medium" checked><label class="size-label" for="addSizeM">Medium <span style="font-size:.7em;opacity:.7;">+₱20</span></label>
+              <input type="radio" name="addOrderSize" id="addSizeL" value="Large"><label class="size-label" for="addSizeL">Large <span style="font-size:.7em;opacity:.7;">+₱40</span></label>
+            </div>
+          </div>
+
+          <!-- Drink adjustments (sugar/temp) — drinks only -->
+          <div id="addOrderDrinkAdj" style="display:none;margin-bottom:10px;">
+            <div class="row g-2">
+              <div class="col-6">
+                <label class="form-label-custom mb-1">Sugar Level</label>
+                <select class="form-select-custom" id="addOrderSugar" style="font-size:.8rem;padding:7px 10px;">
+                  <option value="">Default</option>
+                  <option>0% (No Sugar)</option><option>25%</option><option>50%</option><option>75%</option><option>100% (Full Sugar)</option>
+                </select>
+              </div>
+              <div class="col-6">
+                <label class="form-label-custom mb-1">Temperature</label>
+                <select class="form-select-custom" id="addOrderTemp" style="font-size:.8rem;padding:7px 10px;">
+                  <option value="">Default</option>
+                  <option>Hot</option><option>Iced</option><option>Blended</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add-ons -->
+          <div class="mb-1">
+            <label class="form-label-custom mb-1">Add-ons</label>
+            <div id="addOrderAddonsList" style="max-height:160px;overflow-y:auto;"></div>
+          </div>
+
+          <button class="btn-primary-custom mt-2" style="padding:8px 16px;width:auto;font-size:.8rem;border-radius:8px;" onclick="confirmAddOrderItem()">
+            <span class="material-icons" style="font-size:14px;">add_circle</span> Add to Order
+          </button>
+        </div>
+
+        <!-- ── FULFILLMENT ── -->
+        <div class="mb-3">
+          <label class="form-label-custom">Fulfillment Method</label>
+          <div class="seg-control">
+            <input type="radio" name="addOrderFulfillment" id="addPickup" value="pickup" checked>
+            <label for="addPickup"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Pick-up</label>
+            <input type="radio" name="addOrderFulfillment" id="addDelivery" value="delivery">
+            <label for="addDelivery"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">delivery_dining</span>Delivery</label>
+          </div>
+        </div>
+
+        <!-- ── NOTES ── -->
+        <div class="mb-3">
+          <label class="form-label-custom">Special Notes (Optional)</label>
+          <textarea class="form-control-custom" id="addOrderNotesInput" placeholder="Any special requests or instructions…" style="min-height:56px;resize:none;"></textarea>
+        </div>
+
       </div>
-      <div class="modal-footer-custom pt-2">
+      <div class="modal-footer-custom">
+        <div class="order-total-row">
+          <span class="order-total-label">Order Total</span>
+          <span class="order-total-amount" id="addOrderTotalDisplay">₱0.00</span>
+        </div>
         <button class="btn-primary-custom" onclick="saveManualOrder()">
-          <span class="material-icons" style="font-size:17px;">add_circle</span> Add Order
+          <span class="material-icons" style="font-size:17px;">add_circle</span> Confirm & Add to Queue
         </button>
       </div>
     </div>
@@ -1497,7 +1758,9 @@ document.addEventListener('DOMContentLoaded', () => {
   renderReviews();
   renderMgmtGrid();
   renderQueue();
+  renderOrdersHistory();
   setupCategoryBarModal();
+  updateAddOrderPrefix();
   updateCartBadge();
   syncDashboard();
   document.getElementById('statMenuCount').textContent = state.menuItems.length;
@@ -1506,6 +1769,32 @@ document.addEventListener('DOMContentLoaded', () => {
     new bootstrap.Modal(document.getElementById('cartModal')).show();
   });
   document.getElementById('cartModal').addEventListener('show.bs.modal', renderCart);
+
+  // ── CROSS-TAB SYNC: if the client page or another admin tab changes the menu,
+  // this admin panel re-renders its grids automatically.
+  window.addEventListener('storage', (e) => {
+    if (e.key === STORAGE_KEY && e.newValue) {
+      try {
+        const updated = JSON.parse(e.newValue);
+        if (Array.isArray(updated)) {
+          state.menuItems = updated;
+          renderMenuModal(state.searchQuery);
+          renderMgmtGrid();
+          syncDashboard();
+          document.getElementById('statMenuCount').textContent = state.menuItems.length;
+        }
+      } catch(err) {}
+    }
+    if (e.key === REVIEWS_KEY && e.newValue) {
+      try {
+        const updated = JSON.parse(e.newValue);
+        if (Array.isArray(updated)) {
+          state.reviews = updated;
+          renderReviews();
+        }
+      } catch(err) {}
+    }
+  });
 });
 
 /* THEME */
@@ -1602,6 +1891,7 @@ function recalcTotal() {
   document.getElementById('orderTotalDisplay').textContent=`₱${total.toFixed(2)}`;
 }
 document.querySelectorAll('input[name="orderSize"]').forEach(r=>r.addEventListener('change',recalcTotal));
+document.querySelectorAll('input[name="addOrderSize"]').forEach(r=>r.addEventListener('change',recalcAddOrderCustom));
 function confirmOrder() {
   const item = state.currentOrderItem; if(!item) return;
   const size = document.querySelector('input[name="orderSize"]:checked')?.value||'Medium';
@@ -1733,7 +2023,21 @@ function confirmDelete(){
 }
 
 /* ════════ REVIEWS (ADMIN SIDE) ════════ */
+function syncReviewStats() {
+  const total = state.reviews.length;
+  const pending = state.reviews.filter(r => !r.adminReply || r.adminReply.trim() === '').length;
+  const avg = total > 0 ? (state.reviews.reduce((s, r) => s + r.rating, 0) / total).toFixed(1) : '—';
+  const totalEl = document.getElementById('adminReviewCount');
+  const pendingEl = document.getElementById('adminPendingReplyCount');
+  const avgEl = document.getElementById('adminAvgRating');
+  if (totalEl) totalEl.textContent = total;
+  if (pendingEl) pendingEl.textContent = pending;
+  if (avgEl) avgEl.textContent = avg;
+}
+
 function renderReviews() {
+  syncReviewStats();
+  syncDashboard();
   document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => {
     // Check if an admin response already exists for this review
     const hasReply = r.adminReply && r.adminReply.trim() !== '';
@@ -1789,6 +2093,13 @@ function renderReviews() {
 function deleteReview(id) {
   state.reviews = state.reviews.filter(r => r.id !== id);
   saveReviewsToStorage();
+  try {
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: REVIEWS_KEY,
+      newValue: JSON.stringify(state.reviews),
+      storageArea: localStorage
+    }));
+  } catch(e) {}
   renderReviews();
   showToast('Review removed.');
 }
@@ -1809,6 +2120,13 @@ function submitAdminReply(id) {
   if (targetReview) {
     targetReview.adminReply = replyText;
     saveReviewsToStorage();
+    try {
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: REVIEWS_KEY,
+        newValue: JSON.stringify(state.reviews),
+        storageArea: localStorage
+      }));
+    } catch(e) {}
     renderReviews(); // Re-render the UI smoothly 
     showToast('Response posted!');
   }
@@ -1838,6 +2156,17 @@ function syncDashboard() {
   document.getElementById('dashMenuCount').textContent   = state.menuItems.length;
   const sm = document.getElementById('statMenuCount');
   if (sm) sm.textContent = state.menuItems.length;
+  // Live average rating from actual reviews
+  const reviews = state.reviews || [];
+  const avgEl = document.getElementById('dashAvgRating');
+  if (avgEl) {
+    if (reviews.length > 0) {
+      const avg = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+      avgEl.textContent = avg;
+    } else {
+      avgEl.textContent = '—';
+    }
+  }
 }
 
 /* ════════ SHARED QUEUE SYSTEM ════════ */
@@ -1861,88 +2190,301 @@ function saveOrderQueue() {
   }
 }
 
-function getAvailableOrderNumber() {
-  // Find first available number in 1001+ range
-  try {
-    const usedNumbers = state.queue.filter(o => o.status !== 'done').map(o => o.num);
-    let num = 1001;
-    while(usedNumbers.includes(num)) {
-      num++;
-    }
-    return num;
-  } catch(e) {
-    return Math.floor(1001 + Math.random() * 9000);
+/* ── ORDER NUMBER SYSTEM (F#### walk-in, O#### online) ── */
+const F_COUNTER_KEY = 'sap_forder_counter';
+const O_COUNTER_KEY = 'sap_oorder_counter';
+
+function getNextOrderNum(prefix) {
+  const key = prefix === 'O' ? O_COUNTER_KEY : F_COUNTER_KEY;
+  let current = parseInt(localStorage.getItem(key) || '1000', 10);
+  current += 1;
+  localStorage.setItem(key, String(current));
+  return prefix + current;
+}
+
+/* ── ADD ORDER MODAL STATE ── */
+const addOrderState = {
+  selectedItems: [],   // [{item, size, sugar, temp, addons:[], subtotal}]
+  editingItemIdx: null
+};
+
+function updateAddOrderPrefix() {
+  const prefix = document.querySelector('input[name="addOrderSource"]:checked')?.value || 'F';
+  const key = prefix === 'O' ? O_COUNTER_KEY : F_COUNTER_KEY;
+  const next = parseInt(localStorage.getItem(key) || '1000', 10) + 1;
+  const el = document.getElementById('addOrderNumPreview');
+  if (el) el.textContent = `Order will be assigned: ${prefix}${next}`;
+}
+
+function filterAddOrderItems(q) {
+  const dropdown = document.getElementById('addOrderItemDropdown');
+  if (!q.trim()) { dropdown.style.display = 'none'; return; }
+  const matches = state.menuItems.filter(i => i.available &&
+    (i.name.toLowerCase().includes(q.toLowerCase()) ||
+     (catLabels[i.cat]||'').toLowerCase().includes(q.toLowerCase()))
+  ).slice(0, 8);
+  if (!matches.length) { dropdown.style.display = 'none'; return; }
+  dropdown.style.display = 'block';
+  dropdown.innerHTML = matches.map(item => `
+    <div onclick="selectAddOrderItem(${item.id})"
+      style="padding:10px 14px;cursor:pointer;font-size:.85rem;border-bottom:1px solid rgba(175,143,111,.15);transition:background .15s;"
+      onmouseover="this.style.background='var(--bg-surface-2)'" onmouseout="this.style.background=''">
+      <span style="font-weight:600;color:var(--text-main);">${item.name}</span>
+      <span style="margin-left:8px;font-size:.75rem;color:var(--brand);font-weight:700;">₱${parseFloat(item.price).toFixed(2)}</span>
+      <span style="margin-left:6px;font-size:.7rem;color:var(--text-dim);">${catLabels[item.cat]||item.cat}</span>
+    </div>`).join('');
+}
+
+function selectAddOrderItem(itemId) {
+  const item = state.menuItems.find(i => i.id === itemId);
+  if (!item) return;
+  // Hide dropdown, clear search
+  document.getElementById('addOrderItemDropdown').style.display = 'none';
+  document.getElementById('addOrderItemSearch').value = '';
+  // Store currently configuring item
+  addOrderState.configuringItem = item;
+  addOrderState.editingItemIdx = null;
+  // Show customization panel
+  const panel = document.getElementById('addOrderCustomPanel');
+  const title = document.getElementById('addOrderCustomTitle');
+  panel.style.display = 'block';
+  title.textContent = item.type === 'drink'
+    ? `☕ Customise: ${item.name} (Base ₱${parseFloat(item.price).toFixed(2)})`
+    : `🍽 Customise: ${item.name} (Base ₱${parseFloat(item.price).toFixed(2)})`;
+  const isDrink = item.type === 'drink';
+  document.getElementById('addOrderSizeSection').style.display = isDrink ? '' : 'none';
+  document.getElementById('addOrderDrinkAdj').style.display = isDrink ? '' : 'none';
+  // Reset size to Medium
+  const medR = document.getElementById('addSizeM');
+  if (medR) medR.checked = true;
+  // Reset adjustments
+  const sugar = document.getElementById('addOrderSugar'); if(sugar) sugar.value='';
+  const temp = document.getElementById('addOrderTemp'); if(temp) temp.value='';
+  // Build add-ons
+  const addons = isDrink ? DRINK_ADDONS : FOOD_ADDONS;
+  document.getElementById('addOrderAddonsList').innerHTML = addons.map(a => `
+    <div class="addon-row">
+      <input type="checkbox" class="addon-check" id="aoaddon_${a.id}" data-price="${a.price}" onchange="recalcAddOrderCustom()">
+      <label for="aoaddon_${a.id}" style="cursor:pointer;flex:1;font-size:.82rem;">${a.label}</label>
+      <span class="addon-price">+₱${a.price}</span>
+    </div>`).join('');
+  recalcAddOrderCustom();
+}
+
+function recalcAddOrderCustom() {
+  const item = addOrderState.configuringItem;
+  if (!item) return;
+  let total = parseFloat(item.price);
+  const sv = document.querySelector('input[name="addOrderSize"]:checked')?.value;
+  if (sv === 'Medium') total += 20;
+  if (sv === 'Large') total += 40;
+  document.querySelectorAll('#addOrderAddonsList .addon-check:checked')
+    .forEach(c => total += parseFloat(c.dataset.price));
+  recalcAddOrderTotal();
+}
+
+function confirmAddOrderItem() {
+  const item = addOrderState.configuringItem;
+  if (!item) return;
+  const isDrink = item.type === 'drink';
+  const size = isDrink ? (document.querySelector('input[name="addOrderSize"]:checked')?.value || 'Medium') : null;
+  const sugar = isDrink ? (document.getElementById('addOrderSugar')?.value || '') : '';
+  const temp = isDrink ? (document.getElementById('addOrderTemp')?.value || '') : '';
+  const addons = [];
+  let subtotal = parseFloat(item.price);
+  if (size === 'Medium') subtotal += 20;
+  if (size === 'Large') subtotal += 40;
+  document.querySelectorAll('#addOrderAddonsList .addon-check:checked').forEach(c => {
+    addons.push({ label: c.nextElementSibling.textContent.trim(), price: parseFloat(c.dataset.price) });
+    subtotal += parseFloat(c.dataset.price);
+  });
+  const entry = { item, size, sugar, temp, addons, subtotal };
+  if (addOrderState.editingItemIdx !== null) {
+    addOrderState.selectedItems[addOrderState.editingItemIdx] = entry;
+  } else {
+    addOrderState.selectedItems.push(entry);
   }
+  addOrderState.configuringItem = null;
+  addOrderState.editingItemIdx = null;
+  document.getElementById('addOrderCustomPanel').style.display = 'none';
+  renderAddOrderSelectedItems();
+  recalcAddOrderTotal();
+  showToast(`${item.name} added to this order.`);
+}
+
+function renderAddOrderSelectedItems() {
+  const wrap = document.getElementById('addOrderSelectedItems');
+  const list = document.getElementById('addOrderItemsList');
+  if (!addOrderState.selectedItems.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = addOrderState.selectedItems.map((e, idx) => {
+    const addonStr = e.addons.length ? e.addons.map(a => a.label).join(', ') : '';
+    const detailParts = [];
+    if (e.size) detailParts.push(e.size);
+    if (e.sugar) detailParts.push(e.sugar);
+    if (e.temp) detailParts.push(e.temp);
+    if (addonStr) detailParts.push(addonStr);
+    return `
+    <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:10px;padding:10px 12px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+      <div style="flex:1;">
+        <div style="font-weight:600;font-size:.85rem;color:var(--text-main);">${e.item.name}</div>
+        ${detailParts.length ? `<div style="font-size:.74rem;color:var(--text-dim);margin-top:2px;">${detailParts.join(' · ')}</div>` : ''}
+        <div style="font-size:.8rem;font-weight:700;color:var(--brand);margin-top:3px;">₱${e.subtotal.toFixed(2)}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button onclick="editAddOrderItem(${idx})" style="background:rgba(116,81,45,.1);border:1px solid rgba(116,81,45,.3);color:var(--brand);border-radius:6px;padding:3px 7px;cursor:pointer;font-size:.7rem;">
+          <span class="material-icons" style="font-size:13px;">edit</span>
+        </button>
+        <button onclick="removeAddOrderItem(${idx})" style="background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);color:#c0392b;border-radius:6px;padding:3px 7px;cursor:pointer;font-size:.7rem;">
+          <span class="material-icons" style="font-size:13px;">close</span>
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function editAddOrderItem(idx) {
+  const e = addOrderState.selectedItems[idx];
+  addOrderState.editingItemIdx = idx;
+  // Re-open the customise panel with pre-filled values
+  selectAddOrderItem(e.item.id);
+  // Re-set previous selections
+  setTimeout(() => {
+    if (e.size) {
+      const r = document.querySelector(`input[name="addOrderSize"][value="${e.size}"]`);
+      if (r) r.checked = true;
+    }
+    const sugar = document.getElementById('addOrderSugar'); if (sugar) sugar.value = e.sugar || '';
+    const temp = document.getElementById('addOrderTemp'); if (temp) temp.value = e.temp || '';
+    e.addons.forEach(a => {
+      const chk = document.getElementById(`aoaddon_${a.label.toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'')}`);
+      if (chk) chk.checked = true;
+    });
+    recalcAddOrderCustom();
+  }, 50);
+}
+
+function removeAddOrderItem(idx) {
+  addOrderState.selectedItems.splice(idx, 1);
+  renderAddOrderSelectedItems();
+  recalcAddOrderTotal();
+}
+
+function recalcAddOrderTotal() {
+  const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
+  const el = document.getElementById('addOrderTotalDisplay');
+  if (el) el.textContent = '₱' + total.toFixed(2);
+}
+
+function resetAddOrderModal() {
+  addOrderState.selectedItems = [];
+  addOrderState.configuringItem = null;
+  addOrderState.editingItemIdx = null;
+  const els = ['addOrderItemSearch','addOrderCustomerInput','addOrderNotesInput'];
+  els.forEach(id => { const e = document.getElementById(id); if(e) e.value=''; });
+  document.getElementById('addOrderItemDropdown').style.display = 'none';
+  document.getElementById('addOrderCustomPanel').style.display = 'none';
+  document.getElementById('addOrderSelectedItems').style.display = 'none';
+  document.getElementById('addOrderItemsList').innerHTML = '';
+  document.getElementById('addOrderTotalDisplay').textContent = '₱0.00';
+  const pickup = document.getElementById('addPickup'); if(pickup) pickup.checked = true;
+  const walkin = document.getElementById('srcWalkin'); if(walkin) walkin.checked = true;
+  updateAddOrderPrefix();
 }
 
 function editQueueOrder(id) {
   const order = state.queue.find(o => o.id === id);
   if (!order) return;
-  
-  // Populate form with order data
-  document.getElementById('addOrderItemsInput').value = order.items;
-  document.getElementById('addOrderMethodSelect').value = order.method === 'Delivery' ? 'delivery' : 'pickup';
-  document.getElementById('addOrderTotalInput').value = order.total;
-  document.getElementById('addOrderCustomerInput').value = order.customerName || '';
-  
-  // Store current editing order
+  resetAddOrderModal();
+  // Simple edit: populate customer + notes + method only (item customisation re-entry is complex)
+  const custEl = document.getElementById('addOrderCustomerInput');
+  if (custEl) custEl.value = order.customerName || '';
+  const notesEl = document.getElementById('addOrderNotesInput');
+  if (notesEl) notesEl.value = order.notes || order.items || '';
+  const method = order.method === 'Delivery' ? 'addDelivery' : 'addPickup';
+  const mEl = document.getElementById(method); if(mEl) mEl.checked = true;
+  // Show total
+  const totEl = document.getElementById('addOrderTotalDisplay');
+  if (totEl) totEl.textContent = '₱' + parseFloat(order.total).toFixed(2);
   state.editingOrderId = id;
   const btnText = document.querySelector('#addOrderModal .modal-title-custom');
-  if (btnText) btnText.textContent = `Edit Order #${order.num}`;
+  if (btnText) btnText.textContent = `Edit Order ${order.num}`;
   new bootstrap.Modal(document.getElementById('addOrderModal')).show();
 }
 
 function saveManualOrder() {
-  const items = document.getElementById('addOrderItemsInput').value.trim();
-  const method = document.getElementById('addOrderMethodSelect').value;
-  const total = parseFloat(document.getElementById('addOrderTotalInput').value);
-  const customerName = document.getElementById('addOrderCustomerInput').value.trim() || 'Walk-in Customer';
-  
-  if (!items || !total || isNaN(total)) {
-    showToast('Please fill in all order details.', true);
-    return;
-  }
-  
+  const customerName = (document.getElementById('addOrderCustomerInput')?.value || '').trim() || 'Walk-in Customer';
+  const notesInput = (document.getElementById('addOrderNotesInput')?.value || '').trim();
+  const fulfillment = document.querySelector('input[name="addOrderFulfillment"]:checked')?.value || 'pickup';
+  const method = fulfillment === 'delivery' ? 'Delivery' : 'Pick-up';
+
   if (state.editingOrderId) {
-    // Update existing order
+    // ── EDIT MODE: update only editable fields ──
     const idx = state.queue.findIndex(o => o.id === state.editingOrderId);
     if (idx !== -1) {
+      const totalEl = document.getElementById('addOrderTotalDisplay');
+      const parsed = totalEl ? parseFloat(totalEl.textContent.replace('₱','').replace(/,/g,'')) : state.queue[idx].total;
       state.queue[idx] = {
         ...state.queue[idx],
-        items,
-        method: method === 'delivery' ? 'Delivery' : 'Pick-up',
-        total,
-        customerName
+        method,
+        customerName,
+        notes: notesInput,
+        total: isNaN(parsed) ? state.queue[idx].total : parsed
       };
-      showToast(`Order #${state.queue[idx].num} updated.`);
+      showToast(`Order ${state.queue[idx].num} updated.`);
     }
     state.editingOrderId = null;
   } else {
-    // Add new order
-    const orderNum = getAvailableOrderNumber();
+    // ── ADD MODE ──
+    if (!addOrderState.selectedItems.length) {
+      showToast('Please add at least one item to the order.', true);
+      return;
+    }
+    const prefix = document.querySelector('input[name="addOrderSource"]:checked')?.value || 'F';
+    const orderNum = getNextOrderNum(prefix);
+    const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
+
+    // Build items string
+    const itemsStr = addOrderState.selectedItems.map(e => {
+      const parts = [];
+      if (e.size) parts.push(e.size);
+      if (e.sugar) parts.push(e.sugar);
+      if (e.temp) parts.push(e.temp);
+      if (e.addons.length) parts.push(e.addons.map(a => a.label).join(', '));
+      return e.item.name + (parts.length ? ` (${parts.join(' · ')})` : '');
+    }).join(' | ');
+
+    // Build dashboard notes
+    const notesParts = addOrderState.selectedItems.map(e => {
+      const lines = [`• ${e.item.name} — ₱${e.subtotal.toFixed(2)}`];
+      if (e.size) lines.push(`  Size: ${e.size}`);
+      if (e.sugar) lines.push(`  Sugar: ${e.sugar}`);
+      if (e.temp) lines.push(`  Temp: ${e.temp}`);
+      if (e.addons.length) lines.push(`  Add-ons: ${e.addons.map(a => a.label + ' (+₱' + a.price + ')').join(', ')}`);
+      return lines.join('\n');
+    }).join('\n');
+    const fullNotes = notesParts + (notesInput ? '\nNote: ' + notesInput : '');
+
     state.queue.push({
       id: Date.now(),
       num: orderNum,
-      items,
-      method: method === 'delivery' ? 'Delivery' : 'Pick-up',
+      source: prefix,
+      items: itemsStr,
+      notes: fullNotes,
+      method,
       total,
       status: 'new',
       customerName,
-      customerEmail: '',
       timestamp: new Date().toISOString()
     });
-    showToast(`New order #${orderNum} added to queue.`);
+    updateAddOrderPrefix();
+    showToast(`Order ${orderNum} added to queue!`);
   }
-  
+
   saveOrderQueue();
   renderQueue();
   bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
-  
-  // Reset form
-  document.getElementById('addOrderItemsInput').value = '';
-  document.getElementById('addOrderMethodSelect').value = 'pickup';
-  document.getElementById('addOrderTotalInput').value = '';
-  document.getElementById('addOrderCustomerInput').value = '';
+  resetAddOrderModal();
 }
 
 function deleteQueueOrder(id) {
@@ -1953,8 +2495,97 @@ function deleteQueueOrder(id) {
     state.queue = state.queue.filter(o => o.id !== id);
     saveOrderQueue();
     renderQueue();
+    renderOrdersHistory();
     showToast(`Order #${order.num} deleted. Number can be reused.`);
   }
+}
+
+/* ════════ TOTAL ORDERS HISTORY ════════ */
+function renderOrdersHistory() {
+  const searchVal = (document.getElementById('ordersHistorySearch')?.value || '').toLowerCase().trim();
+  const statusFilter = document.getElementById('ordersHistoryFilter')?.value || 'all';
+  const methodFilter = document.getElementById('ordersHistoryMethod')?.value || 'all';
+  const tbody = document.getElementById('ordersHistoryBody');
+  const countEl = document.getElementById('ordersHistoryCount');
+  if (!tbody) return;
+
+  // All orders — sorted newest first by id (timestamp)
+  let orders = [...(state.queue || [])].sort((a, b) => b.id - a.id);
+
+  const sourceFilter = document.getElementById('ordersHistorySource')?.value || 'all';
+  // Apply filters
+  if (statusFilter !== 'all') orders = orders.filter(o => o.status === statusFilter);
+  if (methodFilter !== 'all') orders = orders.filter(o => o.method === methodFilter);
+  if (sourceFilter !== 'all') orders = orders.filter(o => (o.source || 'F') === sourceFilter);
+  if (searchVal) {
+    orders = orders.filter(o =>
+      String(o.num).includes(searchVal) ||
+      (o.items || '').toLowerCase().includes(searchVal) ||
+      (o.customerName || '').toLowerCase().includes(searchVal) ||
+      (o.method || '').toLowerCase().includes(searchVal)
+    );
+  }
+
+  // Update summary stats (always from full unfiltered list)
+  const all = state.queue || [];
+  const totalRev = all.reduce((s, o) => s + (parseFloat(o.total) || 0), 0);
+  const pickupCount = all.filter(o => o.method === 'Pick-up').length;
+  const deliveryCount = all.filter(o => o.method === 'Delivery').length;
+  const walkinCount = all.filter(o => (o.source || 'F') === 'F').length;
+  const onlineCount = all.filter(o => o.source === 'O').length;
+  const ohTotal = document.getElementById('ohTotalOrders');
+  const ohRev = document.getElementById('ohTotalRevenue');
+  const ohPick = document.getElementById('ohPickup');
+  const ohDel = document.getElementById('ohDelivery');
+  const ohWalk = document.getElementById('ohWalkin');
+  const ohOnl = document.getElementById('ohOnline');
+  if (ohTotal) ohTotal.textContent = all.length;
+  if (ohRev) ohRev.textContent = '₱' + totalRev.toLocaleString('en-PH', {minimumFractionDigits:2, maximumFractionDigits:2});
+  if (ohPick) ohPick.textContent = pickupCount;
+  if (ohDel) ohDel.textContent = deliveryCount;
+  if (ohWalk) ohWalk.textContent = walkinCount;
+  if (ohOnl) ohOnl.textContent = onlineCount;
+
+  if (!orders.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:28px;font-size:.85rem;">No orders match your filters.</td></tr>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+
+  const statusLabel = { new: 'New', preparing: 'Preparing', ready: 'Ready', done: 'Completed' };
+
+  tbody.innerHTML = orders.map(o => {
+    // Format timestamp if available
+    let dateStr = '—';
+    if (o.timestamp) {
+      const d = new Date(o.timestamp);
+      dateStr = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+               + ' ' + d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+    } else if (o.id && String(o.id).length === 13) {
+      // id is a Unix ms timestamp
+      const d = new Date(o.id);
+      dateStr = d.toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })
+               + ' ' + d.toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+    }
+    return `
+    <tr>
+      <td>
+        <strong style="color:var(--brand);">${o.num}</strong>
+        ${o.source==='O' ? '<span style="font-size:.6rem;background:rgba(52,152,219,.15);color:#2471a3;border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700;">ONLINE</span>' : '<span style="font-size:.6rem;background:rgba(116,81,45,.12);color:var(--brand);border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700;">WALK-IN</span>'}
+      </td>
+      <td style="font-size:.82rem;">${o.customerName || 'Walk-in'}</td>
+      <td style="max-width:240px;">
+        <div style="font-size:.82rem;">${o.items}</div>
+        ${o.notes ? `<details style="margin-top:3px;"><summary style="font-size:.7rem;color:var(--brand);cursor:pointer;font-weight:600;">Details</summary><pre style="font-size:.7rem;color:var(--text-dim);white-space:pre-wrap;margin:4px 0 0;font-family:inherit;background:var(--bg-surface);border-radius:6px;padding:6px;">${o.notes}</pre></details>` : ''}
+      </td>
+      <td style="font-size:.82rem;">${o.method}</td>
+      <td class="menu-price-color" style="font-weight:700;">₱${parseFloat(o.total).toFixed(2)}</td>
+      <td><span class="oh-status-badge ${o.status}">${statusLabel[o.status] || o.status}</span></td>
+      <td style="font-size:.78rem;color:var(--text-dim);white-space:nowrap;">${dateStr}</td>
+    </tr>`;
+  }).join('');
+
+  if (countEl) countEl.textContent = `Showing ${orders.length} of ${all.length} order${all.length !== 1 ? 's' : ''}`;
 }
 
 /* ════════ QUEUE ════════ */
@@ -1965,12 +2596,19 @@ function renderQueue() {
   const active = state.queue.filter(o => o.status !== 'done');
   if (!active.length) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:24px;font-size:.85rem;">No active orders in queue.</td></tr>';
+    renderOrdersHistory();
     syncDashboard(); return;
   }
+  renderOrdersHistory();
   tbody.innerHTML = active.map(o => `
     <tr>
-      <td><strong style="color:var(--brand);">#${o.num}</strong></td>
-      <td style="max-width:200px;">${o.items}</td>
+      <td><strong style="color:var(--brand);">${o.num}</strong>
+        ${o.source==='O' ? '<span style="font-size:.6rem;background:rgba(52,152,219,.15);color:#2471a3;border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700;">ONLINE</span>' : '<span style="font-size:.6rem;background:rgba(116,81,45,.12);color:var(--brand);border-radius:4px;padding:1px 5px;margin-left:3px;font-weight:700;">WALK-IN</span>'}
+      </td>
+      <td style="max-width:220px;">
+        <div style="font-size:.82rem;">${o.items}</div>
+        ${o.notes ? '<details style="margin-top:4px;"><summary style="font-size:.7rem;color:var(--brand);cursor:pointer;font-weight:600;">View customization</summary><pre style="font-size:.7rem;color:var(--text-dim);white-space:pre-wrap;margin:4px 0 0;font-family:inherit;background:var(--bg-surface);border-radius:6px;padding:6px;">' + o.notes + '</pre></details>' : ''}
+      </td>
       <td>${o.method}</td>
       <td class="menu-price-color" style="font-weight:700;">₱${o.total.toFixed(2)}</td>
       <td><span class="queue-badge ${o.status}">${o.status === 'new' ? 'New' : o.status === 'preparing' ? 'Preparing' : 'Ready'}</span></td>
@@ -2003,6 +2641,7 @@ function completeQueue(id) {
   saveOrderQueue();
   showToast(`Order #${o.num} marked as done.`);
   renderQueue();
+  renderOrdersHistory();
 }
 
 function addDemoOrder() {

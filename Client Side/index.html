@@ -7,6 +7,8 @@
   <title>Sip & Pulse Cafe</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <!-- Google Identity Services SDK — real OAuth sign-in -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <link
     href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@300;400;500;600&display=swap"
     rel="stylesheet">
@@ -2402,6 +2404,24 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
 <body>
 
+  <!--
+    ══════════════════════════════════════════════════════════
+    GOOGLE IDENTITY SERVICES — HTML API (most reliable method)
+    Replace YOUR_GOOGLE_CLIENT_ID below with your actual
+    OAuth 2.0 Client ID from Google Cloud Console.
+    This div is invisible; it triggers One Tap automatically.
+    ══════════════════════════════════════════════════════════
+  -->
+  <div id="g_id_onload"
+       data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+       data-context="signin"
+       data-ux_mode="popup"
+       data-callback="onGoogleCredentialResponse"
+       data-auto_prompt="true"
+       data-itp_support="true"
+       style="display:none;">
+  </div>
+
   <!-- ADMIN BANNER -->
   <div id="adminBanner">
     <span class="material-icons align-middle me-2" style="font-size:14px;">shield</span>
@@ -2457,17 +2477,23 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
         <!-- Google Login Button (styled like original Google button) -->
         <div class="position-relative d-none d-lg-block" id="googleLoginWrap">
-          <button class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()">
+          <button class="btn-google-login" id="googleLoginBtn">
             <img src="https://www.google.com/favicon.ico" alt="G">
             Sign in with Google
           </button>
+          <!-- Logged-in avatar chip (shown instead of the button after sign-in) -->
+          <div id="googleUserChip" style="display:none;align-items:center;gap:8px;background:var(--bg-surface-2);border:1.5px solid var(--border);border-radius:24px;padding:4px 12px 4px 5px;cursor:pointer;" onclick="toggleGoogleMenu()">
+            <img id="googleUserAvatar" src="" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.src='https://i.pravatar.cc/80?img=47'">
+            <span id="googleUserFirstName" style="font-size:.8rem;font-weight:600;color:var(--text-main);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+            <span class="material-icons" style="font-size:14px;color:var(--text-dim);">expand_more</span>
+          </div>
           <div class="google-user-menu d-none" id="googleUserMenu">
-            <img id="googleUserAvatar" src="" alt=""
-              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;">
+            <img id="googleUserAvatarLarge" src="" alt=""
+              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;" onerror="this.src='https://i.pravatar.cc/80?img=47'">
             <p class="u-name" id="googleUserName"></p>
             <p id="googleUserEmail" style="word-break:break-all;"></p>
             <hr style="border-color:var(--border);margin:8px 0;">
-            <button onclick="handleGoogleLogout()"
+            <button onclick="event.stopPropagation(); handleGoogleLogout()"
               style="background:none;border:none;color:var(--admin-accent);font-size:.8rem;font-weight:600;cursor:pointer;padding:0;">Sign Out</button>
           </div>
         </div>
@@ -2730,11 +2756,14 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
               <input type="radio" id="s1" name="rating" value="1"><label for="s1">★</label>
             </div>
           </div>
-          <div class="mb-3">
+          <div class="mb-3" id="reviewNameRow">
             <label class="form-label-custom">Your Name</label>
-            <div class="input-group-custom">
-              <span class="material-icons">person</span>
-              
+            <input type="text" class="form-control-custom" id="reviewName" placeholder="Your name…">
+            <!-- Shown when signed in — displays the Google account name read-only -->
+            <div id="reviewNameSignedIn" style="display:none;margin-top:8px;display:none;align-items:center;gap:10px;background:var(--bg-surface);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;">
+              <img id="reviewNameAvatar" src="" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" onerror="this.src='https://i.pravatar.cc/40?img=1'">
+              <span id="reviewNameDisplay" style="font-size:.875rem;font-weight:600;color:var(--text-main);"></span>
+              <span style="font-size:.72rem;color:var(--brand);margin-left:auto;font-weight:600;">via Google</span>
             </div>
           </div>
           <div class="mb-3">
@@ -2821,12 +2850,13 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
   <div class="modal fade" id="fullMenuModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-fullscreen" style="margin:0;">
-    <div class="modal-content" style="border-radius:0;border:none;">
+    <div class="modal-content" style="border-radius:0;border:none;position:relative;">
+      <!-- ✕ Close button is a direct child of modal-content so it sits above ALL scroll layers -->
+      <button class="menu-modal-close-btn" data-bs-dismiss="modal" title="Close menu" style="position:fixed;top:20px;right:20px;z-index:99999;">
+        <span class="material-icons">close</span>
+      </button>
       <div class="menu-modal-bg">
         <div class="menu-modal-overlay">
-          <button class="menu-modal-close-btn" data-bs-dismiss="modal" title="Close menu">
-            <span class="material-icons">close</span>
-          </button>
 
           <div class="sticky-top" style="background: rgba(18, 12, 8, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding-top: 20px; z-index: 10; border-bottom: 1px solid rgba(175, 143, 111, 0.2);">
             <div class="container text-center">
@@ -3593,6 +3623,19 @@ const FOOD_ADDONS = [
       setupCategoryBarModal();
       updateCartBadge();
 
+      // Restore previous Google session (survives page refresh within the same tab session)
+      _restoreGoogleSession();
+
+      // Initialise real Google GIS sign-in once the SDK script has loaded
+      if (window.google && window.google.accounts) {
+        initGoogleSignIn();
+      } else {
+        // SDK loads async — wait for it
+        window.addEventListener('load', () => {
+          if (window.google && window.google.accounts) initGoogleSignIn();
+        });
+      }
+
       // Open full menu button
       document.getElementById('openFullMenuBtn').addEventListener('click', () => {
         new bootstrap.Modal(document.getElementById('fullMenuModal')).show();
@@ -3607,8 +3650,35 @@ const FOOD_ADDONS = [
 
       // Close google menu on outside click
       document.addEventListener('click', (e) => {
-        if (!document.getElementById('googleLoginWrap').contains(e.target)) {
-          document.getElementById('googleUserMenu').classList.add('d-none');
+        const wrap = document.getElementById('googleLoginWrap');
+        const menu = document.getElementById('googleUserMenu');
+        if (wrap && !wrap.contains(e.target) && menu) {
+          menu.classList.add('d-none');
+        }
+      });
+
+      // ── CROSS-TAB SYNC: listen for admin changes to the menu ──
+      // When admin.html adds, edits, or deletes items in another tab,
+      // this event fires here and the full menu modal re-renders instantly.
+      window.addEventListener('storage', (e) => {
+        if (e.key === STORAGE_KEY && e.newValue) {
+          try {
+            const updated = JSON.parse(e.newValue);
+            if (Array.isArray(updated)) {
+              state.menuItems = updated;
+              renderMenuModal(state.searchQuery);
+              showToast('Menu updated by admin.');
+            }
+          } catch(err) {}
+        }
+        if (e.key === REVIEWS_KEY && e.newValue) {
+          try {
+            const updated = JSON.parse(e.newValue);
+            if (Array.isArray(updated)) {
+              state.reviews = updated;
+              renderReviews();
+            }
+          } catch(err) {}
         }
       });
     });
@@ -3622,28 +3692,209 @@ const FOOD_ADDONS = [
     });
 
     /* ════════════════════════════════════════════
-       GOOGLE LOGIN (simulated)
+       GOOGLE LOGIN — Real Google Identity Services (GIS)
+       ════════════════════════════════════════════
+       HOW TO ENABLE REAL SIGN-IN:
+         1. Go to https://console.cloud.google.com/
+         2. Create a project → APIs & Services → Credentials
+         3. Create an OAuth 2.0 Client ID (Web Application)
+         4. Add your domain to "Authorised JavaScript origins"
+         5. Replace 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
+            below with your actual Client ID.
        ════════════════════════════════════════════ */
-    function handleGoogleLogin() {
-      // In production: use Google Identity Services SDK
-      // window.google.accounts.id.initialize({ client_id: 'YOUR_CLIENT_ID', callback: onGoogleResponse });
-      // window.google.accounts.id.prompt();
 
-      // Simulated flow:
-      const mockUsers = [
-        { name: "Maria Santos", email: "maria.santos@gmail.com", avatar: "https://i.pravatar.cc/80?img=47" },
-        { name: "Jake Reyes", email: "jake.reyes@gmail.com", avatar: "https://i.pravatar.cc/80?img=12" },
-      ];
-      const u = mockUsers[Math.floor(Math.random() * mockUsers.length)];
+    // ── Replace this with your real Google OAuth Client ID ──
+    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+    const _isRealGIS = () => GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE');
+
+    // Decode a JWT (Google credential token) into a plain object
+    function decodeJwt(token) {
+      try {
+        const base64 = token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+        return JSON.parse(atob(base64));
+      } catch (e) { return null; }
+    }
+
+    // Called by Google GIS after the user picks an account
+    function onGoogleCredentialResponse(response) {
+      const payload = decodeJwt(response.credential);
+      if (!payload) { showToast('Sign-in failed. Please try again.', true); return; }
+      const u = {
+        name:   payload.name,
+        email:  payload.email,
+        avatar: payload.picture || ''
+      };
+      _applyGoogleUser(u);
+    }
+
+    // Shared helper — applies a signed-in user to the UI state
+    function _applyGoogleUser(u) {
       state.googleUser = u;
+      // Persist across page reloads (sessionStorage so it clears on browser close)
+      try { sessionStorage.setItem('sipandpulse_guser', JSON.stringify(u)); } catch(e) {}
 
-      document.getElementById('googleLoginBtn').style.display = 'none';
-      const menu = document.getElementById('googleUserMenu');
-      document.getElementById('googleUserAvatar').src = u.avatar;
-      document.getElementById('googleUserName').textContent = u.name;
-      document.getElementById('googleUserEmail').textContent = u.email;
+      // Hide the plain sign-in button, show the avatar chip
+      const loginBtn = document.getElementById('googleLoginBtn');
+      if (loginBtn) loginBtn.style.display = 'none';
+      const chip = document.getElementById('googleUserChip');
+      if (chip) chip.style.display = 'flex';
+
+      // Chip avatar + first name
+      const avatarEl = document.getElementById('googleUserAvatar');
+      if (avatarEl) avatarEl.src = u.avatar || 'https://i.pravatar.cc/80?img=47';
+      const firstNameEl = document.getElementById('googleUserFirstName');
+      if (firstNameEl) firstNameEl.textContent = u.name.split(' ')[0];
+
+      // Dropdown content
+      const avatarLargeEl = document.getElementById('googleUserAvatarLarge');
+      if (avatarLargeEl) avatarLargeEl.src = u.avatar || 'https://i.pravatar.cc/80?img=47';
+      const nameEl  = document.getElementById('googleUserName');
+      if (nameEl)  nameEl.textContent  = u.name;
+      const emailEl = document.getElementById('googleUserEmail');
+      if (emailEl) emailEl.textContent = u.email;
+
       showToast(`Welcome, ${u.name}! You are now signed in.`);
-      renderReviews(); // refresh to auto-fill name in form
+      renderReviews(); // refresh so review form auto-fills with real name
+    }
+
+    // Initialise Google GIS — One Tap + hidden rendered button for popup fallback
+    function initGoogleSignIn() {
+      if (!window.google || !window.google.accounts) return;
+      const isRealClientId = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE');
+      if (!isRealClientId) return; // no Client ID configured — stay in demo mode
+
+      google.accounts.id.initialize({
+        client_id:             GOOGLE_CLIENT_ID,
+        callback:              onGoogleCredentialResponse,
+        auto_select:           true,   // silently signs in returning users
+        cancel_on_tap_outside: false,
+        use_fedcm_for_prompt:  true    // modern Federated Credential Management
+      });
+
+      // Render a hidden GIS button — clicking it opens the real Google popup
+      const container = document.getElementById('googleSignInButtonContainer');
+      if (container) {
+        google.accounts.id.renderButton(container, {
+          type:  'standard',
+          theme: 'outline',
+          size:  'large',
+          text:  'signin_with',
+          shape: 'pill',
+          width: 240
+        });
+      }
+
+      // Show the One Tap floating prompt
+      google.accounts.id.prompt();
+    }
+
+    // Main entry point — called when the user clicks "Sign in with Google"
+    function handleGoogleLogin() {
+      const isRealClientId = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE');
+
+      if (isRealClientId && window.google && window.google.accounts) {
+        // Real mode: show One Tap; if blocked, click the hidden GIS rendered button
+        google.accounts.id.prompt((note) => {
+          if (note.isNotDisplayed() || note.isSkippedMoment()) {
+            // One Tap was suppressed — click the hidden GIS button to open the full popup
+            const gBtn = document.querySelector('#googleSignInButtonContainer div[role="button"]');
+            if (gBtn) { gBtn.click(); }
+          }
+        });
+      } else {
+        // Demo mode — show a realistic Google-style account picker
+        _showDemoGooglePicker();
+      }
+    }
+
+    // Demo Google picker — mimics the real account-chooser look
+    function _showDemoGooglePicker() {
+      // Remove any existing picker
+      const existing = document.getElementById('demoGooglePicker');
+      if (existing) existing.remove();
+
+      const picker = document.createElement('div');
+      picker.id = 'demoGooglePicker';
+      picker.innerHTML = `
+        <div id="demoGoogleBackdrop" style="
+          position:fixed;inset:0;background:rgba(0,0,0,0.45);
+          z-index:99990;display:flex;align-items:center;justify-content:center;
+          backdrop-filter:blur(4px);">
+          <div style="
+            background:#fff;border-radius:28px;width:360px;max-width:92vw;
+            box-shadow:0 8px 40px rgba(0,0,0,.28);padding:32px 24px 24px;
+            font-family:'Inter',sans-serif;color:#1f1f1f;position:relative;">
+            <!-- Google Logo -->
+            <div style="text-align:center;margin-bottom:16px;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="74" height="24" viewBox="0 0 74 24">
+                <path fill="#4285F4" d="M9.24 8.19v2.46h5.88c-.18 1.38-1.62 4.04-5.88 4.04-3.54 0-6.43-2.93-6.43-6.54S5.7 1.61 9.24 1.61c2.02 0 3.37.86 4.14 1.6l2.82-2.71C14.46.91 12.06 0 9.24 0 4.14 0 0 4.14 0 9.25S4.14 18.5 9.24 18.5c5.33 0 8.86-3.74 8.86-9.02 0-.6-.07-1.07-.15-1.53L9.24 8.19z"/>
+                <path fill="#EA4335" d="M9.24 8.19v2.46h5.88"/>
+              </svg>
+              <p style="font-size:1rem;font-weight:600;margin:12px 0 4px;color:#1f1f1f;">Sign in with Google</p>
+              <p style="font-size:.8rem;color:#666;margin:0;">Choose your account to continue to Sip &amp; Pulse</p>
+            </div>
+            <hr style="border-color:#e0e0e0;margin:16px 0;">
+            <!-- Account options -->
+            <div id="demoAccountList">
+              <p style="font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#888;margin:0 0 10px;">Select account</p>
+            </div>
+            <!-- Divider + use another account -->
+            <hr style="border-color:#e0e0e0;margin:14px 0 10px;">
+            <button id="demoPickerClose" style="width:100%;background:none;border:1.5px solid #dadce0;border-radius:20px;padding:9px;font-size:.82rem;font-weight:600;color:#3c4043;cursor:pointer;transition:background .2s;" onmouseover="this.style.background='#f1f3f4'" onmouseout="this.style.background='none'">
+              Use another account
+            </button>
+          </div>
+        </div>`;
+      document.body.appendChild(picker);
+
+      // Demo accounts — these represent "accounts already signed in to Chrome"
+      const demoAccounts = [
+        { name: 'Maria Santos',   email: 'maria.santos@gmail.com',  avatar: 'https://i.pravatar.cc/80?img=47' },
+        { name: 'Jake Reyes',     email: 'jake.reyes@gmail.com',    avatar: 'https://i.pravatar.cc/80?img=12' },
+        { name: 'Ana Dela Cruz',  email: 'ana.delacruz@gmail.com',  avatar: 'https://i.pravatar.cc/80?img=32' },
+      ];
+
+      const list = document.getElementById('demoAccountList');
+      demoAccounts.forEach(acc => {
+        const btn = document.createElement('button');
+        btn.style.cssText = 'display:flex;align-items:center;gap:14px;width:100%;background:none;border:none;border-radius:12px;padding:10px 8px;cursor:pointer;transition:background .18s;text-align:left;margin-bottom:4px;';
+        btn.innerHTML = `
+          <img src="${acc.avatar}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" onerror="this.src='https://i.pravatar.cc/80?img=1'">
+          <div>
+            <p style="margin:0;font-size:.88rem;font-weight:600;color:#1f1f1f;">${acc.name}</p>
+            <p style="margin:0;font-size:.75rem;color:#666;">${acc.email}</p>
+          </div>`;
+        btn.onmouseover = () => btn.style.background = '#f1f3f4';
+        btn.onmouseout  = () => btn.style.background = 'none';
+        btn.onclick = () => {
+          _closeDemoGooglePicker();
+          _applyGoogleUser(acc);
+          // If triggered from loginRequiredModal, close it too
+          const lrm = document.getElementById('loginRequiredModal');
+          const lrmInst = lrm ? bootstrap.Modal.getInstance(lrm) : null;
+          if (lrmInst) lrmInst.hide();
+          // Open pending order if any
+          setTimeout(() => {
+            if (state.pendingOrderItemId !== null) {
+              const id = state.pendingOrderItemId;
+              state.pendingOrderItemId = null;
+              openOrderModal(id);
+            }
+          }, 500);
+        };
+        list.appendChild(btn);
+      });
+
+      // Close on backdrop click or close button
+      document.getElementById('demoPickerClose').onclick = _closeDemoGooglePicker;
+      document.getElementById('demoGoogleBackdrop').onclick = (e) => {
+        if (e.target === document.getElementById('demoGoogleBackdrop')) _closeDemoGooglePicker();
+      };
+    }
+
+    function _closeDemoGooglePicker() {
+      const el = document.getElementById('demoGooglePicker');
+      if (el) el.remove();
     }
 
     function toggleGoogleMenu() {
@@ -3651,49 +3902,67 @@ const FOOD_ADDONS = [
     }
 
     function handleGoogleLogout() {
+      // Sign out of Google GIS if real auth is active
+      if (_isRealGIS() && window.google && window.google.accounts) {
+        if (state.googleUser && state.googleUser.email) {
+          google.accounts.id.revoke(state.googleUser.email, () => {});
+        }
+        google.accounts.id.disableAutoSelect();
+      }
       state.googleUser = null;
-      document.getElementById('googleLoginBtn').style.display = '';
+      try { sessionStorage.removeItem('sipandpulse_guser'); } catch(e) {}
+      // Hide chip, show login button
+      const chip = document.getElementById('googleUserChip');
+      if (chip) chip.style.display = 'none';
+      const loginBtn = document.getElementById('googleLoginBtn');
+      if (loginBtn) loginBtn.style.display = '';
       document.getElementById('googleUserMenu').classList.add('d-none');
+      renderReviews(); // clear auto-filled name from review form
       showToast('Signed out successfully.');
     }
 
     function handleGoogleLoginFromModal() {
-      bootstrap.Modal.getInstance(document.getElementById('loginRequiredModal')).hide();
+      const lrm = document.getElementById('loginRequiredModal');
+      const lrmInst = lrm ? bootstrap.Modal.getInstance(lrm) : null;
+      if (lrmInst) lrmInst.hide();
       handleGoogleLogin();
-      // After login, open the pending order if any
-      setTimeout(() => {
-        if (state.pendingOrderItemId !== null) {
-          const id = state.pendingOrderItemId;
-          state.pendingOrderItemId = null;
-          openOrderModal(id);
-        }
-      }, 600);
+      // Pending order is handled inside _showDemoGooglePicker and onGoogleCredentialResponse
     }
 
     function handleFacebookLogin() {
-      // Simulated Facebook login
-      const mockFBUsers = [
-        { name: "Ana Dela Cruz", email: "ana.delacruz@facebook.com", avatar: "https://i.pravatar.cc/80?img=32" },
-        { name: "Carlo Reyes", email: "carlo.reyes@facebook.com", avatar: "https://i.pravatar.cc/80?img=22" },
-      ];
-      const u = mockFBUsers[Math.floor(Math.random() * mockFBUsers.length)];
-      state.googleUser = u;
-      bootstrap.Modal.getInstance(document.getElementById('loginRequiredModal')).hide();
-      document.getElementById('googleLoginBtn').style.display = 'none';
-      document.getElementById('googleUserAvatar').src = u.avatar;
-      document.getElementById('googleUserName').textContent = u.name;
-      document.getElementById('googleUserEmail').textContent = u.email;
-      showToast(`Welcome, ${u.name}! Signed in via Facebook.`);
-      setTimeout(() => {
-        if (state.pendingOrderItemId !== null) {
-          const id = state.pendingOrderItemId;
-          state.pendingOrderItemId = null;
-          openOrderModal(id);
-        }
-      }, 600);
+      // Facebook login kept for compatibility — uses demo picker for now
+      _showDemoGooglePicker();
     }
 
+    // Restore session on page load (so refresh doesn't log the user out)
+    function _restoreGoogleSession() {
+      try {
+        const saved = sessionStorage.getItem('sipandpulse_guser');
+        if (saved) {
+          const u = JSON.parse(saved);
+          if (u && u.name) _applyGoogleUser(u);
+        }
+      } catch(e) {}
+    }
+
+    // Bind the navbar Sign-in button (removes duplicate onclick attr conflict)
+    document.getElementById('googleLoginBtn').removeAttribute('onclick');
     document.getElementById('googleLoginBtn').addEventListener('click', handleGoogleLogin);
+
+    // Avatar wrap click → toggle dropdown menu
+    document.getElementById('googleUserAvatar') &&
+      document.getElementById('googleUserAvatar').addEventListener('click', toggleGoogleMenu);
+
+    // Hidden container for GIS rendered button (used internally by Google SDK)
+    (function _injectGISContainer() {
+      const wrap = document.getElementById('googleLoginWrap');
+      if (wrap && !document.getElementById('googleSignInButtonContainer')) {
+        const c = document.createElement('div');
+        c.id = 'googleSignInButtonContainer';
+        c.style.cssText = 'position:absolute;opacity:0;pointer-events:none;width:1px;height:1px;overflow:hidden;';
+        wrap.appendChild(c);
+      }
+    })();
 
     /* ════════════════════════════════════════════
        ADMIN TOGGLE
@@ -4239,16 +4508,22 @@ const FOOD_ADDONS = [
        REVIEWS
        ════════════════════════════════════════════ */
     function renderReviews() {
-      // Auto-fill name if Google user is logged in
-      const nameInput = document.getElementById('reviewName');
-      if (nameInput && state.googleUser) {
-        nameInput.value = state.googleUser.name;
-        nameInput.readOnly = true;
-        nameInput.style.opacity = '0.75';
-        nameInput.title = 'Using your Google account name';
-      } else if (nameInput) {
-        nameInput.readOnly = false;
-        nameInput.style.opacity = '';
+      // Toggle name field between "signed-in chip" and plain text input
+      const nameInput       = document.getElementById('reviewName');
+      const nameSignedIn    = document.getElementById('reviewNameSignedIn');
+      const nameDisplay     = document.getElementById('reviewNameDisplay');
+      const reviewNameAvatar= document.getElementById('reviewNameAvatar');
+
+      if (state.googleUser) {
+        // Hide plain input, show the signed-in chip
+        if (nameInput)    { nameInput.style.display = 'none'; nameInput.value = state.googleUser.name; }
+        if (nameSignedIn) { nameSignedIn.style.display = 'flex'; }
+        if (nameDisplay)  { nameDisplay.textContent = state.googleUser.name; }
+        if (reviewNameAvatar && state.googleUser.avatar) { reviewNameAvatar.src = state.googleUser.avatar; }
+      } else {
+        // Show plain input, hide chip
+        if (nameInput)    { nameInput.style.display = ''; nameInput.value = ''; nameInput.readOnly = false; nameInput.style.opacity = ''; }
+        if (nameSignedIn) { nameSignedIn.style.display = 'none'; }
       }
 
       document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => `
@@ -4256,7 +4531,10 @@ const FOOD_ADDONS = [
       <div class="review-card" onclick="openReviewDetail(${r.id})" title="Click to read full review">
         <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
-            <div class="review-avatar">${r.initials}</div>
+            ${r.avatar
+              ? `<img src="${r.avatar}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';" alt="${r.name}"><div class="review-avatar" style="display:none;">${r.initials}</div>`
+              : `<div class="review-avatar">${r.initials}</div>`
+            }
             <div>
               <p style="font-weight:600;font-size:.875rem;margin:0;">${r.name}</p>
               <p style="font-size:.72rem;color:var(--text-dim);margin:0;">${r.date}</p>
@@ -4296,55 +4574,76 @@ const FOOD_ADDONS = [
     }
 
    function submitReview() {
-      let name = document.getElementById('reviewName').value.trim();
-      const comment = document.getElementById('reviewComment').value.trim();
-      const ratingEl = document.querySelector('input[name="rating"]:checked');
-      const isAnonymous = document.getElementById('reviewAnonymous').checked;
+      const comment    = document.getElementById('reviewComment').value.trim();
+      const ratingEl   = document.querySelector('input[name="rating"]:checked');
+      const isAnonymous= document.getElementById('reviewAnonymous').checked;
 
-      // If Google user is logged in, always use their real name (unless anonymous)
-      if (state.googleUser && !isAnonymous) {
-        name = state.googleUser.name;
+      // Name comes from Google account if logged in, otherwise from the plain input
+      let name = state.googleUser && !isAnonymous
+        ? state.googleUser.name
+        : (document.getElementById('reviewName').value || '').trim();
+
+      // Validate
+      if (!comment) {
+        showToast('Please write a review before posting.', true);
+        return;
       }
-
-      // Validate: Require comment & rating. Require name ONLY if not anonymous.
-      if (!comment || !ratingEl || (!name && !isAnonymous)) { 
-        showToast('Please fill in all review fields and select a rating.', true); 
-        return; 
+      if (!ratingEl) {
+        showToast('Please select a star rating.', true);
+        return;
+      }
+      if (!name && !isAnonymous) {
+        if (!state.googleUser) {
+          showToast('Please enter your name or sign in with Google.', true);
+        } else {
+          showToast('Please fill in all fields.', true);
+        }
+        return;
       }
 
       const rating = parseInt(ratingEl.value);
       let initials;
 
-      // Handle Anonymous vs Named logic
       if (isAnonymous) {
-        name = "Anonymous";
-        initials = "AN";
+        name     = 'Anonymous';
+        initials = 'AN';
       } else {
         initials = name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
       }
 
-      state.reviews.unshift({ 
-        id: Date.now(), 
-        name, 
-        initials, 
-        rating, 
-        comment, 
-        adminReply: '',
-        date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) 
-      });
+      // Use Google avatar if available
+      const avatar = (state.googleUser && !isAnonymous) ? (state.googleUser.avatar || '') : '';
 
-      try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
+      const newReview = {
+        id: Date.now(),
+        name,
+        initials,
+        rating,
+        comment,
+        avatar,
+        adminReply: '',
+        date: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      };
+
+      state.reviews.unshift(newReview);
+
+      try {
+        localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews));
+        // Explicitly dispatch storage event so same-origin admin tab picks it up immediately
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: REVIEWS_KEY,
+          newValue: JSON.stringify(state.reviews),
+          storageArea: localStorage
+        }));
+      } catch(e) {}
       renderReviews();
 
-      // Reset the form
+      // Reset form
       document.getElementById('reviewComment').value = '';
       document.getElementById('reviewAnonymous').checked = false;
-      if (!state.googleUser) {
-        document.getElementById('reviewName').value = '';
-      }
-      document.getElementById('reviewName').disabled = false; // Reset disabled state
+      if (!state.googleUser) document.getElementById('reviewName').value = '';
       document.querySelectorAll('input[name="rating"]').forEach(r => r.checked = false);
-      
+
       showToast('Your review has been posted. Thank you!');
     }
 
