@@ -2405,15 +2405,23 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 <body>
 
   <!--
-    ══════════════════════════════════════════════════════════
-    GOOGLE IDENTITY SERVICES — HTML API (most reliable method)
-    Replace YOUR_GOOGLE_CLIENT_ID below with your actual
-    OAuth 2.0 Client ID from Google Cloud Console.
-    This div is invisible; it triggers One Tap automatically.
-    ══════════════════════════════════════════════════════════
+    ════════════════════════════════════════════════════════════════════════════════
+    GOOGLE IDENTITY SERVICES — One Tap Sign-In
+    ════════════════════════════════════════════════════════════════════════════════
+    
+    SETUP REQUIRED:
+    Replace "YOUR_GOOGLE_CLIENT_ID" in the data-client_id attribute below with
+    your real OAuth 2.0 Client ID from Google Cloud Console.
+    
+    The Client ID should look like:
+    123456789-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com
+    
+    See the JavaScript section (search for "GOOGLE SIGN-IN") for detailed setup steps.
+    
+    ════════════════════════════════════════════════════════════════════════════════
   -->
   <div id="g_id_onload"
-       data-client_id="YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com"
+       data-client_id="34874390808-rlb401gpajkoc1erak52gn1s54hnt50e.apps.googleusercontent.com"
        data-context="signin"
        data-ux_mode="popup"
        data-callback="onGoogleCredentialResponse"
@@ -3691,20 +3699,10 @@ const FOOD_ADDONS = [
       document.documentElement.setAttribute('data-bs-theme', state.isDark ? 'dark' : 'light');
     });
 
-    /* ════════════════════════════════════════════
-       GOOGLE LOGIN — Real Google Identity Services (GIS)
-       ════════════════════════════════════════════
-       HOW TO ENABLE REAL SIGN-IN:
-         1. Go to https://console.cloud.google.com/
-         2. Create a project → APIs & Services → Credentials
-         3. Create an OAuth 2.0 Client ID (Web Application)
-         4. Add your domain to "Authorised JavaScript origins"
-         5. Replace 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'
-            below with your actual Client ID.
-       ════════════════════════════════════════════ */
-
-    // ── Replace this with your real Google OAuth Client ID ──
-    const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+    
+    // ── PASTE YOUR REAL GOOGLE OAUTH CLIENT ID HERE ──
+    
+    const GOOGLE_CLIENT_ID = '34874390808-rlb401gpajkoc1erak52gn1s54hnt50e.apps.googleusercontent.com';
     const _isRealGIS = () => GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE');
 
     // Decode a JWT (Google credential token) into a plain object
@@ -3759,33 +3757,55 @@ const FOOD_ADDONS = [
 
     // Initialise Google GIS — One Tap + hidden rendered button for popup fallback
     function initGoogleSignIn() {
-      if (!window.google || !window.google.accounts) return;
+      if (!window.google || !window.google.accounts) {
+        console.warn('Google Identity Services not loaded. Sign-in will be in demo mode.');
+        return;
+      }
+      
       const isRealClientId = GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE');
-      if (!isRealClientId) return; // no Client ID configured — stay in demo mode
-
-      google.accounts.id.initialize({
-        client_id:             GOOGLE_CLIENT_ID,
-        callback:              onGoogleCredentialResponse,
-        auto_select:           true,   // silently signs in returning users
-        cancel_on_tap_outside: false,
-        use_fedcm_for_prompt:  true    // modern Federated Credential Management
-      });
-
-      // Render a hidden GIS button — clicking it opens the real Google popup
-      const container = document.getElementById('googleSignInButtonContainer');
-      if (container) {
-        google.accounts.id.renderButton(container, {
-          type:  'standard',
-          theme: 'outline',
-          size:  'large',
-          text:  'signin_with',
-          shape: 'pill',
-          width: 240
-        });
+      if (!isRealClientId) {
+        console.log('Using DEMO mode. To enable real Google Sign-In:');
+        console.log('1. Get a Client ID from https://console.cloud.google.com/');
+        console.log('2. Replace YOUR_GOOGLE_CLIENT_ID in the index.html file');
+        return; // no Client ID configured — stay in demo mode
       }
 
-      // Show the One Tap floating prompt
-      google.accounts.id.prompt();
+      try {
+        google.accounts.id.initialize({
+          client_id:             GOOGLE_CLIENT_ID,
+          callback:              onGoogleCredentialResponse,
+          auto_select:           true,   // silently signs in returning users
+          cancel_on_tap_outside: false,
+          use_fedcm_for_prompt:  true    // modern Federated Credential Management
+        });
+
+        // Render a hidden GIS button — clicking it opens the real Google popup
+        const container = document.getElementById('googleSignInButtonContainer');
+        if (container) {
+          google.accounts.id.renderButton(container, {
+            type:  'standard',
+            theme: 'outline',
+            size:  'large',
+            text:  'signin_with',
+            shape: 'pill',
+            width: 240
+          });
+        }
+
+        // Show the One Tap floating prompt
+        google.accounts.id.prompt((notification) => {
+          if (notification.isNotDisplayed()) {
+            console.log('One Tap not displayed: ', notification.getNotDisplayedReason());
+          }
+          if (notification.isSkippedMoment()) {
+            console.log('One Tap skipped');
+          }
+        });
+        
+        console.log('✓ Real Google Sign-In initialized successfully!');
+      } catch (error) {
+        console.error('Error initializing Google Sign-In:', error);
+      }
     }
 
     // Main entry point — called when the user clicks "Sign in with Google"
