@@ -420,6 +420,152 @@
       .queue-table th:nth-child(3),
       .queue-table td:nth-child(3) { display: none; }
     }
+
+    /* ─── Extra Small phones (< 360px) ─── */
+    @media (max-width: 359.98px) {
+      .hero-title { font-size: 1.45rem; line-height: 1.15; }
+      .navbar-brand-link { font-size: .95rem; gap: 4px; }
+      .nav-logo { width: 32px; height: 32px; }
+      .admin-top-bar { font-size: .65rem; padding: 4px 8px; }
+      .section-title { font-size: 1.2rem; }
+      
+      /* Dashboard cards */
+      .dash-card { padding: 12px 10px; gap: 8px; }
+      .dash-num { font-size: 1.2rem; }
+      .dash-icon { width: 38px; height: 38px; }
+      .dash-label { font-size: .65rem; }
+      
+      /* Queue table */
+      .queue-table th, .queue-table td { padding: 6px 8px; font-size: .7rem; }
+      .queue-badge { font-size: .6rem; padding: 1px 5px; }
+      
+      /* Menu management */
+      .mgmt-card-img { height: 100px; }
+      .mgmt-card-name { font-size: .85rem; }
+      .btn-mgmt-edit, .btn-mgmt-del { padding: 4px 6px; font-size: .65rem; }
+      
+      /* Buttons */
+      .btn-admin-nav, .btn-client-view { font-size: .65rem; padding: 4px 8px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 220px; }
+    }
+
+    /* ─── Large Phones (360px - 480px) ─── */
+    @media (min-width: 360px) and (max-width: 479.98px) {
+      .hero-section { min-height: 68vh; }
+      .hero-title { font-size: 1.7rem; }
+      
+      /* Dashboard */
+      .dash-card { padding: 14px 12px; gap: 10px; }
+      .dash-num { font-size: 1.3rem; }
+      .dash-icon { width: 40px; height: 40px; }
+      
+      /* Queue */
+      .queue-table th, .queue-table td { padding: 7px 9px; font-size: .74rem; }
+      
+      /* Menu mgmt */
+      .mgmt-card-img { height: 110px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 250px; }
+    }
+
+    /* ─── Tablets Landscape (480px - 768px) ─── */
+    @media (min-width: 480px) and (max-width: 767.98px) {
+      .hero-section { min-height: 70vh; }
+      .hero-title { font-size: 1.95rem; }
+      
+      /* Dashboard: 2-col grid */
+      .dashboard-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .dash-card { padding: 18px 16px; gap: 14px; }
+      .dash-num { font-size: 1.5rem; }
+      
+      /* Queue table */
+      .queue-section .table-responsive { overflow-x: auto; }
+      .queue-table th, .queue-table td { padding: 9px 12px; font-size: .8rem; }
+      
+      /* Menu management: 2-col */
+      .menu-mgmt-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .mgmt-card-img { height: 130px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 300px; }
+    }
+
+    /* ─── Tablet Portrait (768px - 992px) ─── */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .hero-section { min-height: 75vh; }
+      .hero-title { font-size: 2.3rem; }
+      .section-title { font-size: 1.6rem; }
+      
+      /* Dashboard: 2-col grid */
+      .dashboard-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .dash-card { padding: 20px 18px; gap: 16px; }
+      
+      /* Queue */
+      .queue-table th, .queue-table td { padding: 10px 13px; font-size: .82rem; }
+      
+      /* Menu management: 2-col */
+      .menu-mgmt-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .mgmt-card-img { height: 140px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 330px; }
+    }
+
+    /* ─── Large Tablets & Small Desktops (992px - 1200px) ─── */
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+      .hero-section { min-height: 82vh; }
+      .hero-title { font-size: 2.8rem; }
+      .section-title { font-size: 1.8rem; }
+      
+      /* Dashboard: 2-col grid */
+      .dashboard-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .dash-card { padding: 22px 20px; gap: 18px; }
+      .dash-num { font-size: 1.8rem; }
+      
+      /* Queue */
+      .queue-section { padding: 44px 0; }
+      .queue-table th, .queue-table td { padding: 11px 14px; font-size: .85rem; }
+      
+      /* Menu management: 3-col */
+      .menu-mgmt-section { padding: 52px 0; }
+      .menu-mgmt-section .col-6 { flex: 0 0 33.333%; max-width: 33.333%; }
+      .mgmt-card-img { height: 150px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 360px; }
+    }
+
+    /* ─── Extra Large Desktops (> 1200px) ─── */
+    @media (min-width: 1200px) {
+      .hero-section { min-height: 88vh; }
+      .hero-title { font-size: 3.2rem; }
+      .section-title { font-size: 2rem; }
+      
+      /* Dashboard: 2-col grid (proper spacing) */
+      .dashboard-section { padding: 56px 0 40px; }
+      .dashboard-section .row { --bs-gutter-x: 28px; }
+      .dashboard-section .col-6 { flex: 0 0 50%; max-width: 50%; }
+      .dash-card { padding: 26px 24px; gap: 20px; }
+      .dash-num { font-size: 1.9rem; }
+      .dash-icon { width: 54px; height: 54px; }
+      
+      /* Queue */
+      .queue-section { padding: 48px 0; }
+      .queue-table th, .queue-table td { padding: 13px 16px; font-size: .88rem; }
+      
+      /* Menu management */
+      .menu-mgmt-section { padding: 56px 0; }
+      .menu-mgmt-section .col-6 { flex: 0 0 25%; max-width: 25%; }
+      .mgmt-card { border-radius: 14px; }
+      .mgmt-card-img { height: 160px; }
+      .mgmt-card-body { padding: 14px 16px; }
+      
+      /* Analytics */
+      #analytics-section iframe { height: 400px; }
+    }
   </style>
 </head>
 <body>
@@ -534,12 +680,6 @@
   <div class="mobile-nav-divider"></div>
 
   <div class="mobile-nav-controls">
-    <!-- Theme toggle -->
-    <button class="btn-theme d-flex gap-2" style="width:100%;border-radius:10px;height:auto;padding:10px 14px;"
-      onclick="document.getElementById('themeToggleBtn').click();closeMobileNav()">
-      <span class="material-icons" style="font-size:18px;">brightness_6</span>
-      <span style="font-size:.82rem;font-weight:600;">Toggle Dark / Light</span>
-    </button>
     <!-- Add Admin -->
     <button class="btn-admin-nav" style="width:100%;justify-content:center;border-radius:10px;padding:10px 14px;"
       data-bs-toggle="modal" data-bs-target="#addAdminModal" onclick="closeMobileNav()">

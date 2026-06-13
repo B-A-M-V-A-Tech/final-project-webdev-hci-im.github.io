@@ -2134,6 +2134,168 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       #adminBanner button { margin-left: 6px !important; }
     }
 
+    /* ─── Extra Small phones (< 360px) ─── */
+    @media (max-width: 359.98px) {
+      .hero-title { font-size: 1.45rem; line-height: 1.15; }
+      .hero-subtitle { font-size: .8rem; }
+      .navbar-brand-link { font-size: .95rem; gap: 4px; }
+      .nav-logo { width: 32px; height: 32px; }
+      .section-title { font-size: 1.25rem; margin-bottom: 16px; }
+      .section-eyebrow { font-size: .65rem; }
+      
+      /* Modal adjustments */
+      #fullMenuModal .modal-content { border-radius: 16px; }
+      .menu-card-modal { border-radius: 10px; }
+      .menu-img-modal { height: 140px; }
+      
+      /* Buttons */
+      .btn-hero-primary, .btn-hero-outline { padding: 9px 18px; font-size: .75rem; }
+      .btn-primary-custom { padding: 10px 16px; font-size: .75rem; }
+      
+      /* Cards */
+      .preview-card, .review-card, .careers-card { padding: 20px 16px; border-radius: 16px; }
+      .hero-stat { padding: 8px 10px; min-width: 70px; font-size: .7rem; }
+      
+      /* Spacing */
+      section.py-5 { padding-top: 40px !important; padding-bottom: 40px !important; }
+      
+      /* Review section */
+      .review-card { margin-bottom: 12px; }
+      
+      /* Contact/Map */
+      .map-embed-wrap { height: 180px; }
+      
+      /* Mobile drawer padding */
+      #mobileNavDrawer { max-width: 80vw; }
+    }
+
+    /* ─── Large Phones (360px - 480px) ─── */
+    @media (min-width: 360px) and (max-width: 479.98px) {
+      .hero-section { min-height: 70vh; }
+      .hero-title { font-size: 1.7rem; }
+      .hero-subtitle { font-size: .88rem; }
+      
+      /* Category buttons */
+      .cat-btn-modal { padding: 6px 14px; font-size: .75rem; }
+      
+      /* Order form */
+      #orderModal .modal-content { padding: 20px; }
+      .form-label { font-size: .85rem; margin-bottom: 6px; }
+      .form-control { padding: 9px 12px; font-size: .85rem; }
+      
+      /* Review form */
+      .form-group { margin-bottom: 14px; }
+      
+      /* Modals max height */
+      #fullMenuModal .modal-content { max-height: 85vh; }
+    }
+
+    /* ─── Tablets Landscape (480px - 768px) ─── */
+    @media (min-width: 480px) and (max-width: 767.98px) {
+      .hero-section { min-height: 72vh; }
+      .hero-title { font-size: 1.95rem; }
+      
+      /* Bento cards better spacing */
+      .featured-bento { min-height: 300px; }
+      .regular-bento { min-height: 200px; }
+      
+      /* Menu grid: 2 cols */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 50%; max-width: 50%; }
+      
+      /* Review cards */
+      .review-card { padding: 32px 24px; }
+      
+      /* Section spacing */
+      section.py-5 { padding-top: 64px !important; padding-bottom: 64px !important; }
+      
+      /* About section */
+      #about-section .col-lg-5 img { height: 350px; }
+      
+      /* Buttons */
+      .btn-hero-primary, .btn-hero-outline { padding: 12px 26px; font-size: .88rem; }
+      
+      /* Contact section */
+      .map-embed-wrap { height: 280px; }
+    }
+
+    /* ─── Tablet Portrait (768px - 992px) ─── */
+    @media (min-width: 768px) and (max-width: 991.98px) {
+      .hero-section { min-height: 78vh; }
+      .hero-title { font-size: 2.4rem; }
+      .section-title { font-size: 1.65rem; }
+      
+      /* About section optimized */
+      #about-section .col-lg-5 img { height: 400px; }
+      
+      /* Menu modal: 2-col layout */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 50%; max-width: 50%; }
+      
+      /* Bento grid */
+      .featured-bento { min-height: 360px; }
+      .regular-bento { min-height: 220px; }
+      
+      /* Cards with better padding */
+      .preview-card, .review-card { padding: 36px 28px; }
+      
+      /* Stat cards */
+      .hero-stat { padding: 12px 16px; min-width: 100px; }
+      
+      /* Section spacing */
+      section.py-5 { padding-top: 72px !important; padding-bottom: 72px !important; }
+      
+      /* Contact section */
+      .map-embed-wrap { height: 300px; }
+    }
+
+    /* ─── Large Tablets & Small Desktops (992px - 1200px) ─── */
+    @media (min-width: 992px) and (max-width: 1199.98px) {
+      .hero-section { min-height: 88vh; }
+      .hero-title { font-size: 3rem; }
+      .section-title { font-size: 1.85rem; }
+      
+      /* About section */
+      #about-section .col-lg-5 img { height: 450px; }
+      
+      /* Menu modal: 3-col layout */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 33.333%; max-width: 33.333%; }
+      
+      /* Bento */
+      .featured-bento { min-height: 420px; }
+      .regular-bento { min-height: 240px; }
+      
+      /* Section spacing */
+      section.py-5 { padding-top: 88px !important; padding-bottom: 88px !important; }
+      
+      /* Contact section */
+      .map-embed-wrap { height: 320px; }
+    }
+
+    /* ─── Extra Large Desktops (> 1200px) ─── */
+    @media (min-width: 1200px) {
+      .hero-section { min-height: 92vh; }
+      .hero-title { font-size: 3.4rem; }
+      .section-title { font-size: 2rem; }
+      
+      /* About section */
+      #about-section .col-lg-5 img { height: 500px; }
+      
+      /* Menu modal: 4-col layout */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 25%; max-width: 25%; }
+      
+      /* Bento premium spacing */
+      .featured-bento { min-height: 480px; }
+      .regular-bento { min-height: 280px; }
+      
+      /* Section spacing */
+      section.py-5 { padding-top: 100px !important; padding-bottom: 100px !important; }
+      
+      /* Contact section */
+      .map-embed-wrap { height: 380px; }
+      
+      /* Cards premium spacing */
+      .preview-card, .review-card, .careers-card { padding: 48px 40px; }
+    }
+
     /* ── CART ITEM EDIT CONTROLS ── */
     .cart-item-row {
       background-color: var(--bg-surface);
@@ -2280,24 +2442,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             onkeydown="if(event.key==='Enter'){handleNavSearch(this.value);document.getElementById('fullMenuModal') && new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
         </div>
 
-        <!-- Google Login -->
-        <div class="position-relative" id="googleLoginWrap">
-          <button class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()">
-            <img src="https://www.google.com/favicon.ico" alt="G">
-            Sign in with Google
-          </button>
-          <div class="google-user-menu d-none" id="googleUserMenu">
-            <img id="googleUserAvatar" src="" alt=""
-              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;">
-            <p class="u-name" id="googleUserName"></p>
-            <p id="googleUserEmail" style="word-break:break-all;"></p>
-            <hr style="border-color:var(--border);margin:8px 0;">
-            <button onclick="handleGoogleLogout()"
-              style="background:none;border:none;color:var(--admin-accent);font-size:.8rem;font-weight:600;cursor:pointer;padding:0;">Sign
-              Out</button>
-          </div>
-        </div>
-
         <!-- Cart -->
         <div class="position-relative client-only-control">
           <button class="btn-theme" id="cartOpenBtn" title="View cart">
@@ -2311,8 +2455,25 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
           <span class="material-icons" style="font-size:18px;">brightness_6</span>
         </button>
 
-        <!-- Admin toggle -->
-        <div class="admin-toggle-wrap" id="adminToggleWrap" onclick="handleAdminToggleClick()">
+        <!-- Google Login Button (styled like admin buttons) -->
+        <div class="position-relative d-none d-lg-block" id="googleLoginWrap">
+          <button class="btn-admin-nav" id="googleLoginBtn" onclick="handleGoogleLogin()" style="background:#fff;color:#3c4043;border:1.5px solid #ddd;">
+            <img src="https://www.google.com/favicon.ico" alt="G" style="width:14px;height:14px;">
+            Sign In
+          </button>
+          <div class="google-user-menu d-none" id="googleUserMenu">
+            <img id="googleUserAvatar" src="" alt=""
+              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;">
+            <p class="u-name" id="googleUserName"></p>
+            <p id="googleUserEmail" style="word-break:break-all;"></p>
+            <hr style="border-color:var(--border);margin:8px 0;">
+            <button onclick="handleGoogleLogout()"
+              style="background:none;border:none;color:var(--admin-accent);font-size:.8rem;font-weight:600;cursor:pointer;padding:0;">Sign Out</button>
+          </div>
+        </div>
+
+        <!-- Admin toggle (moved before hamburger) -->
+        <div class="admin-toggle-wrap d-none d-lg-flex" id="adminToggleWrap" onclick="handleAdminToggleClick()">
           <input type="checkbox" id="adminModeCheckbox" style="accent-color:var(--admin-accent);"
             onclick="event.preventDefault();">
           <label for="adminModeCheckbox">
@@ -2373,12 +2534,20 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     <div class="mobile-nav-divider"></div>
 
     <div class="mobile-nav-controls">
-      <!-- Theme toggle -->
-      <button class="btn-theme w-100 d-flex gap-2" style="width:100%!important;border-radius:10px;height:auto;padding:10px 14px;"
-        onclick="document.getElementById('themeToggleBtn').click();closeMobileNav()">
-        <span class="material-icons" style="font-size:18px;">brightness_6</span>
-        <span style="font-size:.82rem;font-weight:600;">Toggle Dark / Light</span>
+      <!-- Google Login for Mobile -->
+      <button class="btn-admin-nav w-100" style="width:100%!important;border-radius:10px;height:auto;padding:10px 14px;background:#fff;color:#3c4043;border:1.5px solid #ddd;display:flex;align-items:center;justify-content:center;gap:8px;" id="mobileGoogleLoginBtn" onclick="handleGoogleLogin();closeMobileNav()">
+        <img src="https://www.google.com/favicon.ico" alt="G" style="width:14px;height:14px;">
+        <span style="font-size:.82rem;font-weight:600;">Sign In with Google</span>
       </button>
+
+      <!-- Admin toggle for Mobile -->
+      <div class="admin-toggle-wrap w-100" style="width:100%!important;padding:10px 14px;margin-top:10px;border-radius:10px;" id="mobileAdminToggleWrap" onclick="handleAdminToggleClick()">
+        <input type="checkbox" id="mobileAdminModeCheckbox" style="accent-color:var(--admin-accent);" onclick="event.preventDefault();">
+        <label for="mobileAdminModeCheckbox" style="cursor:pointer;width:100%;">
+          <span class="material-icons" style="font-size:16px;">manage_accounts</span>
+          Admin Mode
+        </label>
+      </div>
     </div>
   </div>
 
