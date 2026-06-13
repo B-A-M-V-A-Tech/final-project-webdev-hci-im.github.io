@@ -708,7 +708,7 @@
           <div class="d-flex gap-3 flex-wrap">
           <div class="hero-stat"><span class="stat-num" id="statMenuCount">53</span><span class="stat-label">Menu Items</span></div>
           <div class="hero-stat"><span class="stat-num">4.8★</span><span class="stat-label">Avg Rating</span></div>
-          <div class="hero-stat"><span class="stat-num">#1 🏆</span><span class="stat-label">Best Café in Sto. Tomas</span></div>
+          <div class="hero-stat"><span class="stat-num">#1 </span><span class="stat-label">Best Café in Sto. Tomas</span></div>
         </div>
       </div>
     </div>
@@ -1414,8 +1414,8 @@
 
 <!-- ══ ADD TO ORDER MODAL (Admin Manual Order) ══ -->
 <div class="modal fade" id="addOrderModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" style="max-width:560px;">
-    <div class="modal-content">
+  <div class="modal-dialog modal-dialog-centered" style="max-width:560px;max-height:90vh;">
+    <div class="modal-content" style="max-height:90vh;display:flex;flex-direction:column;">
       <div class="modal-header-custom">
         <div>
           <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Queue Management</span>
@@ -1423,19 +1423,7 @@
         </div>
         <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
       </div>
-      <div class="modal-body-custom">
-
-        <!-- ── ORDER SOURCE (Walk-in F / Online O) ── -->
-        <div class="mb-3">
-          <label class="form-label-custom">Order Source</label>
-          <div class="seg-control">
-            <input type="radio" name="addOrderSource" id="srcWalkin" value="F" checked onchange="updateAddOrderPrefix()">
-            <label for="srcWalkin"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">storefront</span>Walk-in <span style="opacity:.7;font-size:.75em;">(F####)</span></label>
-            <input type="radio" name="addOrderSource" id="srcOnline" value="O" onchange="updateAddOrderPrefix()">
-            <label for="srcOnline"><span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">smartphone</span>Online <span style="opacity:.7;font-size:.75em;">(O####)</span></label>
-          </div>
-          <p id="addOrderNumPreview" style="font-size:.75rem;color:var(--brand);font-weight:700;margin:6px 0 0;letter-spacing:.5px;">Order will be assigned: F1001</p>
-        </div>
+      <div class="modal-body-custom" style="max-height:65vh;overflow-y:auto;">
 
         <!-- ── CUSTOMER NAME ── -->
         <div class="mb-3">
@@ -1522,7 +1510,7 @@
         </div>
 
       </div>
-      <div class="modal-footer-custom">
+      <div class="modal-footer-custom" style="margin-top:auto;flex-shrink:0;">
         <div class="order-total-row">
           <span class="order-total-label">Order Total</span>
           <span class="order-total-amount" id="addOrderTotalDisplay">₱0.00</span>
@@ -1765,6 +1753,26 @@ document.addEventListener('DOMContentLoaded', () => {
   syncDashboard();
   document.getElementById('statMenuCount').textContent = state.menuItems.length;
 
+  // ── AUTO-REFRESH ONLINE ORDERS EVERY 500MS FOR REAL-TIME UPDATES ──
+  let lastOnlineOrdersCount = 0;
+  let lastOnlineOrdersJson = '[]';
+  setInterval(() => {
+    try {
+      const onlineOrdersJson = localStorage.getItem('sip_online_orders') || '[]';
+      // Check if online orders have changed
+      if (onlineOrdersJson !== lastOnlineOrdersJson) {
+        lastOnlineOrdersJson = onlineOrdersJson;
+        const onlineOrders = JSON.parse(onlineOrdersJson);
+        const pendingOnlineOrders = onlineOrders.filter(o => o.status !== 'done').length;
+        lastOnlineOrdersCount = pendingOnlineOrders;
+        // Reload and render queue immediately
+        loadOrderQueue();
+        renderQueue();
+        renderOrdersHistory();
+      }
+    } catch(e) {}
+  }, 500);
+
   document.getElementById('cartOpenBtn').addEventListener('click', () => {
     new bootstrap.Modal(document.getElementById('cartModal')).show();
   });
@@ -1793,6 +1801,12 @@ document.addEventListener('DOMContentLoaded', () => {
           renderReviews();
         }
       } catch(err) {}
+    }
+    // ── SYNC ONLINE ORDERS FROM CLIENT ──
+    if (e.key === 'sip_online_orders') {
+      loadOrderQueue();
+      renderQueue();
+      renderOrdersHistory();
     }
   });
 });
@@ -2177,6 +2191,34 @@ function loadOrderQueue() {
   try {
     const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
     state.queue = queue ? JSON.parse(queue) : [];
+
+    // ── REMOVE OLD DEMO ORDERS ──
+    state.queue = state.queue.filter(o => {
+      const isDemoOrder = o.customerName && (o.customerName.includes('Marga') || o.customerName.includes('Marah'));
+      return !isDemoOrder;
+    });
+
+    // ── LOAD ONLINE ORDERS FROM CLIENT ──
+    const onlineOrdersRaw = localStorage.getItem('sip_online_orders');
+    if (onlineOrdersRaw) {
+      try {
+        const onlineOrders = JSON.parse(onlineOrdersRaw);
+        if (Array.isArray(onlineOrders)) {
+          // Add online orders that aren't already in queue
+          onlineOrders.forEach(onlineOrder => {
+            const exists = state.queue.some(q => q.id === onlineOrder.id);
+            if (!exists) {
+              state.queue.push(onlineOrder);
+            }
+          });
+        }
+      } catch(e) {
+        console.error('Error loading online orders:', e);
+      }
+    }
+
+    // Save cleaned queue back to localStorage
+    saveOrderQueue();
   } catch(e) {
     state.queue = [];
   }
@@ -2209,8 +2251,9 @@ const addOrderState = {
 };
 
 function updateAddOrderPrefix() {
-  const prefix = document.querySelector('input[name="addOrderSource"]:checked')?.value || 'F';
-  const key = prefix === 'O' ? O_COUNTER_KEY : F_COUNTER_KEY;
+  // Walk-in only - always use 'F' prefix
+  const prefix = 'F';
+  const key = F_COUNTER_KEY;
   const next = parseInt(localStorage.getItem(key) || '1000', 10) + 1;
   const el = document.getElementById('addOrderNumPreview');
   if (el) el.textContent = `Order will be assigned: ${prefix}${next}`;
@@ -2440,7 +2483,8 @@ function saveManualOrder() {
       showToast('Please add at least one item to the order.', true);
       return;
     }
-    const prefix = document.querySelector('input[name="addOrderSource"]:checked')?.value || 'F';
+    // Walk-in only - always use 'F' prefix
+    const prefix = 'F';
     const orderNum = getNextOrderNum(prefix);
     const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
 
@@ -2493,6 +2537,18 @@ function deleteQueueOrder(id) {
   
   if (confirm(`Delete Order #${order.num}? This order number can be reused.`)) {
     state.queue = state.queue.filter(o => o.id !== id);
+    
+    // ── REMOVE DELETED ONLINE ORDER FROM STORAGE ──
+    if (order.source === 'O') {
+      try {
+        const onlineOrders = JSON.parse(localStorage.getItem('sip_online_orders') || '[]');
+        const filtered = onlineOrders.filter(o => o.id !== id);
+        localStorage.setItem('sip_online_orders', JSON.stringify(filtered));
+      } catch(e) {
+        console.error('Error updating online orders:', e);
+      }
+    }
+    
     saveOrderQueue();
     renderQueue();
     renderOrdersHistory();
@@ -2638,6 +2694,18 @@ function completeQueue(id) {
   const o = state.queue.find(x => x.id === id);
   if (!o) return;
   o.status = 'done';
+  
+  // ── REMOVE COMPLETED ONLINE ORDER FROM STORAGE ──
+  if (o.source === 'O') {
+    try {
+      const onlineOrders = JSON.parse(localStorage.getItem('sip_online_orders') || '[]');
+      const filtered = onlineOrders.filter(order => order.id !== id);
+      localStorage.setItem('sip_online_orders', JSON.stringify(filtered));
+    } catch(e) {
+      console.error('Error updating online orders:', e);
+    }
+  }
+  
   saveOrderQueue();
   showToast(`Order #${o.num} marked as done.`);
   renderQueue();
