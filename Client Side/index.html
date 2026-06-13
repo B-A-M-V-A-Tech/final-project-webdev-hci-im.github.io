@@ -1852,6 +1852,288 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       margin: 16px 0;
     }
 
+    /* ══════════════════════════════════════════════
+       MOBILE HAMBURGER MENU
+    ══════════════════════════════════════════════ */
+    .hamburger-btn {
+      display: none;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover {
+      background-color: var(--bg-surface-2);
+      border-color: var(--brand);
+      color: var(--brand);
+    }
+
+    /* Mobile drawer overlay */
+    .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(31, 21, 12, 0.55);
+      z-index: 1040;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .mobile-nav-overlay.open { display: block; }
+
+    /* Mobile drawer panel */
+    .mobile-nav-drawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: min(300px, 85vw);
+      height: 100%;
+      background: var(--bg-body);
+      border-left: 1px solid var(--border);
+      z-index: 1050;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+    .mobile-nav-drawer.open { right: 0; }
+
+    .mobile-nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-nav-close {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all var(--transition);
+    }
+    .mobile-nav-close:hover { background: var(--bg-surface-2); border-color: var(--brand); color: var(--brand); }
+
+    .mobile-nav-links {
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+      gap: 4px;
+    }
+    .mobile-nav-links a {
+      color: var(--text-dim);
+      font-size: .92rem;
+      font-weight: 500;
+      text-decoration: none;
+      padding: 11px 14px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: color var(--transition), background-color var(--transition);
+    }
+    .mobile-nav-links a:hover, .mobile-nav-links a.active {
+      color: var(--brand);
+      background-color: rgba(116, 81, 45, 0.08);
+    }
+    .mobile-nav-links .material-icons { font-size: 18px; }
+
+    .mobile-nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 8px 12px;
+      opacity: 0.5;
+    }
+
+    .mobile-nav-controls {
+      padding: 12px 20px 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: auto;
+    }
+
+    /* Mobile search bar inside drawer */
+    .mobile-search-wrap {
+      position: relative;
+      padding: 0 20px 4px;
+    }
+    .mobile-search-wrap .material-icons {
+      position: absolute;
+      left: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 17px;
+      pointer-events: none;
+    }
+    .mobile-search-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1.5px solid var(--border);
+      color: var(--text-main);
+      border-radius: 20px;
+      padding: 9px 14px 9px 38px;
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .3s;
+    }
+    .mobile-search-input:focus { border-color: var(--brand); }
+    .mobile-search-input::placeholder { color: var(--text-dim); opacity: .7; }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS — CLIENT (index.html)
+    ══════════════════════════════════════════════ */
+
+    /* ─── Tablet & smaller (< 992px) ─── */
+    @media (max-width: 991.98px) {
+      .hamburger-btn { display: flex; }
+
+      /* Hide desktop nav links, show hamburger */
+      .site-nav .d-none.d-lg-flex { display: none !important; }
+
+      /* Collapse the search bar in navbar — it's in the drawer */
+      .nav-search-wrap { display: none !important; }
+
+      /* About section: stack image above text */
+      #about-section .col-lg-5 { margin-bottom: 40px; }
+      #about-section .col-lg-5 img { height: 420px; }
+
+      /* The "Est." floating badge — reposition so it doesn't overflow */
+      #about-section .position-absolute {
+        bottom: -16px !important;
+        right: 0 !important;
+        left: auto;
+        padding: 16px 22px !important;
+      }
+
+      /* Bento grid — slightly taller featured on tablet */
+      .featured-bento { min-height: 380px; }
+      .regular-bento { min-height: 210px; }
+
+      .bento-overlay { padding: 22px; }
+
+      /* Hero stats row: wrap nicely */
+      .hero-stats-row { gap: 10px !important; }
+    }
+
+    /* ─── Mobile landscape + phablets (< 768px) ─── */
+    @media (max-width: 767.98px) {
+      /* Navbar: tighten up */
+      .site-nav .container { padding-left: 14px; padding-right: 14px; }
+      .navbar-brand-link { font-size: 1rem; }
+      .nav-logo { width: 34px; height: 34px; }
+
+      /* Hide Google login button text on mobile — show icon-only */
+      .btn-google-login span:not(img) { display: none; }
+      .btn-google-login { padding: 5px 10px; }
+
+      /* Admin toggle: shorten label */
+      .admin-toggle-wrap label span.material-icons { margin-right: 0 !important; }
+      .admin-toggle-wrap label { font-size: 0; } /* hide text */
+      .admin-toggle-wrap label::after { content: 'Admin'; font-size: .78rem; font-weight: 600; }
+
+      /* Hero section */
+      .hero-section { min-height: 75vh; }
+      .hero-title { font-size: 1.9rem; }
+      .hero-subtitle { font-size: .9rem; }
+      .hero-content .d-flex.gap-3.flex-wrap.mb-5 { gap: 10px !important; }
+      .btn-hero-primary, .btn-hero-outline { padding: 11px 22px; font-size: .82rem; }
+
+      /* Hero stats */
+      .hero-stat { padding: 10px 14px; min-width: 80px; }
+      .hero-stat .stat-num { font-size: 1.25rem; }
+
+      /* About section */
+      #about-section .col-lg-5 img { height: 300px; }
+      #about-section .position-absolute { display: none; } /* hide floating badge on small screens */
+
+      /* Bento */
+      .featured-bento { min-height: 280px; }
+      .regular-bento { min-height: 180px; }
+      .featured-bento .bento-title { font-size: 1.6rem; }
+      .regular-bento .bento-title { font-size: 1.2rem; }
+      .bento-overlay { padding: 18px; }
+      .bento-price { font-size: 1.1rem; }
+      .bento-action-btn { width: 36px; height: 36px; }
+
+      /* Section spacing */
+      section.py-5 { padding-top: 56px !important; padding-bottom: 56px !important; }
+
+      /* Buttons */
+      .btn-view-menu { padding: 11px 22px; font-size: .85rem; }
+      .btn-open-menu { padding: 11px 24px; font-size: .85rem; }
+
+      /* Menu modal cards: 2-col on mobile */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 50%; max-width: 50%; }
+
+      /* Order modal: full screen on mobile */
+      #orderModal .modal-dialog { margin: 0; }
+      #orderModal .modal-content { border-radius: 20px 20px 0 0; max-height: 92vh; }
+
+      /* Toast: center bottom on mobile */
+      .toast-custom { right: 12px; left: 12px; bottom: 16px; justify-content: center; }
+
+      /* Review form stacking */
+      .reviews-section .row > [class*="col-"] { margin-bottom: 16px; }
+
+      /* Careers section */
+      .careers-card { padding: 28px 20px; }
+
+      /* Contact section map */
+      .map-embed-wrap { height: 220px; }
+
+      /* Subscribe section */
+      .subscribe-section .d-flex { flex-direction: column; gap: 12px !important; }
+
+      /* Footer */
+      .site-footer .row > [class*="col-"] { margin-bottom: 20px; }
+    }
+
+    /* ─── Small phones (< 480px) ─── */
+    @media (max-width: 479.98px) {
+      .hero-title { font-size: 1.65rem; line-height: 1.2; }
+      .hero-eyebrow { font-size: .65rem; }
+
+      /* Navbar: reduce gap */
+      .site-nav .container { gap: 6px; }
+      .btn-theme { width: 32px; height: 32px; }
+
+      /* Bento: full width featured */
+      .col-lg-7, .col-lg-5 { flex: 0 0 100%; max-width: 100%; }
+      .featured-bento { min-height: 240px; }
+      .regular-bento { min-height: 160px; }
+
+      /* Menu modal: 1-col on very small screens */
+      #fullMenuModal .col-sm-6.col-md-4.col-lg-3 { flex: 0 0 100%; max-width: 100%; }
+
+      /* Section titles */
+      .section-title { font-size: 1.4rem; }
+
+      /* Stat row vertical */
+      .hero-stats-row { flex-direction: column; gap: 8px !important; }
+      .hero-stat { width: 100%; }
+
+      /* Footer cols: stack all */
+      .site-footer .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+
+      /* Admin banner text: shorten */
+      #adminBanner { font-size: .72rem; padding: 6px 8px; }
+      #adminBanner button { margin-left: 6px !important; }
+    }
+
   </style>
 
   </style>
@@ -1939,9 +2221,67 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             Admin
           </label>
         </div>
+
+        <!-- Hamburger (mobile only) -->
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="openMobileNav()" aria-label="Open menu">
+          <span class="material-icons" style="font-size:20px;">menu</span>
+        </button>
       </div>
     </div>
   </nav>
+
+  <!-- ═══════════════════ MOBILE NAV DRAWER ═══════════════════ -->
+  <div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+  <div class="mobile-nav-drawer" id="mobileNavDrawer">
+    <div class="mobile-nav-header">
+      <a class="navbar-brand-link" href="#home-section" onclick="closeMobileNav()">
+        <img src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png"
+          alt="Sip & Pulse" class="nav-logo"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=120&q=80';">
+        Sip & Pulse
+      </a>
+      <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
+        <span class="material-icons" style="font-size:18px;">close</span>
+      </button>
+    </div>
+
+    <!-- Mobile search -->
+    <div class="mobile-search-wrap mt-3">
+      <span class="material-icons">search</span>
+      <input class="mobile-search-input" type="search" placeholder="Search menu…"
+        oninput="handleNavSearch(this.value)"
+        onkeydown="if(event.key==='Enter'){closeMobileNav();handleNavSearch(this.value);document.getElementById('fullMenuModal')&&new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
+    </div>
+
+    <nav class="mobile-nav-links mt-2">
+      <a href="#home-section" onclick="closeMobileNav()">
+        <span class="material-icons">home</span> Home
+      </a>
+      <a href="#about-section" onclick="closeMobileNav()">
+        <span class="material-icons">info</span> About Us
+      </a>
+      <a href="#menu-preview-section" onclick="closeMobileNav()">
+        <span class="material-icons">restaurant_menu</span> Menu
+      </a>
+      <a href="#reviews-section" onclick="closeMobileNav()">
+        <span class="material-icons">star</span> Reviews
+      </a>
+      <a href="#contact-section" onclick="closeMobileNav()">
+        <span class="material-icons">location_on</span> Contact Us
+      </a>
+    </nav>
+
+    <div class="mobile-nav-divider"></div>
+
+    <div class="mobile-nav-controls">
+      <!-- Theme toggle -->
+      <button class="btn-theme w-100 d-flex gap-2" style="width:100%!important;border-radius:10px;height:auto;padding:10px 14px;"
+        onclick="document.getElementById('themeToggleBtn').click();closeMobileNav()">
+        <span class="material-icons" style="font-size:18px;">brightness_6</span>
+        <span style="font-size:.82rem;font-weight:600;">Toggle Dark / Light</span>
+      </button>
+    </div>
+  </div>
 
   <!-- ═══════════════════ HERO — VIDEO BG ═══════════════════ -->
   <section class="hero-section" id="home-section">
@@ -3613,6 +3953,22 @@ const FOOD_ADDONS = [
       toast.classList.add('show');
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3800);
     }
+    /* ════════════════════════════════════════════
+       MOBILE NAV DRAWER
+       ════════════════════════════════════════════ */
+    function openMobileNav() {
+      document.getElementById('mobileNavOverlay').classList.add('open');
+      document.getElementById('mobileNavDrawer').classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+    function closeMobileNav() {
+      document.getElementById('mobileNavOverlay').classList.remove('open');
+      document.getElementById('mobileNavDrawer').classList.remove('open');
+      document.body.style.overflow = '';
+    }
+    // Close drawer with Escape key
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileNav(); });
+
     document.addEventListener("DOMContentLoaded", () => {
       const fulfillmentRadios = document.querySelectorAll('input[name="fulfillment"]');
       const locationContainer = document.getElementById('delivery-location-container');

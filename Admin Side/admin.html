@@ -233,6 +233,193 @@
     .btn-mgmt-edit:hover{border-color:var(--brand);color:var(--brand);}
     .btn-mgmt-del{background:transparent;border:1px solid rgba(169,64,48,.4);color:var(--admin-accent);border-radius:7px;padding:6px 9px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .2s;}
     .btn-mgmt-del:hover{background:rgba(169,64,48,.1);}
+
+    /* ══════════════════════════════════════════════
+       MOBILE HAMBURGER MENU — ADMIN
+    ══════════════════════════════════════════════ */
+    .hamburger-btn {
+      display: none;
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all var(--transition);
+      flex-shrink: 0;
+    }
+    .hamburger-btn:hover { background-color: var(--bg-surface-2); border-color: var(--brand); color: var(--brand); }
+
+    .mobile-nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(31, 21, 12, 0.55);
+      z-index: 1040;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+    .mobile-nav-overlay.open { display: block; }
+
+    .mobile-nav-drawer {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: min(300px, 85vw);
+      height: 100%;
+      background: var(--bg-body);
+      border-left: 1px solid var(--border);
+      z-index: 1050;
+      display: flex;
+      flex-direction: column;
+      transition: right 0.32s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow-y: auto;
+    }
+    .mobile-nav-drawer.open { right: 0; }
+
+    .mobile-nav-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .mobile-nav-close {
+      background: transparent;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--text-main);
+      transition: all var(--transition);
+    }
+    .mobile-nav-close:hover { background: var(--bg-surface-2); border-color: var(--brand); color: var(--brand); }
+
+    .mobile-nav-links { display: flex; flex-direction: column; padding: 16px 12px; gap: 4px; }
+    .mobile-nav-links a { color: var(--text-dim); font-size: .92rem; font-weight: 500; text-decoration: none; padding: 11px 14px; border-radius: 10px; display: flex; align-items: center; gap: 10px; transition: color var(--transition), background-color var(--transition); }
+    .mobile-nav-links a:hover { color: var(--brand); background-color: rgba(116, 81, 45, 0.08); }
+    .mobile-nav-links .material-icons { font-size: 18px; }
+
+    .mobile-nav-divider { height: 1px; background: var(--border); margin: 8px 12px; opacity: 0.5; }
+
+    .mobile-nav-controls { padding: 12px 20px 24px; display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+
+    .mobile-search-wrap { position: relative; padding: 0 20px 4px; }
+    .mobile-search-wrap .material-icons { position: absolute; left: 32px; top: 50%; transform: translateY(-50%); color: var(--text-dim); font-size: 17px; pointer-events: none; }
+    .mobile-search-input { width: 100%; background: var(--bg-surface); border: 1.5px solid var(--border); color: var(--text-main); border-radius: 20px; padding: 9px 14px 9px 38px; font-size: .85rem; outline: none; transition: border-color .3s; }
+    .mobile-search-input:focus { border-color: var(--brand); }
+    .mobile-search-input::placeholder { color: var(--text-dim); opacity: .7; }
+
+    /* Admin-specific mobile badge */
+    .mobile-admin-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: linear-gradient(90deg, #7b1c10, #c0392b);
+      color: #fff;
+      font-size: .7rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 20px;
+      letter-spacing: .4px;
+      text-transform: uppercase;
+    }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS — ADMIN (admin.html)
+    ══════════════════════════════════════════════ */
+
+    /* ─── Tablet (< 992px) ─── */
+    @media (max-width: 991.98px) {
+      .hamburger-btn { display: flex; }
+      .site-nav .d-none.d-lg-flex { display: none !important; }
+      .nav-search-wrap { display: none !important; }
+
+      /* Dashboard cards: 2-col grid */
+      .dashboard-section .row { --bs-gutter-x: 12px; }
+
+      /* Queue table: allow horizontal scroll */
+      .queue-section .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* Menu management header: stack on tablet */
+      .menu-mgmt-section .d-flex.align-items-center.justify-content-between { flex-direction: column; align-items: flex-start !important; }
+      .menu-mgmt-section .d-flex.align-items-center.gap-2.flex-wrap { margin-top: 12px; }
+
+      /* PowerBI iframe: responsive height */
+      #analytics-section iframe { height: 380px; }
+
+      /* Hero */
+      .hero-section { min-height: 72vh; }
+    }
+
+    /* ─── Mobile (< 768px) ─── */
+    @media (max-width: 767.98px) {
+      .site-nav .container { padding-left: 14px; padding-right: 14px; }
+      .navbar-brand-link { font-size: 1rem; }
+      .nav-logo { width: 34px; height: 34px; }
+
+      /* Admin top bar */
+      .admin-top-bar { font-size: .72rem; padding: 6px 10px; }
+
+      /* Hero */
+      .hero-section { min-height: 65vh; }
+      .hero-title { font-size: 1.9rem; }
+
+      /* Dashboard */
+      .dash-card { padding: 16px 14px; gap: 12px; }
+      .dash-num { font-size: 1.4rem; }
+      .dash-icon { width: 42px; height: 42px; }
+
+      /* Queue table: compact */
+      .queue-table th, .queue-table td { padding: 8px 10px; font-size: .78rem; }
+      .queue-badge { font-size: .62rem; padding: 2px 7px; }
+
+      /* Menu management search: full width */
+      .menu-mgmt-section input[type="search"] { width: 100% !important; }
+      .menu-mgmt-section .cat-dropdown { width: 100%; }
+
+      /* Mgmt cards: 2-col */
+      .mgmt-card-img { height: 120px; }
+
+      /* Analytics iframe */
+      #analytics-section iframe { height: 280px; }
+
+      /* Reviews */
+      .reviews-section { padding: 40px 0; }
+
+      /* Footer */
+      .site-footer .col-md-4 { margin-bottom: 20px; }
+
+      /* Toast */
+      .toast-custom { right: 12px; left: 12px; bottom: 16px; justify-content: center; }
+
+      /* Buttons in nav */
+      .btn-admin-nav { font-size: .72rem; padding: 5px 10px; }
+      .btn-client-view { font-size: .72rem; padding: 5px 10px; }
+    }
+
+    /* ─── Small phones (< 480px) ─── */
+    @media (max-width: 479.98px) {
+      .hero-title { font-size: 1.65rem; }
+      .btn-theme { width: 32px; height: 32px; }
+
+      /* Dashboard: full-width cards on tiny screens */
+      .dashboard-section .col-6 { flex: 0 0 100%; max-width: 100%; }
+
+      /* Mgmt cards: 1 col */
+      .menu-mgmt-section .col-6 { flex: 0 0 100%; max-width: 100%; }
+
+      /* Section titles */
+      .section-title { font-size: 1.4rem; }
+
+      /* Queue table: hide less important cols */
+      .queue-table th:nth-child(3),
+      .queue-table td:nth-child(3) { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -294,9 +481,76 @@
         <span class="material-icons" style="font-size:16px;">arrow_back</span>
         Client View
       </a>
+
+      <!-- Hamburger (mobile only) -->
+      <button class="hamburger-btn" id="hamburgerBtn" onclick="openMobileNav()" aria-label="Open menu">
+        <span class="material-icons" style="font-size:20px;">menu</span>
+      </button>
     </div>
   </div>
 </nav>
+
+<!-- ═══════════════════ MOBILE NAV DRAWER (ADMIN) ═══════════════════ -->
+<div class="mobile-nav-overlay" id="mobileNavOverlay" onclick="closeMobileNav()"></div>
+<div class="mobile-nav-drawer" id="mobileNavDrawer">
+  <div class="mobile-nav-header">
+    <div class="d-flex align-items-center gap-2">
+      <img src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png"
+        alt="Sip & Pulse" class="nav-logo"
+        onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=120&q=80';">
+      <span class="mobile-admin-badge"><span class="material-icons" style="font-size:12px;">shield</span> Admin</span>
+    </div>
+    <button class="mobile-nav-close" onclick="closeMobileNav()" aria-label="Close menu">
+      <span class="material-icons" style="font-size:18px;">close</span>
+    </button>
+  </div>
+
+  <!-- Mobile search -->
+  <div class="mobile-search-wrap mt-3">
+    <span class="material-icons">search</span>
+    <input class="mobile-search-input" type="search" placeholder="Search menu…"
+      oninput="handleNavSearch(this.value)"
+      onkeydown="if(event.key==='Enter'){closeMobileNav();handleNavSearch(this.value);new bootstrap.Modal(document.getElementById('fullMenuModal')).show();}">
+  </div>
+
+  <nav class="mobile-nav-links mt-2">
+    <a href="#dashboard-section" onclick="closeMobileNav()">
+      <span class="material-icons">dashboard</span> Dashboard
+    </a>
+    <a href="#queue-section" onclick="closeMobileNav()">
+      <span class="material-icons">pending</span> Queue
+    </a>
+    <a href="#menu-mgmt-section" onclick="closeMobileNav()">
+      <span class="material-icons">restaurant_menu</span> Menu
+    </a>
+    <a href="#reviews-section" onclick="closeMobileNav()">
+      <span class="material-icons">star</span> Reviews
+    </a>
+    <a href="#contact-section" onclick="closeMobileNav()">
+      <span class="material-icons">location_on</span> Contact
+    </a>
+  </nav>
+
+  <div class="mobile-nav-divider"></div>
+
+  <div class="mobile-nav-controls">
+    <!-- Theme toggle -->
+    <button class="btn-theme d-flex gap-2" style="width:100%;border-radius:10px;height:auto;padding:10px 14px;"
+      onclick="document.getElementById('themeToggleBtn').click();closeMobileNav()">
+      <span class="material-icons" style="font-size:18px;">brightness_6</span>
+      <span style="font-size:.82rem;font-weight:600;">Toggle Dark / Light</span>
+    </button>
+    <!-- Add Admin -->
+    <button class="btn-admin-nav" style="width:100%;justify-content:center;border-radius:10px;padding:10px 14px;"
+      data-bs-toggle="modal" data-bs-target="#addAdminModal" onclick="closeMobileNav()">
+      <span class="material-icons" style="font-size:16px;">person_add</span> Add Admin
+    </button>
+    <!-- Client View -->
+    <a href="index.html" class="btn-client-view" style="width:100%;justify-content:center;border-radius:10px;padding:10px 14px;">
+      <span class="material-icons" style="font-size:16px;">arrow_back</span> Client View
+    </a>
+  </div>
+</div>
 
 <!-- ═══════════════════ HERO — VIDEO BG ═══════════════════ -->
 <section class="hero-section" id="home-section">
@@ -1580,6 +1834,19 @@ function showToast(msg,isError=false){
   clearTimeout(toastTimer);
   t.classList.add('show');
   toastTimer=setTimeout(()=>t.classList.remove('show'),3800);}
+
+/* ════════ MOBILE NAV DRAWER ════════ */
+function openMobileNav(){
+  document.getElementById('mobileNavOverlay').classList.add('open');
+  document.getElementById('mobileNavDrawer').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeMobileNav(){
+  document.getElementById('mobileNavOverlay').classList.remove('open');
+  document.getElementById('mobileNavDrawer').classList.remove('open');
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMobileNav(); });
   
 </script>
 </body>
