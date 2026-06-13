@@ -3562,12 +3562,10 @@ const FOOD_ADDONS = [
       const password = document.getElementById('adminPassword').value;
       if (!email || !password) { showToast('Please fill in all fields.', true); return; }
       if (email === 'admin@sipandpulse.com' && password === 'admin123') {
-        state.isAdminLoggedIn = true;
-        bootstrap.Modal.getInstance(document.getElementById('adminLoginModal')).hide();
-        document.getElementById('adminModeCheckbox').checked = true;
-        activateAdminMode();
         document.getElementById('adminEmail').value = '';
         document.getElementById('adminPassword').value = '';
+        sessionStorage.setItem('adminLoggedIn', 'true');
+        window.location.href = 'admin.html';
       } else {
         showToast('Invalid credentials. Use admin@sipandpulse.com / admin123', true);
       }
