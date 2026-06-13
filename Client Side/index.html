@@ -63,24 +63,21 @@
       font-family: 'Playfair Display', serif;
     }
 
-    /* ── NAVBAR ── */
-    /* ── NAVBAR ── */
+    /* ── NAVBAR — Glassmorphism ── */
     .site-nav {
-      /* Mixes your current surface color with 25% transparency so it adapts to light/dark mode */
-      background-color: color-mix(in srgb, var(--bg-surface) 75%, transparent);
-
-      /* The Glass Blur Effect */
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      /* Required for Safari */
-
-      /* Optional: Making the border slightly transparent enhances the glass look */
-      border-bottom: 1px solid color-mix(in srgb, var(--border) 40%, transparent);
-
+      background: rgba(248, 244, 225, 0.72);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(175, 143, 111, 0.25);
       position: sticky;
       top: 0;
       z-index: 1030;
-      transition: background-color var(--transition), border-color var(--transition);
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    [data-bs-theme="dark"] .site-nav {
+      background: rgba(43, 31, 20, 0.78);
+      border-bottom: 1px solid rgba(107, 79, 53, 0.3);
     }
 
     .navbar-brand-link {
@@ -2161,52 +2158,53 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
   
 
   <!-- ═══════════════════ FOOTER ═══════════════════ -->
- <footer class="site-footer" id="contact-section" style="padding: 60px 0 30px; background-color: #0d0a08; color: #b0a89a;">
+ <footer class="site-footer" id="contact-section" style="padding: 60px 0 30px; background-color: var(--bg-surface); border-top: 1px solid var(--border); color: var(--text-dim);">
     <div class="container">
       
       <div class="d-flex flex-wrap gap-5 align-items-start justify-content-between">
         
         <div style="flex: 1 1 300px;">
           <div class="d-flex align-items-center gap-2 mb-3">
-            <img src="assets/logo.png" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" 
+            <img src="C:\Users\marga\OneDrive\Desktop\Final Project Webdev-IM-HCI\final-project-webdev-hci-im.github.io\assets\logo.png" style="width:38px;height:38px;border-radius:50%;object-fit:cover;" 
                  onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=80&q=80';" alt="Logo">
-            <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: #F8F4E1;">Sip & Pulse</span>
+            <span style="font-family:'Playfair Display',serif; font-size: 1.5rem; font-weight: 700; color: var(--text-main);">Sip &amp; Pulse</span>
           </div>
           
-          <p style="font-size:.95rem; line-height:1.7; margin-bottom: 16px; color: #d0c8bc; font-style: italic;">
+          <p style="font-size:.95rem; line-height:1.7; margin-bottom: 16px; color: var(--text-dim); font-style: italic;">
             Your daily beat of flavor and energy — brewed with love in Sto. Tomas, Batangas.
           </p>
 
           <div style="margin-bottom: 20px;">
             <p style="font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color: var(--brand); margin-bottom: 4px;">Get in Touch</p>
-            <h3 style="font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color:#F8F4E1; margin-bottom:6px;">Contact Us</h3>
-            <p style="font-size:.85rem; color:#b0a89a; line-height:1.7; margin-bottom: 12px;">Have questions or inquiries? We'd love to hear from you.</p>
+            <h3 style="font-family:'Playfair Display',serif; font-size:1.35rem; font-weight:700; color: var(--text-main); margin-bottom:6px;">Contact Us</h3>
+            <p style="font-size:.85rem; color: var(--text-dim); line-height:1.7; margin-bottom: 12px;">Have questions or inquiries? We'd love to hear from you.</p>
           </div>
           
-          <div style="font-size:.85rem; line-height:2.2;">
-            <div style="color: #E1DCC9;"><strong>Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
-            <div><strong>Phone:</strong> +63 912 345 6789</div>
-            <div><strong>Email:</strong> <a href="mailto:marketing@sipandpulse.ph" style="color:#AF8F6F;text-decoration:none;">marketing@sipandpulse.ph</a></div>
+          <div style="font-size:.85rem; line-height:2.2; color: var(--text-dim);">
+            <div><strong style="color:var(--text-main);">Hours:</strong> Mon–Sat (7AM–9PM) | Holidays (10AM–4PM)</div>
+            <div><strong style="color:var(--text-main);">Phone:</strong> +63 912 345 6789</div>
+            <div><strong style="color:var(--text-main);">Email:</strong> <a href="mailto:marketing@sipandpulse.ph" style="color:var(--brand);text-decoration:none;">marketing@sipandpulse.ph</a></div>
           </div>
         </div>
 
         <div style="flex: 0 0 600px; width: 100%;">
           <p style="font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--brand); margin-bottom:12px;">Find Us</p>
-          <div class="map-embed-wrap" style="height: 220px; border-radius: 12px; border: 1px solid #412D15; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+          <div class="map-embed-wrap" style="height: 280px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
             <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.0!2d121.0050!3d14.1043!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x33bd6f4b8c8c8c8d%3A0x0!2sSanto+Tomas%2C+Batangas!5e0!3m2!1sen!2sph!4v1620000000000!5m2!1sen!2sph" allowfullscreen="" loading="lazy" style="width: 100%; height: 100%; border: 0;"></iframe>
           </div>
         </div>
 
       </div>
 
-      <hr style="border-color:#412D15; opacity:1; margin: 40px 0 20px;">
+      <hr style="border-color: var(--border); opacity:1; margin: 40px 0 20px;">
       
-      <div class="d-flex justify-content-between align-items-center">
-        <p style="font-size:.75rem; color:#6b665c; margin:0;">© 2026 Sip & Pulse Cafe. All rights reserved.</p>
+      <div class="d-flex justify-content-between align-items-center" style="position:relative;">
+        <div style="width:36px;"></div><!-- spacer to balance the button -->
+        <p style="font-size:.75rem; color: var(--text-dim); margin:0; text-align:center;">© 2026 Sip &amp; Pulse Cafe. All rights reserved.</p>
         <a href="#home-section" title="Back to top" 
-           style="background-color: transparent; color: #b0a89a; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; border: 1.5px solid #412D15; transition: all 0.3s;" 
-           onmouseover="this.style.backgroundColor='var(--brand)'; this.style.color='#F8F4E1';" 
-           onmouseout="this.style.backgroundColor='transparent'; this.style.color='#b0a89a';">
+           style="background-color: transparent; color: var(--text-dim); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-decoration: none; border: 1.5px solid var(--border); transition: all 0.3s; flex-shrink:0;" 
+           onmouseover="this.style.backgroundColor='var(--brand)'; this.style.color='#F8F4E1'; this.style.borderColor='var(--brand)';" 
+           onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-dim)'; this.style.borderColor='var(--border)';">
           <span class="material-icons" style="font-size: 18px;">arrow_upward</span>
         </a>
       </div>
