@@ -3885,6 +3885,24 @@ const FOOD_ADDONS = [
       // Persist across page reloads (sessionStorage so it clears on browser close)
       try { sessionStorage.setItem('sipandpulse_guser', JSON.stringify(u)); } catch(e) {}
 
+      // ✅ SAVE USER TO DATABASE
+      try {
+        fetch('save_user.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: u.name,
+            email: u.email
+          })
+        }).then(r => r.json()).then(d => {
+          if (d.success) {
+            console.log('✅ User saved to database:', u.email);
+          }
+        }).catch(err => console.warn('⚠️ Could not save user to database:', err));
+      } catch(e) {
+        console.warn('⚠️ Save user error:', e);
+      }
+
       // Hide the plain sign-in button, show the avatar chip
       const loginBtn = document.getElementById('googleLoginBtn');
       if (loginBtn) loginBtn.style.display = 'none';

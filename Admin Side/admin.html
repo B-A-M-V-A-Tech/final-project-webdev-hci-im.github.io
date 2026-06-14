@@ -1050,8 +1050,8 @@
   </div>
 </section>
 
-<!-- ═══════════════════ FOOTER ═══════════════════ -->
-<footer class="site-footer" id="footer-section">
+<!-- ═══════════════════ FOOTER / CONTACT ═══════════════════ -->
+<footer class="site-footer" id="contact-section">
   <div class="container">
     <div class="row g-4 mb-4">
       <!-- Brand + tagline -->
@@ -1762,6 +1762,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastOnlineOrdersJson = '[]';
   setInterval(() => {
     try {
+      // Load from both localStorage and database
+      loadOrderQueue();
+      
       const onlineOrdersJson = localStorage.getItem('sip_online_orders') || '[]';
       // Check if online orders have changed
       if (onlineOrdersJson !== lastOnlineOrdersJson) {
@@ -1769,12 +1772,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const onlineOrders = JSON.parse(onlineOrdersJson);
         const pendingOnlineOrders = onlineOrders.filter(o => o.status !== 'done').length;
         lastOnlineOrdersCount = pendingOnlineOrders;
-        // Reload and render queue immediately
-        loadOrderQueue();
-        renderQueue();
-        renderOrdersHistory();
       }
-    } catch(e) {}
+      
+      // Reload and render queue immediately
+      renderQueue();
+      renderOrdersHistory();
+    } catch(e) {
+      console.error('Error in auto-refresh:', e);
+    }
   }, 500);
 
   document.getElementById('cartOpenBtn').addEventListener('click', () => {
@@ -2194,7 +2199,7 @@ function syncDashboard() {
 const QUEUE_STORAGE_KEY = 'sipAndPulse_orderQueue';
 const ORDER_COUNTER_KEY = 'sipAndPulse_orderCounter';
 
-function loadOrderQueue() {
+async function loadOrderQueue() {
   try {
     const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
     state.queue = queue ? JSON.parse(queue) : [];
@@ -2205,7 +2210,44 @@ function loadOrderQueue() {
       return !isDemoOrder;
     });
 
-    // ── LOAD ONLINE ORDERS FROM CLIENT ──
+    // ── LOAD ONLINE ORDERS FROM DATABASE (PRIMARY SOURCE) ──
+    try {
+      const response = await fetch('api/orders.php?action=get_orders');
+      if (response.ok) {
+        const dbResult = await response.json();
+        if (dbResult.success && Array.isArray(dbResult.data)) {
+          console.log('✅ Loaded', dbResult.data.length, 'orders from database');
+          // Convert database orders to queue format
+          dbResult.data.forEach(dbOrder => {
+            const exists = state.queue.some(q => q.id === dbOrder.id || q.orderId === dbOrder.id);
+            if (!exists) {
+              // Map database order to queue order format
+              const queueOrder = {
+                id: dbOrder.id,
+                num: dbOrder.id,
+                source: 'O',
+                items: dbOrder.items ? (typeof dbOrder.items === 'string' ? dbOrder.items : JSON.stringify(dbOrder.items)) : '',
+                notes: `Order ID: ${dbOrder.id}\n💳 Payment: ${dbOrder.fulfillment}\n👤 ${dbOrder.customer_name} (${dbOrder.customer_email})`,
+                method: dbOrder.fulfillment === 'delivery' ? 'Delivery' : 'Pick-up',
+                total: dbOrder.total_amount,
+                status: dbOrder.status === 'pending' ? 'new' : dbOrder.status,
+                customerName: dbOrder.customer_name,
+                customerEmail: dbOrder.customer_email,
+                deliveryLoc: dbOrder.delivery_location || '',
+                timestamp: dbOrder.created_at,
+                orderId: dbOrder.id
+              };
+              state.queue.push(queueOrder);
+            }
+          });
+        }
+      }
+    } catch(dbErr) {
+      console.warn('⚠️ Could not load orders from database:', dbErr);
+      // Fall back to localStorage only
+    }
+
+    // ── LOAD ONLINE ORDERS FROM CLIENT LOCALSTORAGE ──
     const onlineOrdersRaw = localStorage.getItem('sip_online_orders');
     if (onlineOrdersRaw) {
       try {
@@ -2228,6 +2270,7 @@ function loadOrderQueue() {
     saveOrderQueue();
   } catch(e) {
     state.queue = [];
+    console.error('Error in loadOrderQueue:', e);
   }
 }
 
