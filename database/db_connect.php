@@ -38,7 +38,8 @@ function ensureDatabaseSchema($conn) {
     ensureColumn($conn, 'admin_users', 'role', "VARCHAR(50) DEFAULT 'admin'");
 
     $conn->query("UPDATE admin_users SET email = 'admin@sipandpulse.com' WHERE username = 'admin' AND (email IS NULL OR email = '')");
-    $conn->query("UPDATE admin_users SET email = username WHERE (email IS NULL OR email = '') AND username LIKE '%@%'");
+    $conn->query("UPDATE admin_users SET email = LOWER(TRIM(username)) WHERE (email IS NULL OR email = '') AND username LIKE '%@%'");
+    $conn->query("UPDATE admin_users SET email = LOWER(TRIM(email)) WHERE email IS NOT NULL AND email != ''");
 
     $conn->query("CREATE TABLE IF NOT EXISTS menu_items (
         id INT AUTO_INCREMENT PRIMARY KEY,

@@ -1,14 +1,14 @@
 <?php
 session_start();
 
-// If already logged in as admin, redirect to admin panel
+// If already logged in as admin, still require client-side sign-in flow
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-    header('Location: ../Admin Side/admin.html#dashboard-section');
+    header('Location: ../Client%20Side/index.html?openAdmin=1');
     exit();
 }
 
 // Database connection
-include 'db_connect.php';
+include __DIR__ . '/../database/db_connect.php';
 
 $error_message = '';
 
@@ -39,8 +39,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['admin_id'] = $admin['id'];
                     $_SESSION['admin_username'] = $admin['username'];
                     
-                    // Redirect to admin dashboard
-                    header('Location: ../Admin Side/admin.html#dashboard-section');
+                    // Must complete sign-in on client before opening admin dashboard
+                    header('Location: ../Client%20Side/index.html?openAdmin=1');
                     exit();
                 } else {
                     $error_message = 'Invalid username or password.';

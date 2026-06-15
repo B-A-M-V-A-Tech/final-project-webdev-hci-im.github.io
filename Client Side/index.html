@@ -174,45 +174,28 @@
       }
     }
 
-    /* ── FIX MENU MODAL — Sticky Navigation & Menu Window ── */
-    #menuModal {
-      position: fixed !important;
-      top: 0 !important;
-      left: 0 !important;
-      width: 100% !important;
-      height: 100% !important;
-      z-index: 1050 !important;
+    /* ── FULL MENU MODAL — fixed shell, only grid scrolls ── */
+    #fullMenuModal {
+      overflow: hidden;
     }
 
-    #menuModal .modal-dialog {
-      position: fixed !important;
-      top: 60px !important;
-      left: 0 !important;
-      right: 0 !important;
-      width: 100% !important;
-      height: calc(100vh - 60px) !important;
-      max-width: 100% !important;
-      margin: 0 !important;
-      border-radius: 0 !important;
+    #fullMenuModal .modal-dialog {
+      margin: 0;
+      max-width: 100%;
+      width: 100%;
+      height: 100%;
     }
 
-    #menuModal .modal-content {
-      height: 100% !important;
-      border-radius: 0 !important;
-      display: flex !important;
-      flex-direction: column !important;
-    }
-
-    #menuModal .modal-header {
-      position: sticky !important;
-      top: 0 !important;
-      z-index: 1035 !important;
-      flex-shrink: 0 !important;
-    }
-
-    #menuModal .modal-body {
-      overflow-y: auto !important;
-      flex: 1 !important;
+    #fullMenuModal .modal-content {
+      background: transparent;
+      border: none;
+      border-radius: 0;
+      height: 100%;
+      max-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      position: relative;
     }
 
     [data-bs-theme="dark"] .site-nav {
@@ -221,8 +204,13 @@
     }
 
     [data-bs-theme="dark"] .nav-logo,
-    [data-bs-theme="dark"] .site-logo img {
+    [data-bs-theme="dark"] .site-logo img,
+    [data-bs-theme="dark"] .navbar-brand-link img,
+    [data-bs-theme="dark"] .mobile-nav-header img,
+    [data-bs-theme="dark"] .site-footer .nav-logo,
+    [data-bs-theme="dark"] .site-footer .site-logo img {
       filter: brightness(0) invert(1);
+      -webkit-filter: brightness(0) invert(1);
     }
 
     .navbar-brand-link {
@@ -745,42 +733,63 @@
       color: #F8F4E1;
     }
 
-    /* ── FULL MENU MODAL ── */
-  
-
-    #fullMenuModal .modal-dialog {
-      margin: 0;
+    #fullMenuModal .menu-modal-bg {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      width: 100%;
     }
 
-   /* Ensure the modal content covers everything with a blur */
-#fullMenuModal .modal-content {
-  background: transparent; /* Make the modal container transparent */
-  border: none;
-}
+    #fullMenuModal .menu-modal-overlay {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      overflow: hidden;
+      background: rgba(31, 21, 12, 0.92);
+      padding: 0;
+    }
 
-.menu-modal-bg {
-  /* This creates the blur layer */
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  min-height: 100vh;
-  width: 100%;
-}
+    #fullMenuModal .menu-modal-header {
+      position: sticky;
+      top: 0;
+      flex-shrink: 0;
+      padding: 20px 0 12px;
+      background: rgba(43, 31, 20, 0.58);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      border-bottom: 1px solid rgba(175, 143, 111, 0.28);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14);
+      z-index: 10;
+      transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
 
-.menu-modal-overlay {
-  /* Darker, more opaque overlay to hide the "busyness" underneath */
-  background: rgba(31, 21, 12, 0.92); 
-  min-height: 100vh;
-  padding: 20px 0 80px;
-}
+    #fullMenuModal .menu-modal-header .container {
+      padding-right: 56px;
+    }
+
+    #fullMenuModal .menu-modal-scroll {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 80px;
+    }
 
     .menu-modal-close-btn {
-      position: fixed;
+      position: absolute;
       top: 20px;
       right: 20px;
-      z-index: 9999;
-      background: rgba(255, 255, 255, .15);
-      border: 1.5px solid rgba(255, 255, 255, .3);
-      color: #fff;
+      z-index: 20;
+      background: rgba(43, 31, 20, 0.45);
+      border: 1px solid rgba(175, 143, 111, 0.35);
+      color: #F8F4E1;
       border-radius: 50%;
       width: 44px;
       height: 44px;
@@ -788,12 +797,16 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      backdrop-filter: blur(6px);
+      backdrop-filter: blur(18px) saturate(1.15);
+      -webkit-backdrop-filter: blur(18px) saturate(1.15);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
       transition: all .2s;
     }
 
     .menu-modal-close-btn:hover {
-      background: rgba(255, 255, 255, .25);
+      background: rgba(43, 31, 20, 0.62);
+      border-color: rgba(175, 143, 111, 0.5);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
     }
 
     .menu-search-bar {
@@ -1272,8 +1285,6 @@
       margin-bottom: 16px;
     }
 
-    /* ── FOOTER ── */
-   .site-footer
     /* ── ORDER MODAL SCROLL FIX ── */
     #orderModal .modal-content {
       display: flex;
@@ -2008,24 +2019,6 @@
       }
     }
 
-    #fullMenuModal .modal-dialog {
-      display: flex;
-      align-items: center;
-      min-height: calc(100% - 1rem);
-    }
-
-    #fullMenuModal .modal-content {
-      max-height: 90vh;
-      display: flex;
-      flex-direction: column;
-    }
-
-    #fullMenuModal .modal-body-custom {
-      flex: 1 1 auto;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
     .modal-body {
       max-height: 65vh;
       overflow-y: auto;
@@ -2698,7 +2691,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       .section-eyebrow { font-size: .65rem; }
       
       /* Modal adjustments */
-      #fullMenuModal .modal-content { border-radius: 16px; }
       .menu-card-modal { border-radius: 10px; }
       .menu-img-modal { height: 140px; }
       
@@ -2741,7 +2733,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       .form-group { margin-bottom: 14px; }
       
       /* Modals max height */
-      #fullMenuModal .modal-content { max-height: 85vh; }
     }
 
     /* ─── Tablets Landscape (480px - 768px) ─── */
@@ -3434,14 +3425,14 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
   <div class="modal fade" id="fullMenuModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-fullscreen" style="margin:0;">
     <div class="modal-content" style="border-radius:0;border:none;position:relative;">
-      <!-- ✕ Close button is a direct child of modal-content so it sits above ALL scroll layers -->
-      <button class="menu-modal-close-btn" data-bs-dismiss="modal" onclick="closeFullMenuModal()" title="Close menu" style="position:fixed;top:20px;right:20px;z-index:99999;">
+      <button class="menu-modal-close-btn" data-bs-dismiss="modal" onclick="closeFullMenuModal()" title="Close menu">
         <span class="material-icons">close</span>
       </button>
       <div class="menu-modal-bg">
         <div class="menu-modal-overlay">
 
-          <div class="sticky-top" style="background: rgba(18, 12, 8, 0.55); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding-top: 20px; z-index: 10; border-bottom: 1px solid rgba(175, 143, 111, 0.2);">
+          <div class="menu-modal-scroll">
+          <div class="menu-modal-header">
             <div class="container text-center">
               <div class="mb-3">
                 <p style="font-size:.7rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#AF8F6F;margin-bottom:6px;">
@@ -3513,11 +3504,12 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             </div>
           </div>
 
-          <div class="container pt-3">
-            <div class="row g-3" id="menuGridModal"></div>
-            <div id="emptyStateModal" class="text-center py-5 d-none">
-              <span class="material-icons" style="font-size:3rem;color:rgba(175,143,111,.5);">search_off</span>
-              <p style="color:rgba(225,220,201,.6);font-size:.9rem;margin-top:8px;">No items found.</p>
+            <div class="container pt-3">
+              <div class="row g-3" id="menuGridModal"></div>
+              <div id="emptyStateModal" class="text-center py-5 d-none">
+                <span class="material-icons" style="font-size:3rem;color:rgba(175,143,111,.5);">search_off</span>
+                <p style="color:rgba(225,220,201,.6);font-size:.9rem;margin-top:8px;">No items found.</p>
+              </div>
             </div>
           </div>
 
@@ -3526,18 +3518,6 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     </div>
   </div>
 </div>
-              <!-- Menu grid -->
-              <div class="row g-3" id="menuGridModal"></div>
-              <div id="emptyStateModal" class="text-center py-5 d-none">
-                <span class="material-icons" style="font-size:3rem;color:rgba(175,143,111,.5);">search_off</span>
-                <p style="color:rgba(225,220,201,.6);font-size:.9rem;margin-top:8px;">No items found.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <!-- ══ REVIEW DETAIL MODAL ══ -->
   <div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
@@ -3613,24 +3593,23 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
         <div class="modal-body-custom pt-3">
           <div id="adminGoogleClientNotice" style="display:none;background:rgba(192,57,43,.08);border:1.5px solid rgba(192,57,43,.35);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.78rem;color:var(--text-dim);line-height:1.55;"></div>
           <div class="mb-3">
-            <label class="form-label-custom">Email</label>
+            <label class="form-label-custom">Admin Email</label>
             <div class="input-group-custom">
               <span class="material-icons">email</span>
-              <input type="email" class="form-control-custom" id="adminEmail" placeholder="admin@sipandpulse.com">
+              <input type="text" class="form-control-custom" id="adminEmail" placeholder="name@sipandpulse.com" autocomplete="username">
             </div>
           </div>
           <div class="mb-4">
             <label class="form-label-custom">Password</label>
             <div class="input-group-custom">
               <span class="material-icons">lock</span>
-              <input type="password" class="form-control-custom" id="adminPassword" placeholder="••••••••">
+              <input type="password" class="form-control-custom" id="adminPassword" placeholder="••••••••" autocomplete="current-password">
             </div>
           </div>
           <button class="btn-primary-custom" onclick="handleAdminLogin()">
             <span class="material-icons" style="font-size:17px;">login</span> Sign In
           </button>
-          <p style="font-size:.73rem;color:var(--text-dim);text-align:center;margin-top:12px;margin-bottom:0;">Only
-            accounts registered in the administrator database can sign in. Google client accounts cannot access the Admin Panel.</p>
+          <p style="font-size:.73rem;color:var(--text-dim);text-align:center;margin-top:12px;margin-bottom:0;">Use the <strong>email and password</strong> set when the administrator account was created. Any registered admin can sign in here, even if also signed in with Google as a client.</p>
         </div>
         <div style="height:16px;"></div>
       </div>
@@ -5177,6 +5156,15 @@ const FOOD_ADDONS = [
        ════════════════════════════════════════════ */
     const ADMIN_PANEL_URL = PROJECT_BASE + '/Admin%20Side/admin.html#dashboard-section';
     const ADMIN_AUTH_API = apiUrl('admin_auth.php');
+    const ADMIN_CLIENT_GATE_KEY = 'sipandpulse_admin_via_client';
+
+    function setAdminClientGate() {
+      localStorage.setItem(ADMIN_CLIENT_GATE_KEY, '1');
+    }
+
+    function clearAdminClientGate() {
+      localStorage.removeItem(ADMIN_CLIENT_GATE_KEY);
+    }
 
     async function parseApiResponse(response) {
       const text = await response.text();
@@ -5209,7 +5197,7 @@ const FOOD_ADDONS = [
       if (notice) {
         if (state.googleUser && state.googleUser.email) {
           notice.style.display = 'block';
-          notice.innerHTML = `You are signed in with <strong>Sign in with Google</strong> as a client (<strong>${state.googleUser.email}</strong>). Client accounts do not have administrator access. Use your administrator email and password below.`;
+          notice.innerHTML = `Signed in with Google as <strong>${state.googleUser.email}</strong>. If this email is registered as an administrator, enter your admin password below to open the dashboard.`;
         } else {
           notice.style.display = 'none';
           notice.innerHTML = '';
@@ -5221,22 +5209,14 @@ const FOOD_ADDONS = [
     }
 
     async function handleAdminToggleClick() {
-      const checkbox = document.getElementById('adminModeCheckbox');
-      const mobileCheckbox = document.getElementById('mobileAdminModeCheckbox');
-      const isOn = (checkbox && checkbox.checked) || (mobileCheckbox && mobileCheckbox.checked);
+      setAdminCheckboxes(false);
 
-      if (!isOn) {
-        if (isLiveServerPreview()) {
-          redirectToXamppForAdmin();
-          return;
-        }
-
-        openAdminLoginModal();
+      if (isLiveServerPreview()) {
+        redirectToXamppForAdmin();
         return;
       }
 
-      setAdminCheckboxes(false);
-      deactivateAdminMode();
+      openAdminLoginModal();
     }
 
     async function handleAdminLogin() {
@@ -5274,6 +5254,10 @@ const FOOD_ADDONS = [
         document.getElementById('adminPassword').value = '';
 
         bootstrap.Modal.getInstance(document.getElementById('adminLoginModal'))?.hide();
+        state.isAdminLoggedIn = true;
+        setAdminClientGate();
+        setAdminCheckboxes(false);
+        deactivateAdminMode();
         goToAdminDashboard();
       } catch (error) {
         alert(error.message || 'Could not connect to XAMPP. Start Apache and MySQL, then use:\n' + PROJECT_BASE + '/Client%20Side/index.html');
@@ -5284,21 +5268,31 @@ const FOOD_ADDONS = [
     function activateAdminMode() {
       state.isAdminModeActive = true;
       document.body.classList.add('admin-active');
-      document.getElementById('adminBanner').classList.add('visible');
-      document.getElementById('adminToggleWrap').classList.add('is-admin');
-      document.getElementById('modeBadge').textContent = 'Admin Mode';
-      document.getElementById('modeBadge').className = 'mode-badge admin';
+      document.getElementById('adminBanner')?.classList.add('visible');
+      document.getElementById('adminToggleWrap')?.classList.add('is-admin');
+      const modeBadge = document.getElementById('modeBadge');
+      if (modeBadge) {
+        modeBadge.textContent = 'Admin Mode';
+        modeBadge.className = 'mode-badge admin';
+      }
     }
     function deactivateAdminMode() {
       state.isAdminModeActive = false;
       document.body.classList.remove('admin-active');
-      document.getElementById('adminBanner').classList.remove('visible');
-      document.getElementById('adminToggleWrap').classList.remove('is-admin');
-      document.getElementById('modeBadge').textContent = 'Client Mode';
-      document.getElementById('modeBadge').className = 'mode-badge client';
+      document.getElementById('adminBanner')?.classList.remove('visible');
+      document.getElementById('adminToggleWrap')?.classList.remove('is-admin');
+      const modeBadge = document.getElementById('modeBadge');
+      if (modeBadge) {
+        modeBadge.textContent = 'Client Mode';
+        modeBadge.className = 'mode-badge client';
+      }
     }
 
-    document.getElementById('cancelAdminLogin').addEventListener('click', () => {
+    document.getElementById('cancelAdminLogin')?.addEventListener('click', () => {
+      setAdminCheckboxes(false);
+    });
+
+    document.getElementById('adminLoginModal')?.addEventListener('hidden.bs.modal', () => {
       setAdminCheckboxes(false);
     });
 
@@ -5538,6 +5532,7 @@ const FOOD_ADDONS = [
        ════════════════════════════════════════════ */
     function updateCartBadge() {
       const badge = document.getElementById('cartCountBadge');
+      if (!badge) return;
       badge.textContent = state.cart.length;
       badge.classList.toggle('visible', state.cart.length > 0);
     }
@@ -6017,19 +6012,9 @@ async function openMyOrdersModal() {
     /* ════════════════════════════════════════════
        REVIEWS
        ════════════════════════════════════════════ */
-    function updateAvgRatingBadges() {
-      const reviews = state.reviews || [];
-      const el = document.getElementById('heroAvgRating');
-      if (!el) return;
-      if (!reviews.length) {
-        el.textContent = '—★';
-        return;
-      }
-      const avg = (reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length).toFixed(1);
-      el.textContent = `${avg}★`;
-    }
-
     function renderReviews() {
+      updateAvgRatingBadges();
+
       // Toggle name field between "signed-in chip" and plain text input
       const nameInput       = document.getElementById('reviewName');
       const nameSignedIn    = document.getElementById('reviewNameSignedIn');
@@ -6048,7 +6033,10 @@ async function openMyOrdersModal() {
         if (nameSignedIn) { nameSignedIn.style.display = 'none'; }
       }
 
-      document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => `
+      const feed = document.getElementById('reviewsFeed');
+      if (!feed) return;
+
+      feed.innerHTML = state.reviews.map(r => `
     <div class="col-md-6 col-lg-4">
       <div class="review-card" onclick="openReviewDetail(${r.id})" title="Click to read full review">
         <div class="d-flex align-items-center justify-content-between mb-2">
@@ -6076,7 +6064,6 @@ async function openMyOrdersModal() {
       </div>
     </div>
   `).join('');
-      updateAvgRatingBadges();
     }
 
     function openReviewDetail(id) {
@@ -6395,8 +6382,9 @@ function loadReviews() {
             if (data.success && Array.isArray(data.data)) {
                 state.reviews = data.data.map(mapDbReviewToClient);
                 try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
-                renderReviews();
             }
+            updateAvgRatingBadges();
+            if (typeof renderReviews === 'function') renderReviews();
         })
         .catch(err => console.error('Error loading reviews:', err));
 }
@@ -6436,6 +6424,19 @@ function mapDbReviewToClient(row) {
   };
 }
 
+function updateAvgRatingBadges() {
+  const reviews = state.reviews || [];
+  const el = document.getElementById('heroAvgRating');
+  if (!el) return;
+  if (!reviews.length) {
+    el.textContent = '—★';
+    return;
+  }
+  const avg = (reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length).toFixed(1);
+  el.textContent = `${avg}★`;
+}
+window.updateAvgRatingBadges = updateAvgRatingBadges;
+
 function loadMenuFromDatabase() {
   return fetch(apiUrl('get_menu.php'))
     .then(res => res.json())
@@ -6456,10 +6457,14 @@ function loadReviewsFromDatabase() {
       if (data.success && Array.isArray(data.data)) {
         state.reviews = data.data.map(mapDbReviewToClient);
         try { localStorage.setItem(REVIEWS_KEY, JSON.stringify(state.reviews)); } catch(e) {}
-        renderReviews();
       }
+      updateAvgRatingBadges();
+      if (typeof renderReviews === 'function') renderReviews();
     })
-    .catch(err => console.error('Error loading reviews:', err));
+    .catch(err => {
+      console.error('Error loading reviews:', err);
+      updateAvgRatingBadges();
+    });
 }
 
 function saveReviewToDatabase(name, rating, comment, avatar) {

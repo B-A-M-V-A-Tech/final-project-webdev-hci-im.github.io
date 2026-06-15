@@ -1,16 +1,20 @@
 <?php
 ob_start();
+include __DIR__ . '/session_bootstrap.php';
 header('Content-Type: application/json');
 include '../database/db_connect.php';
 include '../database/admin_session.php';
 
-// ADDED: Allow admin panel API access without separate login page
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-if (!isAdminLoggedIn()) {
-    $_SESSION['admin_logged_in'] = true;
-    $_SESSION['admin_username'] = 'admin';
+function requireAdminApiLogin() {
+    if (!isAdminLoggedIn()) {
+        ob_end_clean();
+        http_response_code(403);
+        echo json_encode([
+            'success' => false,
+            'error' => 'You must be signed in as an administrator.'
+        ]);
+        exit;
+    }
 }
 
 try {
@@ -81,7 +85,7 @@ try {
 
     } elseif ($method === 'POST' && $action === 'admin_reply') {
         // Add admin reply to review (admin only)
-        requireAdminLogin();
+        requireAdminApiLogin();
 
         $data = json_decode(file_get_contents('php://input'), true);
 
@@ -127,7 +131,7 @@ try {
 
     } elseif ($method === 'POST' && $action === 'delete_review') {
         // Delete review (admin only)
-        requireAdminLogin();
+        requireAdminApiLogin();
 
         $data = json_decode(file_get_contents('php://input'), true);
 
