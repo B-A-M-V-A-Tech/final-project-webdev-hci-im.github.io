@@ -88,6 +88,10 @@ function ensureDatabaseSchema($conn) {
     ensureColumn($conn, 'orders', 'order_source', "VARCHAR(5) DEFAULT 'O'");
     ensureColumn($conn, 'orders', 'payment_method', "VARCHAR(80) DEFAULT ''");
     ensureColumn($conn, 'orders', 'notes', "TEXT");
+    ensureColumn($conn, 'orders', 'cancel_num', "VARCHAR(20) DEFAULT ''");
+    ensureColumn($conn, 'orders', 'refund_amount', "DECIMAL(10,2) DEFAULT 0");
+    ensureColumn($conn, 'orders', 'refund_status', "VARCHAR(50) DEFAULT ''");
+    ensureColumn($conn, 'orders', 'cancelled_at', "TIMESTAMP NULL DEFAULT NULL");
 }
 
 ensureDatabaseSchema($conn);

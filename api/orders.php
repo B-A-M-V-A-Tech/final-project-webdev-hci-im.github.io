@@ -15,7 +15,7 @@ function uiStatusToDb($status) {
     if ($status === 'new') {
         return 'pending';
     }
-    if (in_array($status, ['pending', 'preparing', 'ready', 'done'], true)) {
+    if (in_array($status, ['pending', 'preparing', 'ready', 'done', 'cancelled'], true)) {
         return $status;
     }
     return 'pending';
@@ -27,6 +27,42 @@ function dbStatusToUi($status) {
         return 'new';
     }
     return $status;
+}
+
+function isRefundableEwalletPayment($paymentMethod) {
+    $m = strtolower(trim((string) $paymentMethod));
+    if ($m === '') {
+        return false;
+    }
+    return (
+        strpos($m, 'gcash') !== false ||
+        strpos($m, 'maya') !== false ||
+        strpos($m, 'e-wallet') !== false ||
+        strpos($m, 'ewallet') !== false ||
+        strpos($m, 'g-cash') !== false
+    );
+}
+
+function nextCancelOrderNumber($conn) {
+    $like = 'C%';
+    $stmt = $conn->prepare(
+        "SELECT cancel_num FROM orders
+         WHERE cancel_num LIKE ?
+         ORDER BY CAST(SUBSTRING(cancel_num, 2) AS UNSIGNED) DESC
+         LIMIT 1"
+    );
+    $stmt->bind_param('s', $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $next = 1001;
+    if ($row = $result->fetch_assoc()) {
+        $num = $row['cancel_num'];
+        if (preg_match('/^C(\d+)$/', $num, $matches)) {
+            $next = intval($matches[1]) + 1;
+        }
+    }
+    $stmt->close();
+    return 'C' . $next;
 }
 
 function nextOrderNumber($conn, $source) {
@@ -68,7 +104,8 @@ function fetchOrderById($conn, $id) {
     $stmt = $conn->prepare(
         "SELECT id, customer_name, customer_email, items, total_amount, status,
                 fulfillment, delivery_location, order_num, order_source,
-                payment_method, notes, created_at
+                payment_method, notes, cancel_num, refund_amount, refund_status,
+                cancelled_at, created_at
          FROM orders WHERE id = ?"
     );
     $stmt->bind_param('i', $id);
@@ -90,12 +127,56 @@ try {
     $action = isset($_GET['action']) ? $_GET['action'] : '';
 
     if ($method === 'GET' && $action === 'get_orders') {
-        $query = "SELECT id, customer_name, customer_email, items, total_amount, status,
-                         fulfillment, delivery_location, order_num, order_source,
-                         payment_method, notes, created_at
-                  FROM orders
-                  ORDER BY created_at DESC";
-        $result = $conn->query($query);
+        $emailFilter = isset($_GET['email']) ? trim((string) $_GET['email']) : '';
+        $idsFilter = isset($_GET['ids']) ? trim((string) $_GET['ids']) : '';
+
+        if ($idsFilter !== '') {
+            $rawIds = array_filter(array_map('intval', explode(',', $idsFilter)));
+            $ids = array_values(array_unique(array_filter($rawIds, function ($id) {
+                return $id > 0;
+            })));
+
+            if (empty($ids)) {
+                $orders = array();
+                ob_end_clean();
+                echo json_encode(['success' => true, 'data' => $orders]);
+                exit;
+            }
+
+            $placeholders = implode(',', array_fill(0, count($ids), '?'));
+            $query = "SELECT id, customer_name, customer_email, items, total_amount, status,
+                             fulfillment, delivery_location, order_num, order_source,
+                             payment_method, notes, cancel_num, refund_amount, refund_status,
+                             cancelled_at, created_at
+                      FROM orders
+                      WHERE id IN ($placeholders)
+                      ORDER BY created_at DESC";
+            $stmt = $conn->prepare($query);
+            $types = str_repeat('i', count($ids));
+            $stmt->bind_param($types, ...$ids);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } elseif ($emailFilter !== '') {
+            $query = "SELECT id, customer_name, customer_email, items, total_amount, status,
+                             fulfillment, delivery_location, order_num, order_source,
+                             payment_method, notes, cancel_num, refund_amount, refund_status,
+                             cancelled_at, created_at
+                      FROM orders
+                      WHERE customer_email = ?
+                      ORDER BY created_at DESC";
+            $stmt = $conn->prepare($query);
+            $stmt->bind_param('s', $emailFilter);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $query = "SELECT id, customer_name, customer_email, items, total_amount, status,
+                             fulfillment, delivery_location, order_num, order_source,
+                             payment_method, notes, cancel_num, refund_amount, refund_status,
+                             cancelled_at, created_at
+                      FROM orders
+                      ORDER BY created_at DESC";
+            $result = $conn->query($query);
+        }
 
         if (!$result) {
             throw new Exception("Database error: " . $conn->error);
@@ -326,6 +407,72 @@ try {
             'success' => true,
             'message' => 'Order status updated successfully',
             'status' => dbStatusToUi($status)
+        ]);
+        exit;
+
+    } elseif ($method === 'POST' && $action === 'cancel_order') {
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['id'])) {
+            throw new Exception('Missing required field: id');
+        }
+
+        $id = intval($data['id']);
+        $order = fetchOrderById($conn, $id);
+
+        if (!$order) {
+            throw new Exception('Order not found');
+        }
+
+        $currentStatus = strtolower(trim((string) ($order['status'] === 'new' ? 'pending' : $order['status'])));
+        if ($currentStatus === 'cancelled' || uiStatusToDb($order['status']) === 'cancelled') {
+            throw new Exception('Order is already cancelled');
+        }
+
+        $cancelNum = nextCancelOrderNumber($conn);
+        $paymentMethod = $order['payment_method'] ?? '';
+        $totalAmount = floatval($order['total_amount'] ?? 0);
+        $refundAmount = 0.0;
+        $refundStatus = 'not_applicable';
+
+        if (isRefundableEwalletPayment($paymentMethod)) {
+            $refundAmount = $totalAmount;
+            $refundStatus = 'refunded';
+        }
+
+        $stmt = $conn->prepare(
+            "UPDATE orders
+             SET status = 'cancelled',
+                 cancel_num = ?,
+                 refund_amount = ?,
+                 refund_status = ?,
+                 cancelled_at = NOW()
+             WHERE id = ?"
+        );
+
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param('sdsi', $cancelNum, $refundAmount, $refundStatus, $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $stmt->close();
+        $updated = fetchOrderById($conn, $id);
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => $refundStatus === 'refunded'
+                ? 'Order cancelled. GCash/Maya refund processed.'
+                : 'Order cancelled successfully',
+            'data' => $updated,
+            'cancel_num' => $cancelNum,
+            'refund_amount' => $refundAmount,
+            'refund_status' => $refundStatus
         ]);
         exit;
 
