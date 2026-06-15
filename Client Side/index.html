@@ -1181,6 +1181,89 @@
       display: inline-flex;
     }
 
+    /* ── CAFE TOUR VIDEO ── */
+    .cafe-tour-section {
+      position: relative;
+      overflow: hidden;
+      min-height: clamp(420px, 62vh, 620px);
+      display: flex;
+      align-items: center;
+      padding: 72px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .cafe-tour-bg-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .cafe-tour-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background: linear-gradient(135deg, rgba(31, 21, 12, 0.84) 0%, rgba(84, 51, 16, 0.62) 48%, rgba(31, 21, 12, 0.8) 100%);
+    }
+
+    [data-bs-theme="dark"] .cafe-tour-overlay {
+      background: linear-gradient(135deg, rgba(12, 8, 5, 0.9) 0%, rgba(43, 31, 20, 0.72) 50%, rgba(12, 8, 5, 0.88) 100%);
+    }
+
+    .cafe-tour-content {
+      position: relative;
+      z-index: 2;
+      color: #F8F4E1;
+      max-width: 720px;
+    }
+
+    .cafe-tour-content .section-eyebrow {
+      color: #e6c9a0;
+    }
+
+    .cafe-tour-content .section-title {
+      color: #F8F4E1;
+    }
+
+    .cafe-tour-content .cafe-tour-desc {
+      color: rgba(248, 244, 225, 0.88);
+      line-height: 1.75;
+      font-size: 1rem;
+      margin-bottom: 0;
+    }
+
+    .cafe-tour-features {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .cafe-tour-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(248, 244, 225, 0.1);
+      border: 1px solid rgba(248, 244, 225, 0.22);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: .78rem;
+      font-weight: 600;
+      color: rgba(248, 244, 225, 0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    @media (max-width: 767px) {
+      .cafe-tour-section {
+        min-height: 480px;
+        padding: 56px 0;
+      }
+    }
+
     /* ── REVIEWS ── */
     .reviews-section {
       background-color: var(--bg-surface);
@@ -3308,6 +3391,36 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     </div>
   </div>
 </section>
+
+
+  <!-- ═══════════════════ CAFE TOUR VIDEO ═══════════════════ -->
+  <section class="cafe-tour-section" id="cafe-tour-section">
+    <video
+      class="cafe-tour-bg-video"
+      id="cafeTourBgVideo"
+      autoplay
+      muted
+      loop
+      playsinline
+      preload="metadata"
+      poster="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1600&q=80"
+      aria-label="Coffee shop atmosphere at Sip and Pulse">
+      <source src="assets/cafe-tour-bg.mp4" type="video/mp4">
+    </video>
+    <div class="cafe-tour-overlay" aria-hidden="true"></div>
+    <div class="container cafe-tour-content">
+      <p class="section-eyebrow mb-2">Step Inside</p>
+      <h2 class="section-title mb-3" style="font-size: clamp(2rem, 4vw, 2.75rem);">Experience Sip & Pulse</h2>
+      <p class="cafe-tour-desc">
+        Take a peek at our warm interiors, artisan coffee bar, and cozy corners — the perfect spot to sip, work, and unwind in Sto. Tomas.
+      </p>
+      <div class="cafe-tour-features">
+        <span class="cafe-tour-pill"><span class="material-icons" style="font-size:16px;">wb_sunny</span> Natural lighting</span>
+        <span class="cafe-tour-pill"><span class="material-icons" style="font-size:16px;">wifi</span> Work-friendly</span>
+        <span class="cafe-tour-pill"><span class="material-icons" style="font-size:16px;">groups</span> Cozy seating</span>
+      </div>
+    </div>
+  </section>
 
 
   <!-- ═══════════════════ REVIEWS ═══════════════════ -->
@@ -6484,7 +6597,24 @@ function saveReviewToDatabase(name, rating, comment, avatar) {
   .catch(() => showToast('Could not save review to database.', true));
 }
 
+function initCafeTourVideo() {
+  const video = document.getElementById('cafeTourBgVideo');
+  if (!video) return;
+
+  const tryPlay = () => {
+    const playPromise = video.play();
+    if (playPromise && typeof playPromise.catch === 'function') {
+      playPromise.catch(() => {});
+    }
+  };
+
+  video.addEventListener('loadeddata', tryPlay);
+  video.addEventListener('canplay', tryPlay);
+  tryPlay();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  initCafeTourVideo();
   loadMenuFromDatabase();
   loadReviewsFromDatabase();
   setInterval(function() {
