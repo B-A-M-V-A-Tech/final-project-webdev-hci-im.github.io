@@ -4,6 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="color-scheme" content="light dark">
+  <link rel="canonical" id="deviceAccessCanonical" href="http://localhost/final-project-webdev-hci-im.github.io/Client%20Side/index.html">
+  <link rel="alternate" href="https://final-project-webdev-hci-im.github.io/Client%20Side/index.html" title="Sip & Pulse — Client (Live)">
+  <link rel="alternate" href="http://localhost/final-project-webdev-hci-im.github.io/Admin%20Side/admin.html" title="Sip & Pulse — Admin (Local)">
+  <link rel="alternate" href="https://final-project-webdev-hci-im.github.io/Admin%20Side/admin.html" title="Sip & Pulse — Admin (Live)">
   <title>Sip & Pulse Cafe</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -3025,6 +3034,51 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
   </style>
 
+  <style>
+    /* ── Device fit & screen sizes (Client) ── */
+    html[data-device="ios"] body {
+      padding-left: env(safe-area-inset-left, 0);
+      padding-right: env(safe-area-inset-right, 0);
+      padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    html[data-device="mobile"] .btn,
+    html[data-device="ios"] .btn {
+      min-height: 48px;
+    }
+    html[data-device="tv"] .btn,
+    html[data-bp="tv"] .btn {
+      min-height: 56px;
+      font-size: 1rem;
+    }
+    html[data-device="tv"] .container,
+    html[data-bp="tv"] .container {
+      max-width: 1600px;
+    }
+    html[data-device="limited_input"] :focus-visible {
+      outline: 3px solid var(--brand);
+      outline-offset: 3px;
+    }
+    html[data-device="chrome_extension"] body {
+      overscroll-behavior: contain;
+    }
+
+    @media (pointer: coarse) {
+      html.device-fit-ready a,
+      html.device-fit-ready button,
+      html.device-fit-ready .btn,
+      html.device-fit-ready input[type="button"],
+      html.device-fit-ready input[type="submit"] {
+        min-height: 44px;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
   </style>
 </head>
 
@@ -6617,11 +6671,87 @@ document.addEventListener('DOMContentLoaded', function() {
   initCafeTourVideo();
   loadMenuFromDatabase();
   loadReviewsFromDatabase();
+  initDeviceAccessFit('client');
   setInterval(function() {
     loadMenuFromDatabase();
     loadReviewsFromDatabase();
   }, 5000);
 });
+
+/* ── Device fit, screen sizes & URL access (database-driven) ── */
+function detectDeviceProfile() {
+  const w = window.innerWidth;
+  const ua = navigator.userAgent || '';
+  const isIOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isTV = w >= 1920 && /(SmartTV|GoogleTV|AppleTV|WebOS|Tizen|NetCast|BRAVIA|HbbTV|CrKey)/i.test(ua);
+  const isChromeExt = !!(window.chrome && window.chrome.runtime && window.chrome.runtime.id);
+  const limitedInput = window.matchMedia('(pointer: none)').matches;
+
+  if (isChromeExt) return 'chrome_extension';
+  if (isTV) return 'tv';
+  if (isIOS) return 'ios';
+  if (limitedInput) return 'limited_input';
+  if (w < 768) return 'mobile';
+  if (w >= 1920) return 'tv';
+  return 'desktop';
+}
+
+function detectScreenBreakpoint(breakpoints) {
+  const w = window.innerWidth;
+  const list = breakpoints && breakpoints.length ? breakpoints : [
+    { breakpoint_key: 'xs', min_width: 0, max_width: 479 },
+    { breakpoint_key: 'sm', min_width: 480, max_width: 767 },
+    { breakpoint_key: 'md', min_width: 768, max_width: 1023 },
+    { breakpoint_key: 'lg', min_width: 1024, max_width: 1439 },
+    { breakpoint_key: 'xl', min_width: 1440, max_width: 1919 },
+    { breakpoint_key: 'tv', min_width: 1920, max_width: 99999 }
+  ];
+  for (let i = 0; i < list.length; i++) {
+    const bp = list[i];
+    if (w >= Number(bp.min_width) && w <= Number(bp.max_width)) return bp.breakpoint_key;
+  }
+  return 'lg';
+}
+
+function applyDeviceFitAttributes(deviceKey, breakpointKey) {
+  const html = document.documentElement;
+  html.setAttribute('data-device', deviceKey);
+  html.setAttribute('data-bp', breakpointKey);
+  html.classList.add('device-fit-ready');
+}
+
+function applyDeviceAccessHeadLinks(urls, viewMode) {
+  if (!urls) return;
+  const canonical = document.getElementById('deviceAccessCanonical');
+  if (canonical) {
+    canonical.href = viewMode === 'admin' ? urls.admin : urls.client;
+  }
+}
+
+function initDeviceAccessFit(viewMode) {
+  viewMode = viewMode || 'client';
+  const deviceKey = detectDeviceProfile();
+  applyDeviceFitAttributes(deviceKey, detectScreenBreakpoint());
+
+  const origin = typeof PROJECT_BASE !== 'undefined' ? PROJECT_BASE : window.location.origin;
+  fetch(apiUrl('device_access.php?origin=' + encodeURIComponent(origin)))
+    .then(function(res) { return res.json(); })
+    .then(function(payload) {
+      if (!payload.success || !payload.data) return;
+      const bp = detectScreenBreakpoint(payload.data.breakpoints);
+      applyDeviceFitAttributes(detectDeviceProfile(), bp);
+      applyDeviceAccessHeadLinks(payload.data.urls, viewMode);
+    })
+    .catch(function() {});
+
+  let resizeTimer;
+  window.addEventListener('resize', function() {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(function() {
+      applyDeviceFitAttributes(detectDeviceProfile(), detectScreenBreakpoint());
+    }, 150);
+  });
+}
 
 
   </script>
