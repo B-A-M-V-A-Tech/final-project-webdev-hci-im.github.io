@@ -1,10 +1,10 @@
 <?php
 header('Content-Type: application/json');
-include '../db_connect.php';
+include '../database/db_connect.php';
 
 try {
     // Get all menu items from database
-    $query = "SELECT id, name, category, description, price, image_url FROM menu_items ORDER BY category, name";
+    $query = "SELECT id, name, category, description, price, image_url, available, item_type FROM menu_items ORDER BY category, name";
     $result = $conn->query($query);
 
     if (!$result) {

@@ -111,6 +111,10 @@
     /* ── REVIEWS ── */
     .reviews-section{background-color:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 0;}
     .review-card{background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;padding:20px;height:100%;}
+    .admin-reply-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;position:relative;z-index:2;}
+    .btn-reply-action{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:6px 12px;font-size:.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all var(--transition);position:relative;z-index:2;pointer-events:auto;}
+    .btn-reply-action:hover{border-color:var(--brand);color:var(--brand);}
+    .btn-reply-action.danger:hover{border-color:#c0392b;color:#c0392b;}
     .review-avatar{width:38px;height:38px;border-radius:50%;background-color:var(--bg-surface-2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;color:var(--brand);border:1.5px solid var(--border);flex-shrink:0;}
     .review-stars{color:#d4a017;font-size:.9rem;letter-spacing:1px;}
     .review-text{font-size:.875rem;color:var(--text-dim);line-height:1.65;margin:10px 0 0;}
@@ -144,6 +148,10 @@
     .form-control-custom:focus,.form-select-custom:focus{border-color:var(--brand);box-shadow:0 0 0 3px rgba(116,81,45,.12);}
     .form-control-custom::placeholder{color:var(--brand-light);opacity:.8;}
     textarea.form-control-custom{min-height:80px;resize:vertical;}
+    .field-warning{display:none;color:#c0392b;font-size:.72rem;font-weight:600;margin-top:5px;}
+    .field-warning:not(:empty){display:block;}
+    .form-control-custom.is-field-invalid,.form-select-custom.is-field-invalid{border-color:#c0392b;box-shadow:0 0 0 3px rgba(192,57,43,.12);}
+    .is-group-invalid .star-rating-input label{color:#c0392b;}
     .form-select-custom option{background-color:var(--bg-body);color:var(--text-main);}
     .order-item-summary{display:flex;gap:14px;align-items:center;background-color:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:20px;}
     .order-item-thumb{width:64px;height:64px;border-radius:10px;object-fit:cover;flex-shrink:0;}
@@ -171,6 +179,12 @@
     .btn-outline-custom:hover{border-color:var(--brand);background-color:var(--bg-surface);}
     .btn-continue-ordering{width:100%;background:transparent;color:var(--brand);border:1.5px solid var(--brand);border-radius:12px;padding:11px;font-size:.85rem;font-weight:700;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;}
     .btn-continue-ordering:hover{background-color:rgba(116,81,45,.08);}
+
+    /* ══ SECURE CHECKOUT PAYMENT OPTIONS ══ */
+    .checkout-pay-option{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 8px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;font-size:.78rem;font-weight:600;color:var(--text-dim);transition:all .2s;text-align:center;user-select:none;}
+    .checkout-pay-option:hover{border-color:var(--brand);color:var(--brand);background:rgba(116,81,45,.06);}
+    .checkout-pay-option.selected{border-color:var(--brand);background:rgba(116,81,45,.10);color:var(--brand);}
+
     .checkout-success{display:none;text-align:center;padding:32px 16px;}
     .checkout-success.visible{display:block;}
     .input-group-custom{position:relative;}
@@ -630,7 +644,7 @@
       </button>
 
       <!-- Back to Client View -->
-      <a href="index.html" class="btn-client-view">
+      <a href="http://localhost/final-project-webdev-hci-im.github.io/Client%20Side/index.html" class="btn-client-view" id="clientViewBtn">
         <span class="material-icons" style="font-size:16px;">arrow_back</span>
         Client View
       </a>
@@ -688,7 +702,7 @@
       <span class="material-icons" style="font-size:16px;">person_add</span> Add Admin
     </button>
     <!-- Client View -->
-    <a href="index.html" class="btn-client-view" style="width:100%;justify-content:center;border-radius:10px;padding:10px 14px;">
+    <a href="http://localhost/final-project-webdev-hci-im.github.io/Client%20Side/index.html" class="btn-client-view" id="mobileClientViewBtn" style="width:100%;justify-content:center;border-radius:10px;padding:10px 14px;">
       <span class="material-icons" style="font-size:16px;">arrow_back</span> Client View
     </a>
   </div>
@@ -1285,11 +1299,102 @@
           <span class="order-total-label">Grand Total</span>
           <span class="order-total-amount" id="cartGrandTotal">₱0.00</span>
         </div>
-        <button class="btn-primary-custom" id="placeOrderBtn" onclick="placeOrder()" disabled>
+        <button class="btn-primary-custom" id="placeOrderBtn" onclick="openCheckoutModal()" disabled>
           <span class="material-icons" style="font-size:17px;">lock</span> Secure Checkout
         </button>
         <button class="btn-continue-ordering" onclick="continueOrdering()">
           <span class="material-icons" style="font-size:17px;">add_shopping_cart</span> Continue Ordering
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ SECURE CHECKOUT MODAL ══ -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header-custom">
+        <div>
+          <span style="font-size:.7rem;color:#1a7c4a;font-weight:700;text-transform:uppercase;letter-spacing:1px;">
+            <span class="material-icons" style="font-size:13px;vertical-align:middle;">lock</span> Secure
+          </span>
+          <h5 class="modal-title-custom">Checkout</h5>
+        </div>
+        <button type="button" class="btn-theme" data-bs-dismiss="modal"><span class="material-icons" style="font-size:18px;">close</span></button>
+      </div>
+      <div class="modal-body-custom">
+        <!-- Order Summary -->
+        <div style="background:var(--bg-surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:20px;">
+          <p style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--brand);margin:0 0 8px;">Order Summary</p>
+          <div id="checkoutOrderSummary" style="font-size:.84rem;color:var(--text-dim);"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+            <span style="font-size:.82rem;font-weight:600;color:var(--text-dim);">Grand Total</span>
+            <span id="checkoutGrandTotal" style="font-family:'Playfair Display',serif;font-size:1.15rem;font-weight:700;color:var(--brand);">₱0.00</span>
+          </div>
+        </div>
+        <!-- Customer Info -->
+        <div class="mb-3">
+          <label class="form-label-custom mb-1">Full Name <span style="color:#c0392b;">*</span></label>
+          <input type="text" id="checkoutName" class="form-control-custom" placeholder="e.g. Juan dela Cruz" autocomplete="name">
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom mb-1">Email Address <span style="color:var(--text-dim);font-size:.75rem;">(Optional)</span></label>
+          <input type="email" id="checkoutEmail" class="form-control-custom" placeholder="juan@email.com" autocomplete="email">
+        </div>
+        <div class="mb-3">
+          <label class="form-label-custom mb-1">Contact Number <span style="color:var(--text-dim);font-size:.75rem;">(Optional)</span></label>
+          <input type="tel" id="checkoutPhone" class="form-control-custom" placeholder="+63 9XX XXX XXXX" autocomplete="tel">
+        </div>
+        <!-- Payment Method -->
+        <div class="mb-3" id="checkoutPaymentGroup">
+          <label class="form-label-custom mb-2">Payment Method <span style="color:#c0392b;">*</span></label>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;" id="paymentMethodGroup">
+            <label class="checkout-pay-option" id="payOpt-cash">
+              <input type="radio" name="checkoutPayment" value="Cash" onchange="onPaymentChange()" style="display:none;">
+              <span class="material-icons" style="font-size:20px;display:block;margin-bottom:4px;">payments</span>
+              Cash
+            </label>
+            <label class="checkout-pay-option" id="payOpt-ewallet">
+              <input type="radio" name="checkoutPayment" value="E-Wallet" onchange="onPaymentChange()" style="display:none;">
+              <span class="material-icons" style="font-size:20px;display:block;margin-bottom:4px;">account_balance_wallet</span>
+              E-Wallet
+            </label>
+            <label class="checkout-pay-option" id="payOpt-card">
+              <input type="radio" name="checkoutPayment" value="Card" onchange="onPaymentChange()" style="display:none;">
+              <span class="material-icons" style="font-size:20px;display:block;margin-bottom:4px;">credit_card</span>
+              Card
+            </label>
+          </div>
+        </div>
+        <!-- E-Wallet details -->
+        <div id="ewalletDetails" style="display:none;" class="mb-3">
+          <label class="form-label-custom mb-1">E-Wallet Type</label>
+          <select id="ewalletType" class="form-select-custom">
+            <option value="GCash">GCash</option>
+            <option value="Maya">Maya (PayMaya)</option>
+            <option value="ShopeePay">ShopeePay</option>
+            <option value="GrabPay">GrabPay</option>
+            <option value="Other E-Wallet">Other</option>
+          </select>
+        </div>
+        <!-- Delivery address -->
+        <div id="deliveryAddressBlock" style="display:none;" class="mb-3">
+          <label class="form-label-custom mb-1">Delivery Address <span style="color:#c0392b;">*</span></label>
+          <textarea id="checkoutDeliveryAddress" class="form-control-custom" placeholder="House/Unit No., Street, Barangay, City..." style="min-height:64px;"></textarea>
+        </div>
+        <!-- Special Notes -->
+        <div class="mb-1">
+          <label class="form-label-custom mb-1">Special Notes <span style="color:var(--text-dim);font-size:.75rem;">(Optional)</span></label>
+          <textarea id="checkoutNotes" class="form-control-custom" placeholder="Allergies, extra requests, etc." style="min-height:56px;"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer-custom">
+        <button class="btn-primary-custom" id="checkoutConfirmBtn" onclick="confirmCheckout()">
+          <span class="material-icons" style="font-size:17px;">check_circle</span> Place Order
+        </button>
+        <button class="btn-continue-ordering mt-2" onclick="backToCart()">
+          <span class="material-icons" style="font-size:15px;">arrow_back</span> Back to Cart
         </button>
       </div>
     </div>
@@ -1328,7 +1433,11 @@
             </select>
           </div>
           <div class="col-12"><label class="form-label-custom">Description</label><textarea class="form-control-custom" id="crudDesc" placeholder="Brief description..."></textarea></div>
-          <div class="col-12"><label class="form-label-custom">Image URL</label><input type="url" class="form-control-custom" id="crudImage" placeholder="https://..."></div>
+          <div class="col-12"><label class="form-label-custom">Image URL</label><input type="text" class="form-control-custom" id="crudImage" placeholder="Paste image link (Google, Unsplash, etc.)" oninput="updateCrudImagePreview()"></div>
+          <div class="col-12" id="crudImagePreviewWrap" style="display:none;">
+            <label class="form-label-custom">Image Preview</label>
+            <img id="crudImagePreview" src="" alt="Menu preview" style="width:100%;max-height:180px;object-fit:cover;border-radius:10px;border:1px solid var(--border);">
+          </div>
           <div class="col-12"><div class="d-flex align-items-center gap-2"><input type="checkbox" id="crudAvailable" style="accent-color:var(--brand);width:16px;height:16px;" checked><label for="crudAvailable" style="font-size:.85rem;color:var(--text-dim);cursor:pointer;">Mark as Available</label></div></div>
         </div>
       </div>
@@ -1430,13 +1539,13 @@
       <div class="modal-body-custom" style="max-height:65vh;overflow-y:auto;">
 
         <!-- ── CUSTOMER NAME ── -->
-        <div class="mb-3">
+        <div class="mb-3" id="addOrderCustomerGroup">
           <label class="form-label-custom">Customer Name</label>
           <input type="text" class="form-control-custom" id="addOrderCustomerInput" placeholder="Walk-in Customer">
         </div>
 
         <!-- ── ITEM SEARCH FROM MENU ── -->
-        <div class="mb-2">
+        <div class="mb-2" id="addOrderItemSection">
           <label class="form-label-custom">Search & Select Item</label>
           <div style="position:relative;">
             <span class="material-icons" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--brand-light);font-size:17px;pointer-events:none;">search</span>
@@ -1596,6 +1705,73 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+/* ══ LOCALHOST / XAMPP (Live Server port 5500 cannot run PHP) ══ */
+function getProjectBase() {
+  const livePorts = ['5500', '5501', '5173', '3000'];
+  if (window.location.protocol === 'file:' || livePorts.includes(window.location.port)) {
+    return 'http://localhost/final-project-webdev-hci-im.github.io';
+  }
+  const path = decodeURIComponent(window.location.pathname);
+  for (const folder of ['/Client Side/', '/Admin Side/']) {
+    const idx = path.indexOf(folder);
+    if (idx !== -1) return window.location.origin + path.substring(0, idx);
+  }
+  return window.location.origin;
+}
+
+const PROJECT_BASE = getProjectBase();
+
+function isLiveServerPreview() {
+  return window.location.protocol === 'file:' || ['5500', '5501', '5173', '3000'].includes(window.location.port);
+}
+
+if (isLiveServerPreview()) {
+  const hash = window.location.hash || '#dashboard-section';
+  window.location.replace(PROJECT_BASE + '/Admin%20Side/admin.html' + hash);
+}
+
+function apiUrl(endpoint) {
+  return PROJECT_BASE + '/api/' + endpoint.replace(/^\//, '');
+}
+
+/* ══ PANEL ROUTES — Client ↔ Admin ══ */
+const PANEL_ROUTES = {
+  adminDashboard: PROJECT_BASE + '/Admin%20Side/admin.html#dashboard-section',
+  clientPanel: PROJECT_BASE + '/Client%20Side/index.html'
+};
+
+function goToAdminPanel() {
+  window.location.href = PANEL_ROUTES.adminDashboard;
+}
+
+async function logoutAdminSession() {
+  try {
+    await fetch(apiUrl('admin_auth.php'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ action: 'logout' })
+    });
+  } catch (e) {
+    console.warn('Admin logout request failed:', e);
+  }
+}
+
+async function goToClientPanel() {
+  await logoutAdminSession();
+  window.location.href = PANEL_ROUTES.clientPanel;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('clientViewBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    goToClientPanel();
+  });
+  document.getElementById('mobileClientViewBtn')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    goToClientPanel();
+  });
+});
 /* ════════════════════════════════════
    STATE
    ════════════════════════════════════ */
@@ -1606,6 +1782,8 @@ const state = {
   menuItems: [],
   cart: [],
   reviews: [],
+  replyDrafts: {},
+  editingReplyId: null,
   currentOrderItem: null,
   pendingDeleteId: null,
   queue: []
@@ -1742,10 +1920,12 @@ function saveReviewsToStorage() {
 /* ════════════════════════════════════
    INIT
    ════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   state.menuItems = loadMenuFromStorage();
   state.reviews   = loadReviewsFromStorage();
-  loadOrderQueue(); // Load orders from shared queue
+  await loadOrderQueue();
+  loadMenuFromDatabase();
+  loadReviewsFromDatabase();
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
@@ -1757,35 +1937,47 @@ document.addEventListener('DOMContentLoaded', () => {
   syncDashboard();
   document.getElementById('statMenuCount').textContent = state.menuItems.length;
 
-  // ── AUTO-REFRESH ONLINE ORDERS EVERY 500MS FOR REAL-TIME UPDATES ──
-  let lastOnlineOrdersCount = 0;
-  let lastOnlineOrdersJson = '[]';
-  setInterval(() => {
+  let ordersRefreshBusy = false;
+  setInterval(async () => {
+    if (ordersRefreshBusy) return;
+    ordersRefreshBusy = true;
     try {
-      // Load from both localStorage and database
-      loadOrderQueue();
-      
-      const onlineOrdersJson = localStorage.getItem('sip_online_orders') || '[]';
-      // Check if online orders have changed
-      if (onlineOrdersJson !== lastOnlineOrdersJson) {
-        lastOnlineOrdersJson = onlineOrdersJson;
-        const onlineOrders = JSON.parse(onlineOrdersJson);
-        const pendingOnlineOrders = onlineOrders.filter(o => o.status !== 'done').length;
-        lastOnlineOrdersCount = pendingOnlineOrders;
-      }
-      
-      // Reload and render queue immediately
+      await loadOrderQueue();
+      loadMenuFromDatabase();
+      loadReviewsFromDatabase();
       renderQueue();
       renderOrdersHistory();
-    } catch(e) {
+      syncDashboard();
+    } catch (e) {
       console.error('Error in auto-refresh:', e);
+    } finally {
+      ordersRefreshBusy = false;
     }
-  }, 500);
+  }, 3000);
 
-  document.getElementById('cartOpenBtn').addEventListener('click', () => {
+  document.getElementById('cartOpenBtn')?.addEventListener('click', () => {
     new bootstrap.Modal(document.getElementById('cartModal')).show();
   });
-  document.getElementById('cartModal').addEventListener('show.bs.modal', renderCart);
+  document.getElementById('cartModal')?.addEventListener('show.bs.modal', renderCart);
+
+  document.getElementById('reviewsFeed')?.addEventListener('input', (e) => {
+    const id = e.target.id || '';
+    if (id.startsWith('reply-input-') || id.startsWith('edit-reply-input-')) {
+      const reviewId = id.replace(/^(reply-input-|edit-reply-input-)/, '');
+      state.replyDrafts[reviewId] = e.target.value;
+    }
+  });
+  setupReviewsFeedActions();
+  setupFormValidationClearers();
+
+  const addOrderModalEl = document.getElementById('addOrderModal');
+  if (addOrderModalEl) {
+    addOrderModalEl.addEventListener('hidden.bs.modal', () => {
+      state.editingOrderId = null;
+      const title = addOrderModalEl.querySelector('.modal-title-custom');
+      if (title) title.textContent = 'Add New Order';
+    });
+  }
 
   // ── CROSS-TAB SYNC: if the client page or another admin tab changes the menu,
   // this admin panel re-renders its grids automatically.
@@ -1807,15 +1999,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const updated = JSON.parse(e.newValue);
         if (Array.isArray(updated)) {
           state.reviews = updated;
-          renderReviews();
+          if (shouldSkipReviewsRerender()) {
+            syncReviewStats();
+            syncDashboard();
+          } else {
+            renderReviews();
+          }
         }
       } catch(err) {}
-    }
-    // ── SYNC ONLINE ORDERS FROM CLIENT ──
-    if (e.key === 'sip_online_orders') {
-      loadOrderQueue();
-      renderQueue();
-      renderOrdersHistory();
     }
   });
 });
@@ -1961,18 +2152,160 @@ function renderCart() {
   document.getElementById('cartGrandTotal').textContent=`₱${grand.toFixed(2)}`;
 }
 function removeFromCart(id){state.cart=state.cart.filter(c=>c.cartId!==id);updateCartBadge();renderCart();}
-function placeOrder(){
-  // Add to queue
-  queueCounter++;
-  const itemNames = state.cart.map(c => c.item.name).join(', ');
+function openCheckoutModal(){
+  if(!state.cart.length) return;
+  // Populate order summary
+  let summaryHtml = '';
+  let grand = 0;
+  state.cart.forEach(ci => {
+    grand += ci.total;
+    summaryHtml += `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(175,143,111,.15);"><span>${ci.item.name} <span style="color:var(--text-dim);font-size:.75rem;">(${ci.size} · ${ci.fulfillment==='pickup'?'Pick-up':'Delivery'})</span></span><span style="font-weight:700;color:var(--brand);">₱${ci.total.toFixed(2)}</span></div>`;
+  });
+  document.getElementById('checkoutOrderSummary').innerHTML = summaryHtml;
+  document.getElementById('checkoutGrandTotal').textContent = '₱' + grand.toFixed(2);
+  // Show delivery address if any cart item is delivery
+  const hasDelivery = state.cart.some(ci => ci.fulfillment === 'delivery');
+  document.getElementById('deliveryAddressBlock').style.display = hasDelivery ? '' : 'none';
+  // Reset fields
+  ['checkoutName','checkoutEmail','checkoutPhone','checkoutDeliveryAddress','checkoutNotes'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
+  document.querySelectorAll('input[name="checkoutPayment"]').forEach(r => r.checked = false);
+  document.querySelectorAll('.checkout-pay-option').forEach(el => el.classList.remove('selected'));
+  document.getElementById('ewalletDetails').style.display = 'none';
+  // Close cart, open checkout
+  const cartM = bootstrap.Modal.getInstance(document.getElementById('cartModal'));
+  if(cartM) cartM.hide();
+  setTimeout(() => new bootstrap.Modal(document.getElementById('checkoutModal')).show(), 300);
+}
+
+function onPaymentChange(){
+  const selected = document.querySelector('input[name="checkoutPayment"]:checked');
+  document.querySelectorAll('.checkout-pay-option').forEach(el => el.classList.remove('selected'));
+  if(selected){
+    const label = selected.closest('.checkout-pay-option');
+    if(label) label.classList.add('selected');
+    document.getElementById('ewalletDetails').style.display = selected.value === 'E-Wallet' ? '' : 'none';
+  }
+}
+
+// Allow clicking the label area to select the radio
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.checkout-pay-option').forEach(label => {
+    label.addEventListener('click', () => {
+      const radio = label.querySelector('input[type="radio"]');
+      if(radio){ radio.checked = true; radio.dispatchEvent(new Event('change')); }
+    });
+  });
+});
+
+function backToCart(){
+  const checkM = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+  if(checkM) checkM.hide();
+  setTimeout(() => {
+    renderCart();
+    new bootstrap.Modal(document.getElementById('cartModal')).show();
+  }, 300);
+}
+
+async function confirmCheckout(){
+  clearAllFieldWarnings(document.getElementById('checkoutModal'));
+
+  const name = document.getElementById('checkoutName').value.trim();
+  const paymentRadio = document.querySelector('input[name="checkoutPayment"]:checked');
+  const hasDelivery = state.cart.some(ci => ci.fulfillment === 'delivery');
+  const deliveryAddr = document.getElementById('checkoutDeliveryAddress')?.value.trim() || '';
+
+  let valid = true;
+  if (!name) {
+    showFieldWarning(document.getElementById('checkoutName'));
+    valid = false;
+  }
+  if (!paymentRadio) {
+    showGroupWarning('checkoutPaymentGroup');
+    valid = false;
+  } else {
+    clearGroupWarning('checkoutPaymentGroup');
+  }
+  if (hasDelivery && !deliveryAddr) {
+    showFieldWarning(document.getElementById('checkoutDeliveryAddress'));
+    valid = false;
+  }
+  if (!valid) {
+    showToast('Please complete all required fields.', true);
+    if (!name) document.getElementById('checkoutName').focus();
+    else if (hasDelivery && !deliveryAddr) document.getElementById('checkoutDeliveryAddress').focus();
+    return;
+  }
+
+  let paymentMethod = paymentRadio.value;
+  if(paymentMethod === 'E-Wallet'){
+    const eType = document.getElementById('ewalletType')?.value || 'E-Wallet';
+    paymentMethod = eType;
+  }
+
+  const email = document.getElementById('checkoutEmail')?.value.trim() || '';
+  const phone = document.getElementById('checkoutPhone')?.value.trim() || '';
+  const notes = document.getElementById('checkoutNotes')?.value.trim() || '';
   const grand = state.cart.reduce((s,c) => s+c.total, 0);
-  const method = state.cart[0]?.fulfillment === 'delivery' ? 'Delivery' : 'Pick-up';
-  state.queue.push({ id: Date.now(), num: queueCounter, items: itemNames, method, total: grand, status: 'new' });
-  renderQueue();
-  document.getElementById('cartBody').style.display='none';
-  document.getElementById('cartFooter').style.display='none';
-  document.getElementById('checkoutSuccess').classList.add('visible');
-  state.cart=[]; updateCartBadge();
+  const fulfillment = hasDelivery ? 'delivery' : 'pickup';
+
+  let fullNotes = '';
+  if(email) fullNotes += `Email: ${email}\n`;
+  if(phone) fullNotes += `Phone: ${phone}\n`;
+  if(hasDelivery && deliveryAddr) fullNotes += `Delivery Address: ${deliveryAddr}\n`;
+  if(notes) fullNotes += `Notes: ${notes}`;
+  fullNotes = fullNotes.trim();
+
+  const itemsPayload = state.cart.map(c => ({
+    name: c.item.name,
+    size: c.size || '',
+    fulfillment: c.fulfillment || 'pickup',
+    addons: c.addons || [],
+    notes: c.notes || '',
+    total: c.total,
+    qty: c.qty || 1
+  }));
+
+  try {
+    const result = await ordersApiPost('save_order', {
+      customer_name: name,
+      customer_email: email,
+      items: itemsPayload,
+      total_amount: grand,
+      fulfillment,
+      delivery_location: deliveryAddr,
+      order_source: 'O',
+      payment_method: paymentMethod,
+      notes: fullNotes,
+      status: 'new'
+    });
+
+    state.cart = [];
+    updateCartBadge();
+    await loadOrderQueue();
+    renderQueue();
+    renderOrdersHistory();
+    syncDashboard();
+
+    const checkM = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
+    if(checkM) checkM.hide();
+
+    setTimeout(() => {
+      document.getElementById('cartBody').style.display='none';
+      document.getElementById('cartFooter').style.display='none';
+      document.getElementById('checkoutSuccess').classList.add('visible');
+      new bootstrap.Modal(document.getElementById('cartModal')).show();
+    }, 350);
+
+    showToast(`Order ${result.order_num || result.order_id} placed! Welcome, ${name}!`);
+  } catch (error) {
+    console.error('Checkout error:', error);
+    showToast(error.message || 'Could not place order.', true);
+  }
+}
+
+function placeOrder(){
+  // Redirects to the secure checkout modal
+  openCheckoutModal();
 }
 function continueOrdering(){
   bootstrap.Modal.getInstance(document.getElementById('cartModal')).hide();
@@ -1981,9 +2314,11 @@ function continueOrdering(){
 
 /* ════════ CRUD ════════ */
 function openCrudModal(mode, itemId=null) {
+  clearAllFieldWarnings(document.getElementById('adminCrudModal'));
   const title=document.getElementById('crudModalTitle'),saveBtn=document.getElementById('crudSaveBtn');
   ['crudItemId','crudName','crudPrice','crudDesc','crudImage'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('crudAvailable').checked=true;
+  updateCrudImagePreview();
   if(mode==='add'){
     title.textContent='Add New Menu Item';
     saveBtn.innerHTML='<span class="material-icons" style="font-size:17px;">add_circle</span> Insert to Database';
@@ -1998,6 +2333,22 @@ function openCrudModal(mode, itemId=null) {
     document.getElementById('crudDesc').value=item.desc;
     document.getElementById('crudImage').value=item.img;
     document.getElementById('crudAvailable').checked=item.available;
+    updateCrudImagePreview();
+  }
+}
+
+function updateCrudImagePreview() {
+  const url = (document.getElementById('crudImage')?.value || '').trim();
+  const wrap = document.getElementById('crudImagePreviewWrap');
+  const img = document.getElementById('crudImagePreview');
+  if (!wrap || !img) return;
+  if (url) {
+    wrap.style.display = '';
+    img.src = url;
+    img.onerror = () => { wrap.style.display = 'none'; };
+  } else {
+    wrap.style.display = 'none';
+    img.removeAttribute('src');
   }
 }
 function saveCrudItem() {
@@ -2008,7 +2359,19 @@ function saveCrudItem() {
         desc=document.getElementById('crudDesc').value.trim(),
         img=document.getElementById('crudImage').value.trim(),
         available=document.getElementById('crudAvailable').checked;
-  if(!name||!price||!cat){showToast('Please fill in all required fields.',true);return;}
+
+  clearAllFieldWarnings(document.getElementById('adminCrudModal'));
+  let valid = true;
+  if (!validateRequiredInput('crudName')) valid = false;
+  if (!validateRequiredNumber('crudPrice')) valid = false;
+  if (!cat) {
+    showFieldWarning(document.getElementById('crudCategory'));
+    valid = false;
+  }
+  if (!valid) {
+    showToast('Please complete all required fields.', true);
+    return;
+  }
   if(id){
     const idx=state.menuItems.findIndex(i=>i.id==id);
     if(idx!==-1) state.menuItems[idx]={...state.menuItems[idx],name,price,cat,desc,img:img||state.menuItems[idx].img,available};
@@ -2025,6 +2388,11 @@ function saveCrudItem() {
   renderMenuModal(state.searchQuery);
   renderMgmtGrid();
   syncDashboard();
+  // ADDED: Save menu changes to database
+  const drinkCats = ['espresso','iced','noncoffee','milktea','tea'];
+  const menuPayload = { name, price, cat, desc, img: img, available, type: drinkCats.includes(cat) ? 'drink' : 'food' };
+  if (id) syncMenuItemToDatabase({ ...menuPayload, id: parseInt(id, 10) });
+  else syncMenuItemToDatabase({ ...menuPayload });
 }
 function openDeleteConfirm(itemId){
   const item=state.menuItems.find(i=>i.id===itemId); if(!item) return;
@@ -2034,6 +2402,8 @@ function openDeleteConfirm(itemId){
 }
 function confirmDelete(){
   const item=state.menuItems.find(i=>i.id===state.pendingDeleteId);
+  // ADDED: Delete from database
+  if (state.pendingDeleteId) syncMenuDeleteToDatabase(state.pendingDeleteId);
   state.menuItems=state.menuItems.filter(i=>i.id!==state.pendingDeleteId);
   saveMenuToStorage();
   bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
@@ -2058,12 +2428,61 @@ function syncReviewStats() {
   if (avgEl) avgEl.textContent = avg;
 }
 
-function renderReviews() {
+function escapeHtml(str) {
+  return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function captureReplyDrafts() {
+  document.querySelectorAll('#reviewsFeed [id^="reply-input-"], #reviewsFeed [id^="edit-reply-input-"]').forEach(el => {
+    const reviewId = el.id.replace(/^(reply-input-|edit-reply-input-)/, '');
+    state.replyDrafts[reviewId] = el.value;
+  });
+}
+
+function isUserEditingReviewReply() {
+  const active = document.activeElement;
+  if (!active || !active.id) return false;
+  return active.id.startsWith('reply-input-') || active.id.startsWith('edit-reply-input-');
+}
+
+function shouldSkipReviewsRerender() {
+  return isUserEditingReviewReply();
+}
+
+function setupReviewsFeedActions() {
+  const feed = document.getElementById('reviewsFeed');
+  if (!feed || feed.dataset.actionsBound === '1') return;
+  feed.dataset.actionsBound = '1';
+  feed.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-review-action]');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const reviewId = Number(btn.dataset.reviewId);
+    if (!reviewId) return;
+    const action = btn.dataset.reviewAction;
+    if (action === 'submit-reply') submitAdminReply(reviewId);
+    else if (action === 'edit-reply') startEditAdminReply(reviewId);
+    else if (action === 'cancel-edit-reply') cancelEditAdminReply(reviewId);
+    else if (action === 'delete-reply') deleteAdminReply(reviewId);
+    else if (action === 'delete-review') deleteReview(reviewId);
+  });
+}
+
+function renderReviews(force = false) {
   syncReviewStats();
   syncDashboard();
-  document.getElementById('reviewsFeed').innerHTML = state.reviews.map(r => {
-    // Check if an admin response already exists for this review
-    const hasReply = r.adminReply && r.adminReply.trim() !== '';
+  const feed = document.getElementById('reviewsFeed');
+  if (!feed) return;
+
+  captureReplyDrafts();
+  if (!force && shouldSkipReviewsRerender() && feed.children.length > 0) return;
+
+  feed.innerHTML = state.reviews.map(r => {
+    const reviewId = Number(r.id);
+    const hasReply = r.adminReply && String(r.adminReply).trim() !== '';
+    const isEditing = state.editingReplyId === reviewId;
+    const draft = state.replyDrafts[reviewId] ?? '';
 
     return `
     <div class="col-md-6 col-lg-4">
@@ -2071,42 +2490,54 @@ function renderReviews() {
         <div class="d-flex align-items-center justify-content-between mb-2">
           <div class="d-flex align-items-center gap-2">
             ${r.avatar
-              ? `<img src="${r.avatar}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;" onerror="this.onerror=null;this.style.display='none';" alt="${r.name}">`
-              : `<div class="review-avatar">${r.initials}</div>`
+              ? `<img src="${escapeHtml(r.avatar)}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid var(--border);flex-shrink:0;" onerror="this.onerror=null;this.style.display='none';" alt="${escapeHtml(r.name)}">`
+              : `<div class="review-avatar">${escapeHtml(r.initials)}</div>`
             }
             <div>
-              <p style="font-weight:600;font-size:.875rem;margin:0;">${r.name}${!hasReply ? ' <span style="font-size:.62rem;font-weight:700;background:var(--brand);color:#F8F4E1;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:4px;">NEW</span>' : ''}</p>
-              <p style="font-size:.72rem;color:var(--text-dim);margin:0;">${r.date}</p>
+              <p style="font-weight:600;font-size:.875rem;margin:0;">${escapeHtml(r.name)}${!hasReply ? ' <span style="font-size:.62rem;font-weight:700;background:var(--brand);color:#F8F4E1;padding:2px 7px;border-radius:20px;vertical-align:middle;margin-left:4px;">NEW</span>' : ''}</p>
+              <p style="font-size:.72rem;color:var(--text-dim);margin:0;">${escapeHtml(r.date)}</p>
             </div>
           </div>
-          <button class="btn-delete-review" onclick="deleteReview(${r.id})">
+          <button type="button" class="btn-delete-review" data-review-action="delete-review" data-review-id="${reviewId}">
             <span class="material-icons" style="font-size:15px;">delete</span> Remove
           </button>
         </div>
-        <div class="review-stars mb-2">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-        <p class="review-text flex-grow-1">${r.comment}</p>
+        <div class="review-stars mb-2">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+        <p class="review-text flex-grow-1">${escapeHtml(r.comment)}</p>
 
-        <!-- ── ADMIN REPLY BOX ── -->
         <div class="admin-reply-box mt-3 pt-3" style="border-top: 1px dashed var(--border);">
-          ${hasReply ? `
-            <!-- Shows if a reply has already been made -->
+          ${isEditing ? `
+            <label class="form-label-custom mb-1" style="font-size: 0.7rem; display: block;">Edit Response</label>
+            <textarea class="form-control-custom py-1 px-2" style="font-size: 0.8rem; min-height: 72px; resize: vertical;"
+                      id="edit-reply-input-${reviewId}" placeholder="Update your response...">${escapeHtml(draft || r.adminReply || '')}</textarea>
+            <div class="admin-reply-actions">
+              <button type="button" class="btn-primary-custom" style="width: auto; padding: 4px 12px; font-size: 0.75rem; border-radius: 8px;"
+                      data-review-action="submit-reply" data-review-id="${reviewId}">Save</button>
+              <button type="button" class="btn-reply-action" data-review-action="cancel-edit-reply" data-review-id="${reviewId}">Cancel</button>
+            </div>
+          ` : hasReply ? `
             <div class="p-2 rounded" style="background-color: var(--bg-surface-2); font-size: 0.85rem;">
               <strong style="color: var(--brand); display: block; margin-bottom: 2px;">
                 <span class="material-icons align-middle" style="font-size: 14px; margin-right: 2px;">reply</span>
                 Sip & Pulse Response:
               </strong>
-              <p class="mb-0" style="color: var(--text-dim); font-style: italic;">"${r.adminReply}"</p>
+              <p class="mb-0" style="color: var(--text-dim); font-style: italic;">"${escapeHtml(r.adminReply)}"</p>
+              <div class="admin-reply-actions">
+                <button type="button" class="btn-reply-action" data-review-action="edit-reply" data-review-id="${reviewId}">
+                  <span class="material-icons" style="font-size:14px;">edit</span> Edit
+                </button>
+                <button type="button" class="btn-reply-action danger" data-review-action="delete-reply" data-review-id="${reviewId}">
+                  <span class="material-icons" style="font-size:14px;">delete</span> Delete
+                </button>
+              </div>
             </div>
           ` : `
-            <!-- Form to write a new response -->
             <label class="form-label-custom mb-1" style="font-size: 0.7rem; display: block;">Write Response</label>
-            <div class="d-flex gap-2">
-              <input type="text" class="form-control-custom py-1 px-2" style="font-size: 0.8rem; flex: 1;" 
-                     id="reply-input-${r.id}" placeholder="Thank them or address concerns...">
-              <button class="btn-primary-custom" style="width: auto; padding: 4px 12px; font-size: 0.75rem; border-radius: 8px;"
-                      onclick="submitAdminReply(${r.id})">
-                Reply
-              </button>
+            <textarea class="form-control-custom py-1 px-2" style="font-size: 0.8rem; min-height: 72px; resize: vertical;"
+                      id="reply-input-${reviewId}" placeholder="Thank them or address concerns...">${escapeHtml(draft)}</textarea>
+            <div class="admin-reply-actions">
+              <button type="button" class="btn-primary-custom" style="width: auto; padding: 4px 12px; font-size: 0.75rem; border-radius: 8px;"
+                      data-review-action="submit-reply" data-review-id="${reviewId}">Reply</button>
             </div>
           `}
         </div>
@@ -2116,50 +2547,122 @@ function renderReviews() {
   }).join('');
 }
 
-function deleteReview(id) {
-  state.reviews = state.reviews.filter(r => r.id !== id);
-  saveReviewsToStorage();
+async function saveAdminReplyToDatabase(reviewId, replyText) {
+  const response = await fetch(apiUrl('reviews.php?action=admin_reply'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ review_id: reviewId, reply: replyText })
+  });
+
+  const text = await response.text();
+  let data;
   try {
-    window.dispatchEvent(new StorageEvent('storage', {
-      key: REVIEWS_KEY,
-      newValue: JSON.stringify(state.reviews),
-      storageArea: localStorage
-    }));
-  } catch(e) {}
-  renderReviews();
-  showToast('Review removed.');
+    data = JSON.parse(text);
+  } catch (e) {
+    console.error('Admin reply raw response:', text);
+    throw new Error('Server did not return valid JSON.');
+  }
+
+  if (!data.success) {
+    throw new Error(data.error || 'Could not save reply.');
+  }
+
+  return data;
 }
 
-function submitAdminReply(id) {
-  const inputField = document.getElementById(`reply-input-${id}`);
-  if (!inputField) return;
-
-  const replyText = inputField.value.trim();
-
-  if (!replyText) {
-    showToast('Please enter a response before submitting.', true);
+async function submitAdminReply(id) {
+  const reviewId = Number(id);
+  const inputField = document.getElementById(`edit-reply-input-${reviewId}`)
+    || document.getElementById(`reply-input-${reviewId}`);
+  if (!inputField) {
+    showToast('Reply form not found. Please refresh the page.', true);
     return;
   }
 
-  // Find the exact review object in your data state and update it
-  const targetReview = state.reviews.find(r => r.id === id);
-  if (targetReview) {
-    targetReview.adminReply = replyText;
+  const replyText = inputField.value.trim();
+  if (!replyText) {
+    showFieldWarning(inputField);
+    showToast('Please complete all required fields.', true);
+    return;
+  }
+  clearFieldWarning(inputField);
+
+  const replyBtn = inputField.closest('.admin-reply-box')?.querySelector('.btn-primary-custom');
+  if (replyBtn) replyBtn.disabled = true;
+
+  const wasEdit = state.editingReplyId === reviewId;
+
+  try {
+    await saveAdminReplyToDatabase(reviewId, replyText);
+
+    const targetReview = state.reviews.find(r => Number(r.id) === reviewId);
+    if (targetReview) targetReview.adminReply = replyText;
+    delete state.replyDrafts[reviewId];
+    state.editingReplyId = null;
     saveReviewsToStorage();
-    try {
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: REVIEWS_KEY,
-        newValue: JSON.stringify(state.reviews),
-        storageArea: localStorage
-      }));
-    } catch(e) {}
-    renderReviews(); // Re-render the UI smoothly 
-    showToast('Response posted!');
+    renderReviews(true);
+    showToast(wasEdit ? 'Response updated!' : 'Response posted!');
+    loadReviewsFromDatabase();
+  } catch (error) {
+    console.error('Admin reply error:', error);
+    showToast(error.message || 'Could not save reply.', true);
+  } finally {
+    if (replyBtn) replyBtn.disabled = false;
   }
 }
 
+function startEditAdminReply(id) {
+  const reviewId = Number(id);
+  const review = state.reviews.find(r => Number(r.id) === reviewId);
+  if (!review) return;
+  state.editingReplyId = reviewId;
+  state.replyDrafts[reviewId] = review.adminReply || '';
+  renderReviews(true);
+  setTimeout(() => {
+    const el = document.getElementById(`edit-reply-input-${reviewId}`);
+    if (el) {
+      el.focus();
+      el.setSelectionRange(el.value.length, el.value.length);
+    }
+  }, 0);
+}
+
+function cancelEditAdminReply(id) {
+  const reviewId = Number(id);
+  delete state.replyDrafts[reviewId];
+  state.editingReplyId = null;
+  renderReviews(true);
+}
+
+async function deleteAdminReply(id) {
+  const reviewId = Number(id);
+  if (!confirm('Delete this admin response?')) return;
+
+  try {
+    await saveAdminReplyToDatabase(reviewId, '');
+
+    const targetReview = state.reviews.find(r => Number(r.id) === reviewId);
+    if (targetReview) targetReview.adminReply = '';
+    delete state.replyDrafts[reviewId];
+    state.editingReplyId = null;
+    saveReviewsToStorage();
+    renderReviews(true);
+    showToast('Response deleted.');
+    loadReviewsFromDatabase();
+  } catch (error) {
+    console.error('Delete admin reply error:', error);
+    showToast(error.message || 'Could not delete reply.', true);
+  }
+}
+
+window.submitAdminReply = submitAdminReply;
+window.startEditAdminReply = startEditAdminReply;
+window.cancelEditAdminReply = cancelEditAdminReply;
+window.deleteAdminReply = deleteAdminReply;
+
 /* ════════ ADD ADMIN ════════ */
-function registerAdmin(){
+async function registerAdmin(){
   const name=document.getElementById('newAdminName').value.trim(),
         email=document.getElementById('newAdminEmail').value.trim(),
         pass=document.getElementById('newAdminPass').value,
@@ -2168,10 +2671,29 @@ function registerAdmin(){
   if(!name||!email||!pass){showToast('Please fill in all fields.',true);return;}
   if(pass!==conf){showToast('Passwords do not match.',true);return;}
   if(pass.length<8){showToast('Password must be at least 8 characters.',true);return;}
-  // XAMPP: fetch('php/api.php?action=add_admin', {method:'POST', body:JSON.stringify({name,email,pass,role})})
-  showToast(`Admin account for ${name} (${role}) created successfully!`);
-  bootstrap.Modal.getInstance(document.getElementById('addAdminModal')).hide();
-  ['newAdminName','newAdminEmail','newAdminPass','newAdminPassConfirm'].forEach(id=>document.getElementById(id).value='');
+
+  try {
+    const response = await fetch(apiUrl('add_admin.php'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ name, email, password: pass, role })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      alert(data.error || 'Could not create administrator account.');
+      showToast(data.error || 'Failed to create admin account.', true);
+      return;
+    }
+
+    showToast(`Admin account for ${name} (${role}) saved to database!`);
+    bootstrap.Modal.getInstance(document.getElementById('addAdminModal')).hide();
+    ['newAdminName','newAdminEmail','newAdminPass','newAdminPassConfirm'].forEach(id=>document.getElementById(id).value='');
+  } catch (error) {
+    alert('Could not save admin account. Make sure you are signed in and the database is running.');
+    showToast('Failed to save admin account.', true);
+  }
 }
 
 /* ════════ DASHBOARD SYNC ════════ */
@@ -2198,79 +2720,122 @@ function syncDashboard() {
 /* ════════ SHARED QUEUE SYSTEM ════════ */
 const QUEUE_STORAGE_KEY = 'sipAndPulse_orderQueue';
 const ORDER_COUNTER_KEY = 'sipAndPulse_orderCounter';
+const F_COUNTER_KEY = 'sap_forder_counter';
+const O_COUNTER_KEY = 'sap_oorder_counter';
+
+function formatOrderItemsDisplay(items) {
+  if (!items) return '';
+  if (typeof items === 'string') {
+    try {
+      const parsed = JSON.parse(items);
+      if (Array.isArray(parsed) || typeof parsed === 'object') return formatOrderItemsDisplay(parsed);
+    } catch (e) {}
+    return items;
+  }
+  if (Array.isArray(items)) {
+    return items.map(ci => {
+      if (typeof ci === 'string') return ci;
+      const name = ci.item?.name || ci.name || 'Item';
+      const parts = [];
+      if (ci.size) parts.push(ci.size);
+      if (ci.sugar) parts.push(ci.sugar);
+      if (ci.temp) parts.push(ci.temp);
+      if (ci.addons?.length) parts.push(ci.addons.map(a => a.label || a.name || a).join(', '));
+      const qty = ci.qty && ci.qty > 1 ? ` x${ci.qty}` : '';
+      return name + qty + (parts.length ? ` (${parts.join(' · ')})` : '');
+    }).join(' | ');
+  }
+  return String(items);
+}
+
+function findQueueOrder(id) {
+  const target = Number(id);
+  return state.queue.find(o => Number(o.id) === target || Number(o.orderId) === target);
+}
+
+function mapDbOrderToQueue(dbOrder) {
+  const source = dbOrder.order_source || 'O';
+  const statusMap = { new: 'new', pending: 'new', preparing: 'preparing', ready: 'ready', done: 'done' };
+  const itemsDisplay = formatOrderItemsDisplay(dbOrder.items);
+  const payment = dbOrder.payment_method || '';
+  const baseNotes = dbOrder.notes || '';
+  const notes = baseNotes || (payment ? `Payment: ${payment}` : '');
+  const dbId = parseInt(dbOrder.id, 10);
+
+  return {
+    id: dbId,
+    orderId: dbId,
+    num: dbOrder.order_num || String(dbOrder.id),
+    source,
+    customerName: dbOrder.customer_name || 'Guest',
+    customerEmail: dbOrder.customer_email || '',
+    paymentMethod: payment,
+    items: itemsDisplay,
+    itemsRaw: dbOrder.items,
+    notes,
+    method: dbOrder.fulfillment === 'delivery' ? 'Delivery' : 'Pick-up',
+    total: parseFloat(dbOrder.total_amount) || 0,
+    status: statusMap[(dbOrder.status || 'pending').toLowerCase()] || 'new',
+    deliveryLoc: dbOrder.delivery_location || '',
+    timestamp: dbOrder.created_at
+  };
+}
+
+async function ordersApiPost(action, payload) {
+  const response = await fetch(apiUrl('orders.php?action=' + action), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload)
+  });
+  const text = await response.text();
+  let result;
+  try {
+    result = JSON.parse(text);
+  } catch (e) {
+    console.error('Orders API raw response:', text);
+    throw new Error('Server did not return valid JSON.');
+  }
+  if (!result.success) {
+    throw new Error(result.error || 'Request failed');
+  }
+  return result;
+}
+
+function syncOrderCountersFromQueue(queue) {
+  let maxF = parseInt(localStorage.getItem(F_COUNTER_KEY) || '1000', 10);
+  let maxO = parseInt(localStorage.getItem(O_COUNTER_KEY) || '1000', 10);
+  (queue || []).forEach(o => {
+    const match = String(o.num || '').match(/^([FO])(\d+)$/);
+    if (!match) return;
+    const n = parseInt(match[2], 10);
+    if (match[1] === 'F' && n > maxF) maxF = n;
+    if (match[1] === 'O' && n > maxO) maxO = n;
+  });
+  localStorage.setItem(F_COUNTER_KEY, String(maxF));
+  localStorage.setItem(O_COUNTER_KEY, String(maxO));
+}
 
 async function loadOrderQueue() {
   try {
-    const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
-    state.queue = queue ? JSON.parse(queue) : [];
-
-    // ── REMOVE OLD DEMO ORDERS ──
-    state.queue = state.queue.filter(o => {
-      const isDemoOrder = o.customerName && (o.customerName.includes('Marga') || o.customerName.includes('Marah'));
-      return !isDemoOrder;
-    });
-
-    // ── LOAD ONLINE ORDERS FROM DATABASE (PRIMARY SOURCE) ──
-    try {
-      const response = await fetch('api/orders.php?action=get_orders');
-      if (response.ok) {
-        const dbResult = await response.json();
-        if (dbResult.success && Array.isArray(dbResult.data)) {
-          console.log('✅ Loaded', dbResult.data.length, 'orders from database');
-          // Convert database orders to queue format
-          dbResult.data.forEach(dbOrder => {
-            const exists = state.queue.some(q => q.id === dbOrder.id || q.orderId === dbOrder.id);
-            if (!exists) {
-              // Map database order to queue order format
-              const queueOrder = {
-                id: dbOrder.id,
-                num: dbOrder.id,
-                source: 'O',
-                items: dbOrder.items ? (typeof dbOrder.items === 'string' ? dbOrder.items : JSON.stringify(dbOrder.items)) : '',
-                notes: `Order ID: ${dbOrder.id}\n💳 Payment: ${dbOrder.fulfillment}\n👤 ${dbOrder.customer_name} (${dbOrder.customer_email})`,
-                method: dbOrder.fulfillment === 'delivery' ? 'Delivery' : 'Pick-up',
-                total: dbOrder.total_amount,
-                status: dbOrder.status === 'pending' ? 'new' : dbOrder.status,
-                customerName: dbOrder.customer_name,
-                customerEmail: dbOrder.customer_email,
-                deliveryLoc: dbOrder.delivery_location || '',
-                timestamp: dbOrder.created_at,
-                orderId: dbOrder.id
-              };
-              state.queue.push(queueOrder);
-            }
-          });
-        }
-      }
-    } catch(dbErr) {
-      console.warn('⚠️ Could not load orders from database:', dbErr);
-      // Fall back to localStorage only
+    const response = await fetch(apiUrl('orders.php?action=get_orders'), { credentials: 'include' });
+    if (!response.ok) throw new Error('Failed to load orders');
+    const dbResult = await response.json();
+    if (dbResult.success && Array.isArray(dbResult.data)) {
+      state.queue = dbResult.data.map(mapDbOrderToQueue);
+      syncOrderCountersFromQueue(state.queue);
+      saveOrderQueue();
+    } else {
+      state.queue = [];
     }
-
-    // ── LOAD ONLINE ORDERS FROM CLIENT LOCALSTORAGE ──
-    const onlineOrdersRaw = localStorage.getItem('sip_online_orders');
-    if (onlineOrdersRaw) {
-      try {
-        const onlineOrders = JSON.parse(onlineOrdersRaw);
-        if (Array.isArray(onlineOrders)) {
-          // Add online orders that aren't already in queue
-          onlineOrders.forEach(onlineOrder => {
-            const exists = state.queue.some(q => q.id === onlineOrder.id);
-            if (!exists) {
-              state.queue.push(onlineOrder);
-            }
-          });
-        }
-      } catch(e) {
-        console.error('Error loading online orders:', e);
-      }
-    }
-
-    // Save cleaned queue back to localStorage
-    saveOrderQueue();
-  } catch(e) {
-    state.queue = [];
+  } catch (e) {
     console.error('Error in loadOrderQueue:', e);
+    try {
+      const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
+      state.queue = queue ? JSON.parse(queue) : [];
+    } catch (err) {
+      state.queue = [];
+    }
   }
 }
 
@@ -2283,9 +2848,6 @@ function saveOrderQueue() {
 }
 
 /* ── ORDER NUMBER SYSTEM (F#### walk-in, O#### online) ── */
-const F_COUNTER_KEY = 'sap_forder_counter';
-const O_COUNTER_KEY = 'sap_oorder_counter';
-
 function getNextOrderNum(prefix) {
   const key = prefix === 'O' ? O_COUNTER_KEY : F_COUNTER_KEY;
   let current = parseInt(localStorage.getItem(key) || '1000', 10);
@@ -2402,6 +2964,7 @@ function confirmAddOrderItem() {
   document.getElementById('addOrderCustomPanel').style.display = 'none';
   renderAddOrderSelectedItems();
   recalcAddOrderTotal();
+  clearGroupWarning('addOrderItemSection');
   showToast(`${item.name} added to this order.`);
 }
 
@@ -2469,7 +3032,24 @@ function recalcAddOrderTotal() {
   if (el) el.textContent = '₱' + total.toFixed(2);
 }
 
+function setAddOrderModalMode(mode) {
+  const isEdit = mode === 'edit';
+  const searchBlock = document.getElementById('addOrderItemSearch')?.closest('.mb-2');
+  const customPanel = document.getElementById('addOrderCustomPanel');
+  const selectedItems = document.getElementById('addOrderSelectedItems');
+  const saveBtn = document.querySelector('#addOrderModal .modal-footer-custom .btn-primary-custom');
+  if (searchBlock) searchBlock.style.display = isEdit ? 'none' : '';
+  if (customPanel) customPanel.style.display = 'none';
+  if (selectedItems && isEdit) selectedItems.style.display = 'none';
+  if (saveBtn) {
+    saveBtn.innerHTML = isEdit
+      ? '<span class="material-icons" style="font-size:17px;">save</span> Save Changes'
+      : '<span class="material-icons" style="font-size:17px;">add_circle</span> Confirm & Add to Queue';
+  }
+}
+
 function resetAddOrderModal() {
+  clearAllFieldWarnings(document.getElementById('addOrderModal'));
   addOrderState.selectedItems = [];
   addOrderState.configuringItem = null;
   addOrderState.editingItemIdx = null;
@@ -2482,127 +3062,146 @@ function resetAddOrderModal() {
   document.getElementById('addOrderTotalDisplay').textContent = '₱0.00';
   const pickup = document.getElementById('addPickup'); if(pickup) pickup.checked = true;
   const walkin = document.getElementById('srcWalkin'); if(walkin) walkin.checked = true;
+  setAddOrderModalMode('add');
   updateAddOrderPrefix();
 }
 
 function editQueueOrder(id) {
-  const order = state.queue.find(o => o.id === id);
-  if (!order) return;
+  const order = findQueueOrder(id);
+  if (!order) {
+    showToast('Order not found. Refreshing queue…', true);
+    loadOrderQueue().then(() => renderQueue());
+    return;
+  }
   resetAddOrderModal();
-  // Simple edit: populate customer + notes + method only (item customisation re-entry is complex)
+  setAddOrderModalMode('edit');
   const custEl = document.getElementById('addOrderCustomerInput');
   if (custEl) custEl.value = order.customerName || '';
   const notesEl = document.getElementById('addOrderNotesInput');
-  if (notesEl) notesEl.value = order.notes || order.items || '';
+  if (notesEl) notesEl.value = order.notes || '';
   const method = order.method === 'Delivery' ? 'addDelivery' : 'addPickup';
   const mEl = document.getElementById(method); if(mEl) mEl.checked = true;
-  // Show total
   const totEl = document.getElementById('addOrderTotalDisplay');
   if (totEl) totEl.textContent = '₱' + parseFloat(order.total).toFixed(2);
-  state.editingOrderId = id;
+  state.editingOrderId = order.id;
   const btnText = document.querySelector('#addOrderModal .modal-title-custom');
   if (btnText) btnText.textContent = `Edit Order ${order.num}`;
   new bootstrap.Modal(document.getElementById('addOrderModal')).show();
 }
 
-function saveManualOrder() {
-  const customerName = (document.getElementById('addOrderCustomerInput')?.value || '').trim() || 'Walk-in Customer';
+async function saveManualOrder() {
+  clearAllFieldWarnings(document.getElementById('addOrderModal'));
+
+  const customerName = (document.getElementById('addOrderCustomerInput')?.value || '').trim();
   const notesInput = (document.getElementById('addOrderNotesInput')?.value || '').trim();
   const fulfillment = document.querySelector('input[name="addOrderFulfillment"]:checked')?.value || 'pickup';
-  const method = fulfillment === 'delivery' ? 'Delivery' : 'Pick-up';
 
-  if (state.editingOrderId) {
-    // ── EDIT MODE: update only editable fields ──
-    const idx = state.queue.findIndex(o => o.id === state.editingOrderId);
-    if (idx !== -1) {
-      const totalEl = document.getElementById('addOrderTotalDisplay');
-      const parsed = totalEl ? parseFloat(totalEl.textContent.replace('₱','').replace(/,/g,'')) : state.queue[idx].total;
-      state.queue[idx] = {
-        ...state.queue[idx],
-        method,
-        customerName,
-        notes: notesInput,
-        total: isNaN(parsed) ? state.queue[idx].total : parsed
-      };
-      showToast(`Order ${state.queue[idx].num} updated.`);
-    }
-    state.editingOrderId = null;
+  let valid = true;
+  if (!customerName) {
+    showFieldWarning(document.getElementById('addOrderCustomerInput'));
+    valid = false;
+  }
+  if (!state.editingOrderId && !addOrderState.selectedItems.length) {
+    showGroupWarning('addOrderItemSection');
+    valid = false;
   } else {
-    // ── ADD MODE ──
-    if (!addOrderState.selectedItems.length) {
-      showToast('Please add at least one item to the order.', true);
-      return;
-    }
-    // Walk-in only - always use 'F' prefix
-    const prefix = 'F';
-    const orderNum = getNextOrderNum(prefix);
-    const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
-
-    // Build items string
-    const itemsStr = addOrderState.selectedItems.map(e => {
-      const parts = [];
-      if (e.size) parts.push(e.size);
-      if (e.sugar) parts.push(e.sugar);
-      if (e.temp) parts.push(e.temp);
-      if (e.addons.length) parts.push(e.addons.map(a => a.label).join(', '));
-      return e.item.name + (parts.length ? ` (${parts.join(' · ')})` : '');
-    }).join(' | ');
-
-    // Build dashboard notes
-    const notesParts = addOrderState.selectedItems.map(e => {
-      const lines = [`• ${e.item.name} — ₱${e.subtotal.toFixed(2)}`];
-      if (e.size) lines.push(`  Size: ${e.size}`);
-      if (e.sugar) lines.push(`  Sugar: ${e.sugar}`);
-      if (e.temp) lines.push(`  Temp: ${e.temp}`);
-      if (e.addons.length) lines.push(`  Add-ons: ${e.addons.map(a => a.label + ' (+₱' + a.price + ')').join(', ')}`);
-      return lines.join('\n');
-    }).join('\n');
-    const fullNotes = notesParts + (notesInput ? '\nNote: ' + notesInput : '');
-
-    state.queue.push({
-      id: Date.now(),
-      num: orderNum,
-      source: prefix,
-      items: itemsStr,
-      notes: fullNotes,
-      method,
-      total,
-      status: 'new',
-      customerName,
-      timestamp: new Date().toISOString()
-    });
-    updateAddOrderPrefix();
-    showToast(`Order ${orderNum} added to queue!`);
+    clearGroupWarning('addOrderItemSection');
+  }
+  if (!valid) {
+    showToast('Please complete all required fields.', true);
+    return;
   }
 
-  saveOrderQueue();
-  renderQueue();
-  bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
-  resetAddOrderModal();
-}
-
-function deleteQueueOrder(id) {
-  const order = state.queue.find(o => o.id === id);
-  if (!order) return;
-  
-  if (confirm(`Delete Order #${order.num}? This order number can be reused.`)) {
-    state.queue = state.queue.filter(o => o.id !== id);
-    
-    // ── REMOVE DELETED ONLINE ORDER FROM STORAGE ──
-    if (order.source === 'O') {
-      try {
-        const onlineOrders = JSON.parse(localStorage.getItem('sip_online_orders') || '[]');
-        const filtered = onlineOrders.filter(o => o.id !== id);
-        localStorage.setItem('sip_online_orders', JSON.stringify(filtered));
-      } catch(e) {
-        console.error('Error updating online orders:', e);
+  try {
+    if (state.editingOrderId) {
+      const totalEl = document.getElementById('addOrderTotalDisplay');
+      const existing = findQueueOrder(state.editingOrderId);
+      const parsed = totalEl ? parseFloat(totalEl.textContent.replace('₱', '').replace(/,/g, '')) : existing?.total;
+      await ordersApiPost('update_order', {
+        id: Number(state.editingOrderId),
+        customer_name: customerName,
+        notes: notesInput,
+        fulfillment,
+        total_amount: isNaN(parsed) ? existing?.total : parsed
+      });
+      showToast(`Order ${existing?.num || state.editingOrderId} updated.`);
+      state.editingOrderId = null;
+    } else {
+      if (!addOrderState.selectedItems.length) {
+        showGroupWarning('addOrderItemSection');
+        showToast('Please complete all required fields.', true);
+        return;
       }
+
+      const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
+      const itemsPayload = addOrderState.selectedItems.map(e => ({
+        name: e.item.name,
+        size: e.size || '',
+        sugar: e.sugar || '',
+        temp: e.temp || '',
+        addons: e.addons || [],
+        subtotal: e.subtotal
+      }));
+
+      const notesParts = addOrderState.selectedItems.map(e => {
+        const lines = [`• ${e.item.name} — ₱${e.subtotal.toFixed(2)}`];
+        if (e.size) lines.push(`  Size: ${e.size}`);
+        if (e.sugar) lines.push(`  Sugar: ${e.sugar}`);
+        if (e.temp) lines.push(`  Temp: ${e.temp}`);
+        if (e.addons.length) lines.push(`  Add-ons: ${e.addons.map(a => a.label + ' (+₱' + a.price + ')').join(', ')}`);
+        return lines.join('\n');
+      }).join('\n');
+      const fullNotes = notesParts + (notesInput ? '\nNote: ' + notesInput : '');
+
+      const result = await ordersApiPost('save_order', {
+        customer_name: customerName,
+        items: itemsPayload,
+        total_amount: total,
+        fulfillment,
+        delivery_location: '',
+        order_source: 'F',
+        payment_method: 'Cash',
+        notes: fullNotes,
+        status: 'new'
+      });
+
+      updateAddOrderPrefix();
+      showToast(`Order ${result.order_num || result.order_id} added to queue!`);
     }
-    
-    saveOrderQueue();
+
+    await loadOrderQueue();
     renderQueue();
     renderOrdersHistory();
-    showToast(`Order #${order.num} deleted. Number can be reused.`);
+    syncDashboard();
+    bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
+    resetAddOrderModal();
+  } catch (error) {
+    console.error('Save order error:', error);
+    showToast(error.message || 'Could not save order.', true);
+  }
+}
+
+async function deleteQueueOrder(id) {
+  const order = findQueueOrder(id);
+  if (!order) {
+    showToast('Order not found. Refreshing queue…', true);
+    await loadOrderQueue();
+    renderQueue();
+    return;
+  }
+
+  if (!confirm(`Delete Order #${order.num}? This cannot be undone.`)) return;
+
+  try {
+    await ordersApiPost('delete_order', { id: Number(order.orderId || order.id) });
+    await loadOrderQueue();
+    renderQueue();
+    renderOrdersHistory();
+    syncDashboard();
+    showToast(`Order #${order.num} deleted.`);
+  } catch (error) {
+    console.error('Delete order error:', error);
+    showToast(error.message || 'Could not delete order.', true);
   }
 }
 
@@ -2737,34 +3336,35 @@ function renderQueue() {
   syncDashboard();
 }
 
-function advanceQueue(id) {
-  const o = state.queue.find(x => x.id === id);
+async function advanceQueue(id) {
+  const o = findQueueOrder(id);
   if (!o) return;
-  o.status = o.status === 'new' ? 'preparing' : 'ready';
-  saveOrderQueue();
-  renderQueue();
+  const newStatus = o.status === 'new' ? 'preparing' : 'ready';
+  try {
+    await ordersApiPost('update_status', { id: Number(o.orderId || o.id), status: newStatus });
+    await loadOrderQueue();
+    renderQueue();
+    syncDashboard();
+  } catch (error) {
+    console.error('Advance queue error:', error);
+    showToast(error.message || 'Could not update order status.', true);
+  }
 }
 
-function completeQueue(id) {
-  const o = state.queue.find(x => x.id === id);
+async function completeQueue(id) {
+  const o = findQueueOrder(id);
   if (!o) return;
-  o.status = 'done';
-  
-  // ── REMOVE COMPLETED ONLINE ORDER FROM STORAGE ──
-  if (o.source === 'O') {
-    try {
-      const onlineOrders = JSON.parse(localStorage.getItem('sip_online_orders') || '[]');
-      const filtered = onlineOrders.filter(order => order.id !== id);
-      localStorage.setItem('sip_online_orders', JSON.stringify(filtered));
-    } catch(e) {
-      console.error('Error updating online orders:', e);
-    }
+  try {
+    await ordersApiPost('update_status', { id: Number(o.orderId || o.id), status: 'done' });
+    await loadOrderQueue();
+    showToast(`Order #${o.num} marked as done.`);
+    renderQueue();
+    renderOrdersHistory();
+    syncDashboard();
+  } catch (error) {
+    console.error('Complete queue error:', error);
+    showToast(error.message || 'Could not complete order.', true);
   }
-  
-  saveOrderQueue();
-  showToast(`Order #${o.num} marked as done.`);
-  renderQueue();
-  renderOrdersHistory();
 }
 
 function addDemoOrder() {
@@ -2846,6 +3446,101 @@ function showToast(msg,isError=false){
   t.classList.add('show');
   toastTimer=setTimeout(()=>t.classList.remove('show'),3800);}
 
+const REQUIRED_FILL_MSG = 'Required to fill';
+
+function getFieldWarningHost(fieldEl) {
+  if (!fieldEl) return null;
+  return fieldEl.closest('.mb-3, .mb-2, .col-12, .col-6, .admin-reply-box, #paymentMethodContainer, .modal-body-custom') || fieldEl.parentElement;
+}
+
+function showFieldWarning(fieldEl, message = REQUIRED_FILL_MSG) {
+  if (!fieldEl) return;
+  const host = getFieldWarningHost(fieldEl);
+  let warn = host?.querySelector('.field-warning');
+  if (!warn && host) {
+    warn = document.createElement('div');
+    warn.className = 'field-warning';
+    host.appendChild(warn);
+  }
+  if (warn) warn.textContent = message;
+  fieldEl.classList.add('is-field-invalid');
+  fieldEl.setAttribute('aria-invalid', 'true');
+}
+
+function clearFieldWarning(fieldEl) {
+  if (!fieldEl) return;
+  fieldEl.classList.remove('is-field-invalid');
+  fieldEl.removeAttribute('aria-invalid');
+  const host = getFieldWarningHost(fieldEl);
+  const warn = host?.querySelector('.field-warning');
+  if (warn) warn.textContent = '';
+}
+
+function clearAllFieldWarnings(scope) {
+  const root = scope || document;
+  root.querySelectorAll('.is-field-invalid').forEach(el => {
+    el.classList.remove('is-field-invalid');
+    el.removeAttribute('aria-invalid');
+  });
+  root.querySelectorAll('.field-warning').forEach(el => { el.textContent = ''; });
+  root.querySelectorAll('.is-group-invalid').forEach(el => el.classList.remove('is-group-invalid'));
+}
+
+function showGroupWarning(groupId, message = REQUIRED_FILL_MSG) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  let warn = group.querySelector(':scope > .field-warning');
+  if (!warn) {
+    warn = document.createElement('div');
+    warn.className = 'field-warning';
+    group.appendChild(warn);
+  }
+  warn.textContent = message;
+  group.classList.add('is-group-invalid');
+}
+
+function clearGroupWarning(groupId) {
+  const group = document.getElementById(groupId);
+  if (!group) return;
+  group.classList.remove('is-group-invalid');
+  const warn = group.querySelector(':scope > .field-warning');
+  if (warn) warn.textContent = '';
+}
+
+function validateRequiredInput(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return true;
+  if (!(el.value || '').trim()) {
+    showFieldWarning(el);
+    return false;
+  }
+  clearFieldWarning(el);
+  return true;
+}
+
+function validateRequiredNumber(fieldId) {
+  const el = document.getElementById(fieldId);
+  if (!el) return true;
+  const val = parseFloat(el.value);
+  if (!(el.value || '').trim() || isNaN(val) || val <= 0) {
+    showFieldWarning(el);
+    return false;
+  }
+  clearFieldWarning(el);
+  return true;
+}
+
+function setupFormValidationClearers() {
+  document.addEventListener('input', (e) => {
+    if (e.target.matches('.form-control-custom, .form-select-custom, textarea.form-control-custom')) {
+      clearFieldWarning(e.target);
+    }
+  });
+  document.addEventListener('change', (e) => {
+    if (e.target.matches('input[name="checkoutPayment"]')) clearGroupWarning('checkoutPaymentGroup');
+  });
+}
+
 /* ════════ MOBILE NAV DRAWER ════════ */
 function openMobileNav(){
   document.getElementById('mobileNavOverlay').classList.add('open');
@@ -2857,8 +3552,180 @@ function closeMobileNav(){
   document.getElementById('mobileNavDrawer').classList.remove('open');
   document.body.style.overflow='';
 }
-document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMobileNav(); });
-  
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMobileNav(); })
+
+
+function loadAdminMenu() {
+    fetch(apiUrl('get_menu.php')) 
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                const tbody = document.getElementById('adminMenuTableBody');
+                if(!tbody) return;
+                tbody.innerHTML = ''; 
+                
+                data.data.forEach(item => {
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><img src="${item.image_url || 'https://via.placeholder.com/50'}" style="width:50px; height:50px; object-fit:cover; border-radius:5px;"></td>
+                            <td>${item.name}</td>
+                            <td>${item.category}</td>
+                            <td>₱${item.price}</td>
+                            <td>
+                                <button class="btn btn-sm btn-primary" onclick="editMenu(${item.id}, '${item.name}', '${item.category}', ${item.price}, '${item.description}', '${item.image_url}')">Edit</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMenu(${item.id})">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        });
+}
+
+/* ════════════════════════════════════════════
+   ADDED: DATABASE SYNC LAYER (ADMIN)
+   ════════════════════════════════════════════ */
+const ADMIN_DRINK_CATEGORIES = ['espresso', 'iced', 'noncoffee', 'milktea', 'tea'];
+
+function mapDbMenuItemToAdmin(row) {
+  const cat = row.category || row.cat || 'espresso';
+  return {
+    id: parseInt(row.id, 10),
+    name: row.name,
+    price: parseFloat(row.price),
+    cat: cat,
+    desc: row.description || row.desc || '',
+    img: row.image_url || row.img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',
+    available: row.available === undefined ? true : (row.available == 1 || row.available === true),
+    type: row.item_type || (ADMIN_DRINK_CATEGORIES.includes(cat) ? 'drink' : 'food')
+  };
+}
+
+function mapDbReviewToAdmin(row) {
+  const name = row.name || 'Guest';
+  return {
+    id: parseInt(row.id, 10),
+    name: name,
+    initials: name === 'Anonymous' ? 'AN' : name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
+    rating: parseInt(row.rating, 10),
+    comment: row.comment,
+    avatar: row.avatar || '',
+    adminReply: row.admin_reply || row.adminReply || '',
+    date: row.created_at
+      ? new Date(row.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+      : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  };
+}
+
+function loadMenuFromDatabase() {
+  return fetch(apiUrl('get_menu.php'), { credentials: 'include' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && Array.isArray(data.data)) {
+        state.menuItems = data.data.map(mapDbMenuItemToAdmin);
+        saveMenuToStorage();
+        renderMenuModal(state.searchQuery || '');
+        renderMgmtGrid();
+        syncDashboard();
+        document.getElementById('statMenuCount').textContent = state.menuItems.length;
+        const tableBody = document.getElementById('adminMenuTableBody');
+        if (tableBody) loadAdminMenu();
+      }
+    })
+    .catch(err => console.error('Error loading menu:', err));
+}
+
+function loadReviewsFromDatabase() {
+  return fetch(apiUrl('reviews.php?action=get_reviews'), { credentials: 'include' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && Array.isArray(data.data)) {
+        state.reviews = data.data.map(mapDbReviewToAdmin);
+        saveReviewsToStorage();
+        if (shouldSkipReviewsRerender()) {
+          syncReviewStats();
+          syncDashboard();
+        } else {
+          renderReviews();
+        }
+      }
+    })
+    .catch(err => console.error('Error loading reviews:', err));
+}
+
+function syncMenuItemToDatabase(item) {
+  const payload = {
+    action: item.id ? 'update' : 'add',
+    name: item.name,
+    category: item.cat,
+    price: item.price,
+    description: item.desc || '',
+    image_url: (item.img || '').trim() || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',
+    available: item.available !== false ? 1 : 0,
+    item_type: item.type || (ADMIN_DRINK_CATEGORIES.includes(item.cat) ? 'drink' : 'food')
+  };
+  if (item.id) payload.id = item.id;
+
+  return fetch(apiUrl('save_menu.php'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      loadMenuFromDatabase();
+      showToast('Menu saved to database.');
+    } else {
+      showToast(data.error || 'Could not save menu to database.', true);
+    }
+  })
+  .catch(() => showToast('Could not save menu to database.', true));
+}
+
+function syncMenuDeleteToDatabase(id) {
+  return fetch(apiUrl('save_menu.php'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ action: 'delete', id: Number(id) })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) loadMenuFromDatabase();
+  })
+  .catch(err => console.error('Error deleting menu item:', err));
+}
+
+// ADDED: Database-backed review delete for Community panel
+window.deleteReview = function(id) {
+  const numId = Number(id);
+  if (!confirm('Remove this review from the community?')) return;
+
+  fetch(apiUrl('reviews.php?action=delete_review'), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ id: numId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      state.reviews = state.reviews.filter(r => Number(r.id) !== numId);
+      saveReviewsToStorage();
+      renderReviews(true);
+      showToast('Review removed.');
+    } else {
+      showToast(data.error || 'Could not delete review.', true);
+    }
+  })
+  .catch(() => showToast('Could not delete review.', true));
+};
+
+loadMenuFromDatabase();
+setupReviewsFeedActions();
+loadReviewsFromDatabase();
 </script>
 </body>
 </html>

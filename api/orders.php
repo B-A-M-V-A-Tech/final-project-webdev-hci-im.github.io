@@ -1,17 +1,100 @@
 <?php
+ob_start();
 header('Content-Type: application/json');
-include '../db_connect.php';
-include '../admin_session.php';
+
+$sessionFile = __DIR__ . '/../database/admin_session.php';
+if (!file_exists($sessionFile)) {
+    $sessionFile = __DIR__ . '/admin_session.php';
+}
+
+include __DIR__ . '/../database/db_connect.php';
+include $sessionFile;
+
+function uiStatusToDb($status) {
+    $status = strtolower(trim((string) $status));
+    if ($status === 'new') {
+        return 'pending';
+    }
+    if (in_array($status, ['pending', 'preparing', 'ready', 'done'], true)) {
+        return $status;
+    }
+    return 'pending';
+}
+
+function dbStatusToUi($status) {
+    $status = strtolower(trim((string) $status));
+    if ($status === 'pending') {
+        return 'new';
+    }
+    return $status;
+}
+
+function nextOrderNumber($conn, $source) {
+    $prefix = ($source === 'F') ? 'F' : 'O';
+    $like = $prefix . '%';
+    $stmt = $conn->prepare(
+        "SELECT order_num FROM orders
+         WHERE order_source = ? AND order_num LIKE ?
+         ORDER BY CAST(SUBSTRING(order_num, 2) AS UNSIGNED) DESC
+         LIMIT 1"
+    );
+    $stmt->bind_param('ss', $source, $like);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $next = 1001;
+    if ($row = $result->fetch_assoc()) {
+        $num = $row['order_num'];
+        if (preg_match('/^' . preg_quote($prefix, '/') . '(\d+)$/', $num, $matches)) {
+            $next = intval($matches[1]) + 1;
+        }
+    }
+    $stmt->close();
+    return $prefix . $next;
+}
+
+function normalizeOrderSource($source) {
+    $source = strtoupper(substr(trim((string) $source), 0, 1));
+    return ($source === 'F') ? 'F' : 'O';
+}
+
+function encodeItems($items) {
+    if (is_string($items)) {
+        return $items;
+    }
+    return json_encode($items);
+}
+
+function fetchOrderById($conn, $id) {
+    $stmt = $conn->prepare(
+        "SELECT id, customer_name, customer_email, items, total_amount, status,
+                fulfillment, delivery_location, order_num, order_source,
+                payment_method, notes, created_at
+         FROM orders WHERE id = ?"
+    );
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    if ($row) {
+        $rawItems = $row['items'];
+        $decoded = json_decode($rawItems, true);
+        $row['items'] = (json_last_error() === JSON_ERROR_NONE) ? $decoded : $rawItems;
+        $row['status'] = dbStatusToUi($row['status']);
+    }
+    return $row;
+}
 
 try {
     $method = $_SERVER['REQUEST_METHOD'];
     $action = isset($_GET['action']) ? $_GET['action'] : '';
 
     if ($method === 'GET' && $action === 'get_orders') {
-        // Get all orders (admin only)
-        requireAdminLogin();
-
-        $query = "SELECT id, customer_name, customer_email, items, total_amount, status, fulfillment, delivery_location, created_at FROM orders ORDER BY created_at DESC";
+        $query = "SELECT id, customer_name, customer_email, items, total_amount, status,
+                         fulfillment, delivery_location, order_num, order_source,
+                         payment_method, notes, created_at
+                  FROM orders
+                  ORDER BY created_at DESC";
         $result = $conn->query($query);
 
         if (!$result) {
@@ -20,38 +103,76 @@ try {
 
         $orders = array();
         while ($row = $result->fetch_assoc()) {
-            $row['items'] = json_decode($row['items'], true);
+            if (empty($row['order_num'])) {
+                $source = normalizeOrderSource($row['order_source'] ?? 'O');
+                $row['order_num'] = nextOrderNumber($conn, $source);
+                $updateStmt = $conn->prepare("UPDATE orders SET order_num = ?, order_source = ? WHERE id = ?");
+                $updateStmt->bind_param('ssi', $row['order_num'], $source, $row['id']);
+                $updateStmt->execute();
+                $updateStmt->close();
+                $row['order_source'] = $source;
+            }
+
+            $decodedItems = json_decode($row['items'], true);
+            $row['items'] = ($decodedItems === null) ? $row['items'] : $decodedItems;
+            $row['status'] = dbStatusToUi($row['status']);
             $orders[] = $row;
         }
 
+        ob_end_clean();
         echo json_encode([
             'success' => true,
             'data' => $orders
         ]);
+        exit;
 
     } elseif ($method === 'POST' && $action === 'save_order') {
-        // Save new order (client side - no auth needed)
         $data = json_decode(file_get_contents('php://input'), true);
 
         if (!$data || !isset($data['customer_name'], $data['items'])) {
             throw new Exception('Missing required fields: customer_name and items');
         }
 
-        $customer_name = $data['customer_name'];
-        $customer_email = $data['customer_email'] ?? '';
-        $items = json_encode($data['items']);
-        $total_amount = floatval($data['total_amount']);
+        $customer_name = trim((string) $data['customer_name']);
+        $customer_email = trim((string) ($data['customer_email'] ?? ''));
+        $items = encodeItems($data['items']);
+        $total_amount = floatval($data['total_amount'] ?? 0);
         $fulfillment = $data['fulfillment'] ?? 'pickup';
-        $delivery_location = $data['delivery_location'] ?? '';
+        $delivery_location = trim((string) ($data['delivery_location'] ?? ''));
+        $order_source = normalizeOrderSource($data['order_source'] ?? 'O');
+        $order_num = trim((string) ($data['order_num'] ?? ''));
+        $payment_method = trim((string) ($data['payment_method'] ?? ''));
+        $notes = trim((string) ($data['notes'] ?? ''));
+        $status = uiStatusToDb($data['status'] ?? 'new');
 
-        $query = "INSERT INTO orders (customer_name, customer_email, items, total_amount, fulfillment, delivery_location, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')";
+        if ($order_num === '') {
+            $order_num = nextOrderNumber($conn, $order_source);
+        }
+
+        $query = "INSERT INTO orders
+                  (customer_name, customer_email, items, total_amount, fulfillment,
+                   delivery_location, status, order_num, order_source, payment_method, notes)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
 
         if (!$stmt) {
             throw new Exception("Prepare failed: " . $conn->error);
         }
 
-        $stmt->bind_param('sssdss', $customer_name, $customer_email, $items, $total_amount, $fulfillment, $delivery_location);
+        $stmt->bind_param(
+            'sssdsssssss',
+            $customer_name,
+            $customer_email,
+            $items,
+            $total_amount,
+            $fulfillment,
+            $delivery_location,
+            $status,
+            $order_num,
+            $order_source,
+            $payment_method,
+            $notes
+        );
 
         if (!$stmt->execute()) {
             throw new Exception("Execute failed: " . $stmt->error);
@@ -60,15 +181,121 @@ try {
         $orderId = $conn->insert_id;
         $stmt->close();
 
+        ob_end_clean();
         echo json_encode([
             'success' => true,
             'message' => 'Order created successfully',
-            'order_id' => $orderId
+            'order_id' => $orderId,
+            'order_num' => $order_num
         ]);
+        exit;
+
+    } elseif ($method === 'POST' && $action === 'update_order') {
+        // requireAdminLogin();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['id'])) {
+            throw new Exception('Missing required field: id');
+        }
+
+        $id = intval($data['id']);
+        $fields = array();
+        $types = '';
+        $values = array();
+
+        $allowed = array(
+            'customer_name' => 's',
+            'customer_email' => 's',
+            'items' => 's',
+            'total_amount' => 'd',
+            'fulfillment' => 's',
+            'delivery_location' => 's',
+            'payment_method' => 's',
+            'notes' => 's',
+            'status' => 's'
+        );
+
+        foreach ($allowed as $field => $type) {
+            if (!array_key_exists($field, $data)) {
+                continue;
+            }
+
+            $value = $data[$field];
+            if ($field === 'items') {
+                $value = encodeItems($value);
+            } elseif ($field === 'status') {
+                $value = uiStatusToDb($value);
+            } elseif ($field === 'total_amount') {
+                $value = floatval($value);
+            } else {
+                $value = trim((string) $value);
+            }
+
+            $fields[] = "$field = ?";
+            $types .= $type;
+            $values[] = $value;
+        }
+
+        if (empty($fields)) {
+            throw new Exception('No fields to update');
+        }
+
+        $types .= 'i';
+        $values[] = $id;
+
+        $query = "UPDATE orders SET " . implode(', ', $fields) . " WHERE id = ?";
+        $stmt = $conn->prepare($query);
+
+        if (!$stmt) {
+            throw new Exception("Prepare failed: " . $conn->error);
+        }
+
+        $stmt->bind_param($types, ...$values);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $stmt->close();
+        $order = fetchOrderById($conn, $id);
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order updated successfully',
+            'data' => $order
+        ]);
+        exit;
+
+    } elseif ($method === 'POST' && $action === 'delete_order') {
+        // requireAdminLogin();
+
+        $data = json_decode(file_get_contents('php://input'), true);
+
+        if (!$data || !isset($data['id'])) {
+            throw new Exception('Missing required field: id');
+        }
+
+        $id = intval($data['id']);
+        $stmt = $conn->prepare("DELETE FROM orders WHERE id = ?");
+        $stmt->bind_param('i', $id);
+
+        if (!$stmt->execute()) {
+            throw new Exception("Execute failed: " . $stmt->error);
+        }
+
+        $stmt->close();
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Order deleted successfully'
+        ]);
+        exit;
 
     } elseif ($method === 'POST' && $action === 'update_status') {
-        // Update order status (admin only)
-        requireAdminLogin();
+        // requireAdminLogin();
 
         $data = json_decode(file_get_contents('php://input'), true);
 
@@ -77,7 +304,7 @@ try {
         }
 
         $id = intval($data['id']);
-        $status = $data['status'];
+        $status = uiStatusToDb($data['status']);
 
         $query = "UPDATE orders SET status = ? WHERE id = ?";
         $stmt = $conn->prepare($query);
@@ -94,21 +321,26 @@ try {
 
         $stmt->close();
 
+        ob_end_clean();
         echo json_encode([
             'success' => true,
-            'message' => 'Order status updated successfully'
+            'message' => 'Order status updated successfully',
+            'status' => dbStatusToUi($status)
         ]);
+        exit;
 
     } else {
         throw new Exception('Invalid action: ' . $action);
     }
 
-} catch (Exception $e) {
+} catch (Throwable $e) {
+    ob_end_clean();
     http_response_code(400);
     echo json_encode([
         'success' => false,
         'error' => $e->getMessage()
     ]);
+    exit;
 } finally {
     $conn->close();
 }

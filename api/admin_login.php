@@ -3,7 +3,7 @@ session_start();
 
 // If already logged in as admin, redirect to admin panel
 if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true) {
-    header('Location: admin.php');
+    header('Location: ../Admin Side/admin.html#dashboard-section');
     exit();
 }
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['admin_username'] = $admin['username'];
                     
                     // Redirect to admin dashboard
-                    header('Location: admin.php');
+                    header('Location: ../Admin Side/admin.html#dashboard-section');
                     exit();
                 } else {
                     $error_message = 'Invalid username or password.';
@@ -275,7 +275,7 @@ $conn->close();
         </form>
 
         <div class="login-footer">
-            <a href="index.html">
+            <a href="../Client Side/index.html">
                 <span class="material-icons" style="vertical-align: middle; margin-right: 4px; font-size: 18px;">arrow_back</span>
                 Back to Client View
             </a>
