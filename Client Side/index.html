@@ -436,6 +436,10 @@
       flex-shrink: 0;
     }
 
+    #googleSignInButtonContainer {
+      display: none !important;
+    }
+
     @media (min-width: 992px) {
       #googleLoginWrap {
         display: inline-flex;
@@ -469,11 +473,6 @@
     }
 
     @media (min-width: 992px) {
-      .google-gis-button-slot {
-        transform: scale(clamp(0.76, 0.055vw + 0.7, 1));
-        transform-origin: center right;
-      }
-
       #googleUserFirstName {
         font-size: clamp(0.68rem, 0.45vw + 0.52rem, 0.8rem);
         max-width: clamp(44px, 6.5vw, 90px);
@@ -3064,12 +3063,24 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
     @media (pointer: coarse) {
       html.device-fit-ready a,
-      html.device-fit-ready button,
-      html.device-fit-ready .btn,
+      html.device-fit-ready button:not(.btn-google-login):not(#mobileGoogleLoginBtn):not(#googleSignInOverlayClose),
+      html.device-fit-ready .btn:not(.btn-google-login),
       html.device-fit-ready input[type="button"],
       html.device-fit-ready input[type="submit"] {
         min-height: 44px;
       }
+    }
+
+    /* Google Sign-In — keep original pill button (navbar uses custom btn only) */
+    #googleLoginWrap .btn-google-login,
+    #mobileGoogleLoginBtn {
+      min-height: var(--nav-control-height);
+      height: var(--nav-control-height);
+    }
+
+    #mobileGoogleLoginBtn {
+      height: auto;
+      min-height: auto;
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -3160,20 +3171,19 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
 
         <!-- Google Login (official GIS button + signed-in chip) -->
         <div id="googleLoginWrap">
-          <div id="googleSignInButtonContainer" class="google-gis-button-slot" aria-label="Sign in with Google"></div>
-          <button type="button" class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()" style="display:none;">
+          <button type="button" class="btn-google-login" id="googleLoginBtn" onclick="handleGoogleLogin()">
             <img src="https://www.google.com/favicon.ico" alt="G">
             Sign in with Google
           </button>
           <!-- Logged-in avatar chip (shown instead of the button after sign-in) -->
           <div id="googleUserChip" style="background:var(--bg-surface-2);border:1.5px solid var(--border);border-radius:24px;padding:0 12px 0 5px;cursor:pointer;" onclick="toggleGoogleMenu()">
-            <img id="googleUserAvatar" src="" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;" onerror="this.src='https://i.pravatar.cc/80?img=47'">
+            <img id="googleUserAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:28px;height:28px;border-radius:50%;object-fit:cover;">
             <span id="googleUserFirstName" style="font-size:.8rem;font-weight:600;color:var(--text-main);max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
             <span class="material-icons" style="font-size:14px;color:var(--text-dim);">expand_more</span>
           </div>
           <div class="google-user-menu d-none" id="googleUserMenu">
-            <img id="googleUserAvatarLarge" src="" alt=""
-              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;" onerror="this.src='https://i.pravatar.cc/80?img=47'">
+            <img id="googleUserAvatarLarge" src="" alt="" referrerpolicy="no-referrer"
+              style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-bottom:8px;">
             <p class="u-name" id="googleUserName"></p>
             <p id="googleUserEmail" style="word-break:break-all;"></p>
             <hr style="border-color:var(--border);margin:8px 0;">
@@ -3256,9 +3266,8 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
         style="display:none;align-items:center;gap:10px;background:var(--bg-surface-2);
                border:1.5px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;"
         onclick="toggleGoogleMenu(); closeMobileNav();">
-        <img id="mobileGoogleUserAvatar" src="" alt=""
-          style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;"
-          onerror="this.src='https://i.pravatar.cc/80?img=47'">
+        <img id="mobileGoogleUserAvatar" src="" alt="" referrerpolicy="no-referrer"
+          style="width:30px;height:30px;border-radius:50%;object-fit:cover;flex-shrink:0;">
         <div style="flex:1;min-width:0;">
           <p id="mobileGoogleUserName"
             style="margin:0;font-size:.85rem;font-weight:700;color:var(--text-main);
@@ -3503,7 +3512,7 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
             <input type="text" class="form-control-custom" id="reviewName" placeholder="Your name…">
             <!-- Shown when signed in — displays the Google account name read-only -->
             <div id="reviewNameSignedIn" style="display:none;margin-top:8px;display:none;align-items:center;gap:10px;background:var(--bg-surface);border:1.5px solid var(--border);border-radius:10px;padding:9px 14px;">
-              <img id="reviewNameAvatar" src="" alt="" style="width:26px;height:26px;border-radius:50%;object-fit:cover;" onerror="this.src='https://i.pravatar.cc/40?img=1'">
+              <img id="reviewNameAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:26px;height:26px;border-radius:50%;object-fit:cover;">
               <span id="reviewNameDisplay" style="font-size:.875rem;font-weight:600;color:var(--text-main);"></span>
               <span style="font-size:.72rem;color:var(--brand);margin-left:auto;font-weight:600;">via Google</span>
             </div>
@@ -4907,14 +4916,37 @@ const FOOD_ADDONS = [
       } catch (e) { return null; }
     }
 
+    function _normalizeGooglePictureUrl(url) {
+      if (!url || typeof url !== 'string') return '';
+      const trimmed = url.trim();
+      if (!trimmed) return '';
+      if (trimmed.includes('googleusercontent.com') && !/=s\d+/.test(trimmed)) {
+        return trimmed + '=s96-c';
+      }
+      return trimmed;
+    }
+
+    function _setGoogleProfileAvatar(imgEl, url) {
+      if (!imgEl) return;
+      const normalized = _normalizeGooglePictureUrl(url);
+      imgEl.referrerPolicy = 'no-referrer';
+      imgEl.decoding = 'async';
+      imgEl.onerror = null;
+      if (!normalized) {
+        imgEl.removeAttribute('src');
+        return;
+      }
+      imgEl.src = normalized;
+    }
+
     // Called by Google GIS after the user picks an account
     function onGoogleCredentialResponse(response) {
       const payload = decodeJwt(response.credential);
       if (!payload) { showToast('Sign-in failed. Please try again.', true); return; }
       const u = {
-        name:   payload.name,
-        email:  payload.email,
-        avatar: payload.picture || ''
+        name:   payload.name || '',
+        email:  payload.email || '',
+        avatar: payload.picture || payload.photo || ''
       };
       _applyGoogleUser(u);
     }
@@ -4928,6 +4960,7 @@ const FOOD_ADDONS = [
 
     // Shared helper — applies a signed-in user to the UI state
     function _applyGoogleUser(u, silent) {
+      if (u && u.avatar) u.avatar = _normalizeGooglePictureUrl(u.avatar);
       state.googleUser = u;
       // Persist across page reloads (sessionStorage so it clears on browser close)
       try { sessionStorage.setItem('sipandpulse_guser', JSON.stringify(u)); } catch(e) {}
@@ -4961,15 +4994,13 @@ const FOOD_ADDONS = [
       const chip = document.getElementById('googleUserChip');
       if (chip) chip.style.display = 'flex';
 
-      // Chip avatar + first name
-      const avatarEl = document.getElementById('googleUserAvatar');
-      if (avatarEl) avatarEl.src = u.avatar || 'https://i.pravatar.cc/80?img=47';
+      // Chip avatar + first name (use real Google profile photo from sign-in)
+      _setGoogleProfileAvatar(document.getElementById('googleUserAvatar'), u.avatar);
       const firstNameEl = document.getElementById('googleUserFirstName');
       if (firstNameEl) firstNameEl.textContent = u.name.split(' ')[0];
 
       // Dropdown content
-      const avatarLargeEl = document.getElementById('googleUserAvatarLarge');
-      if (avatarLargeEl) avatarLargeEl.src = u.avatar || 'https://i.pravatar.cc/80?img=47';
+      _setGoogleProfileAvatar(document.getElementById('googleUserAvatarLarge'), u.avatar);
       const nameEl  = document.getElementById('googleUserName');
       if (nameEl)  nameEl.textContent  = u.name;
       const emailEl = document.getElementById('googleUserEmail');
@@ -4980,8 +5011,7 @@ const FOOD_ADDONS = [
       if (mobileLoginBtn) mobileLoginBtn.style.display = 'none';
       const mobileChip = document.getElementById('mobileGoogleUserChip');
       if (mobileChip) mobileChip.style.display = 'flex';
-      const mobileAvatar = document.getElementById('mobileGoogleUserAvatar');
-      if (mobileAvatar) mobileAvatar.src = u.avatar || 'https://i.pravatar.cc/80?img=47';
+      _setGoogleProfileAvatar(document.getElementById('mobileGoogleUserAvatar'), u.avatar);
       const mobileName = document.getElementById('mobileGoogleUserName');
       if (mobileName) mobileName.textContent = u.name;
       const mobileEmail = document.getElementById('mobileGoogleUserEmail');
@@ -5005,13 +5035,9 @@ const FOOD_ADDONS = [
 
     function _showGoogleSignInControls() {
       const gisSlot = document.getElementById('googleSignInButtonContainer');
-      if (gisSlot && gisSlot.querySelector('[role="button"]')) {
-        gisSlot.style.display = 'inline-flex';
-      }
+      if (gisSlot) gisSlot.style.display = 'none';
       const loginBtn = document.getElementById('googleLoginBtn');
-      if (loginBtn && (!gisSlot || !gisSlot.querySelector('[role="button"]'))) {
-        loginBtn.style.display = 'inline-flex';
-      }
+      if (loginBtn) loginBtn.style.display = 'inline-flex';
     }
 
     function _closeGoogleSignInOverlay() {
@@ -5079,21 +5105,6 @@ const FOOD_ADDONS = [
           itp_support:           true,
           use_fedcm_for_prompt:  false
         });
-
-        // Render the official Google button in the navbar (real clickable GIS widget)
-        const container = document.getElementById('googleSignInButtonContainer');
-        if (container && !container.querySelector('[role="button"]')) {
-          const vw = window.innerWidth;
-          const btnWidth = vw >= 1400 ? 200 : vw >= 1200 ? 175 : vw >= 992 ? 155 : 155;
-          google.accounts.id.renderButton(container, {
-            type:  'standard',
-            theme: 'outline',
-            size:  'medium',
-            text:  'signin_with',
-            shape: 'pill',
-            width: btnWidth
-          });
-        }
 
         _googleSignInInitialized = true;
 
@@ -6193,7 +6204,9 @@ async function openMyOrdersModal() {
         if (nameInput)    { nameInput.style.display = 'none'; nameInput.value = state.googleUser.name; }
         if (nameSignedIn) { nameSignedIn.style.display = 'flex'; }
         if (nameDisplay)  { nameDisplay.textContent = state.googleUser.name; }
-        if (reviewNameAvatar && state.googleUser.avatar) { reviewNameAvatar.src = state.googleUser.avatar; }
+        if (reviewNameAvatar && state.googleUser.avatar) {
+          _setGoogleProfileAvatar(reviewNameAvatar, state.googleUser.avatar);
+        }
       } else {
         // Show plain input, hide chip
         if (nameInput)    { nameInput.style.display = ''; nameInput.value = ''; nameInput.readOnly = false; nameInput.style.opacity = ''; }

@@ -655,6 +655,22 @@
       /* Analytics */
       #analytics-section iframe { height: 400px; }
     }
+
+    /* Power BI — stable embed (no reload flicker from height jumps) */
+    .powerbi-embed-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 320px;
+      contain: layout style paint;
+    }
+
+    #powerBiAnalyticsFrame {
+      width: 100%;
+      height: clamp(320px, 56vw, 540px) !important;
+      border: none;
+      display: block;
+      vertical-align: top;
+    }
   </style>
 
   <style>
@@ -1155,17 +1171,54 @@
     <div class="mb-4">
       <p class="section-eyebrow mb-1">Analytics</p>
       <h2 class="section-title">Sales &amp; Performance</h2>
+      <p style="font-size:.8rem;color:var(--text-dim);margin:8px 0 0;max-width:760px;">
+        Live sales data from the database is exported to Google Sheets, then visualized in Power BI (including anomalies).
+      </p>
     </div>
-    <div style="border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-body);">
+
+    <div class="row g-3 mb-4" id="analyticsKpiRow">
+      <div class="col-6 col-md-3">
+        <div class="dash-card" style="padding:16px 18px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Total Orders</div>
+          <div id="analyticsOrderCount" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--brand);">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-card" style="padding:16px 18px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Net Sales (PHP)</div>
+          <div id="analyticsNetSales" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--brand);">0.00</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-card" style="padding:16px 18px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Anomalies</div>
+          <div id="analyticsAnomalyCount" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--admin-accent);">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="dash-card" style="padding:16px 18px;">
+          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Last Sync</div>
+          <div id="analyticsLastSync" style="font-size:.78rem;font-weight:600;color:var(--text-main);line-height:1.4;">—</div>
+          <button type="button" id="analyticsSyncBtn" class="btn-queue-done" style="margin-top:8px;padding:4px 10px;font-size:.68rem;" onclick="syncAnalyticsPipeline({ refreshPowerBi: true })">Sync now</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="analyticsSyncWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
+
+    <div class="powerbi-embed-wrap" style="border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-body);">
       <iframe
-        title="Sip & Pulse Power BI Dashboard"
-        src="https://app.powerbi.com/reportEmbed?reportId=YOUR_REPORT_ID&autoAuth=true&ctid=YOUR_TENANT_ID"
-        style="width:100%;height:540px;border:none;display:block;"
-        allowfullscreen>
+        id="powerBiAnalyticsFrame"
+        title="SipAndPulseSalesPerformance"
+        src="https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D"
+        frameborder="0"
+        allowfullscreen="true">
       </iframe>
     </div>
     <p style="font-size:.72rem;color:var(--text-dim);margin-top:8px;text-align:center;">
-      Replace the <code>src</code> with your actual Power BI embed URL from <strong>Power BI &rsaquo; Share &rsaquo; Embed report</strong>.
+      Google Sheet:
+      <a id="analyticsSheetLink" href="https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing" target="_blank" rel="noopener" style="color:var(--brand);">Open connected sheet</a>
+      · Auto-sync runs when orders are added or removed.
     </p>
   </div>
 </section>
@@ -2213,6 +2266,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadOrderQueue();
   loadMenuFromDatabase();
   loadReviewsFromDatabase();
+  loadAnalyticsDashboard();
+  syncAnalyticsPipeline({ refreshPowerBi: false });
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
@@ -2241,6 +2296,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       ordersRefreshBusy = false;
     }
   }, 3000);
+
+  // Analytics KPIs refresh (text only — never reloads Power BI iframe)
+  setInterval(() => {
+    loadAnalyticsDashboard();
+  }, 15000);
+
+  // Full pipeline sync (database → Google Sheets) — refresh Power BI only when data changes
+  setInterval(() => {
+    syncAnalyticsPipeline({ refreshPowerBi: 'auto' });
+  }, 60000);
 
   document.getElementById('cartOpenBtn')?.addEventListener('click', () => {
     new bootstrap.Modal(document.getElementById('cartModal')).show();
@@ -2572,6 +2637,7 @@ async function confirmCheckout(){
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
+    syncAnalyticsPipeline({ refreshPowerBi: true });
 
     const checkM = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
     if(checkM) checkM.hide();
@@ -3276,6 +3342,7 @@ function syncOrderCountersFromQueue(queue) {
 }
 
 async function loadOrderQueue() {
+  const prevFingerprint = orderQueueFingerprint(state.queue);
   try {
     const response = await fetch(apiUrl('orders.php?action=get_orders'), { credentials: 'include' });
     if (!response.ok) throw new Error('Failed to load orders');
@@ -3296,6 +3363,16 @@ async function loadOrderQueue() {
       state.queue = [];
     }
   }
+
+  const nextFingerprint = orderQueueFingerprint(state.queue);
+  if (prevFingerprint && nextFingerprint !== prevFingerprint) {
+    syncAnalyticsPipeline({ refreshPowerBi: true });
+  }
+}
+
+function orderQueueFingerprint(queue) {
+  if (!Array.isArray(queue) || !queue.length) return '0';
+  return queue.map(o => `${o.id || o.orderId}:${o.status || ''}:${o.total || 0}`).join('|');
 }
 
 function saveOrderQueue() {
@@ -3632,6 +3709,7 @@ async function saveManualOrder() {
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
+    syncAnalyticsPipeline({ refreshPowerBi: true });
     bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
     resetAddOrderModal();
   } catch (error) {
@@ -3657,6 +3735,7 @@ async function deleteQueueOrder(id) {
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
+    syncAnalyticsPipeline({ refreshPowerBi: true });
     showToast(`Order #${order.num} deleted.`);
   } catch (error) {
     console.error('Delete order error:', error);
@@ -4235,6 +4314,167 @@ loadMenuFromDatabase();
 setupReviewsFeedActions();
 loadReviewsFromDatabase();
 initDeviceAccessFit('admin');
+
+/* ── Analytics & Power BI (database → Google Sheets → Power BI) ── */
+let powerBiEmbedInitialized = false;
+let lastAnalyticsFingerprint = '';
+
+function formatAnalyticsMoney(value) {
+  return Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function analyticsFingerprint(summary) {
+  if (!summary) return '';
+  return `${summary.order_count || 0}|${summary.net_sales || 0}|${summary.anomaly_count || 0}`;
+}
+
+function renderAnalyticsKpis(summary, config, sheetsMeta) {
+  const orderEl = document.getElementById('analyticsOrderCount');
+  const salesEl = document.getElementById('analyticsNetSales');
+  const anomalyEl = document.getElementById('analyticsAnomalyCount');
+  const syncEl = document.getElementById('analyticsLastSync');
+  const sheetLink = document.getElementById('analyticsSheetLink');
+  const warnEl = document.getElementById('analyticsSyncWarning');
+  const syncBtn = document.getElementById('analyticsSyncBtn');
+
+  if (orderEl && summary) orderEl.textContent = String(summary.order_count || 0);
+  if (salesEl && summary) salesEl.textContent = formatAnalyticsMoney(summary.net_sales);
+  if (anomalyEl && summary) anomalyEl.textContent = String(summary.anomaly_count || 0);
+
+  const status = config && config.last_sync_status ? config.last_sync_status : 'pending';
+  const when = config && config.last_sync_at ? new Date(config.last_sync_at).toLocaleString() : 'Not yet synced';
+
+  if (syncEl) {
+    syncEl.textContent = status + ' · ' + when;
+    syncEl.style.color = status === 'success' ? 'var(--text-main)' : (status === 'partial' ? '#a93226' : 'var(--text-main)');
+  }
+
+  if (syncBtn) {
+    syncBtn.disabled = !!analyticsSyncBusy;
+    syncBtn.textContent = analyticsSyncBusy ? 'Syncing…' : 'Sync now';
+  }
+
+  if (sheetLink && config && config.google_sheet_url) {
+    sheetLink.href = config.google_sheet_url;
+  }
+
+  const sheetError = sheetsMeta && sheetsMeta.error ? String(sheetsMeta.error) : '';
+  const showWarning = status === 'partial' || (sheetsMeta && sheetsMeta.success === false);
+  if (warnEl) {
+    if (showWarning) {
+      warnEl.style.display = 'block';
+      warnEl.textContent = sheetError
+        || 'Google Sheets sync is incomplete. KPI cards update from the database, but Power BI only changes after the connected Google Sheet is updated.';
+    } else {
+      warnEl.style.display = 'none';
+      warnEl.textContent = '';
+    }
+  }
+}
+
+function ensurePowerBiEmbedOnce(config) {
+  const frame = document.getElementById('powerBiAnalyticsFrame');
+  if (!frame) return;
+  const url = config && config.powerbi_embed_url ? String(config.powerbi_embed_url).trim() : '';
+  if (!url) return;
+  frame.dataset.embedUrl = url.replace(/([?&])_t=\d+/g, '').replace(/[?&]$/, '');
+  if (!powerBiEmbedInitialized || !frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
+    frame.src = frame.dataset.embedUrl;
+    powerBiEmbedInitialized = true;
+  }
+}
+
+function refreshPowerBiEmbed(config) {
+  const frame = document.getElementById('powerBiAnalyticsFrame');
+  if (!frame) return;
+  const baseUrl = (
+    (config && config.powerbi_embed_url) ||
+    frame.dataset.embedUrl ||
+    frame.getAttribute('src') ||
+    ''
+  ).trim().replace(/([?&])_t=\d+/g, '').replace(/[?&]$/, '');
+  if (!baseUrl) return;
+  frame.dataset.embedUrl = baseUrl;
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  frame.src = baseUrl + sep + '_t=' + Date.now();
+  powerBiEmbedInitialized = true;
+}
+
+function applyAnalyticsPayload(data, options) {
+  if (!data) return;
+  const summary = data.summary;
+  const config = data.config;
+  const fp = analyticsFingerprint(summary);
+  const dataChanged = lastAnalyticsFingerprint !== '' && fp !== lastAnalyticsFingerprint;
+  lastAnalyticsFingerprint = fp;
+
+  renderAnalyticsKpis(summary, config, data.google_sheets);
+  ensurePowerBiEmbedOnce(config);
+
+  const refreshMode = options && options.refreshPowerBi;
+  if (refreshMode === true || (refreshMode === 'auto' && dataChanged)) {
+    refreshPowerBiEmbed(config);
+  }
+}
+
+function renderAnalyticsSummary(summary, config) {
+  applyAnalyticsPayload({ summary, config }, { refreshPowerBi: false });
+}
+
+async function loadAnalyticsDashboard() {
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=summary'), { credentials: 'include' });
+    const payload = await response.json();
+    if (!payload.success || !payload.data) return;
+    applyAnalyticsPayload(payload.data, { refreshPowerBi: false });
+  } catch (e) {
+    console.error('Analytics summary error:', e);
+  }
+}
+
+let analyticsSyncBusy = false;
+let analyticsSyncPending = null;
+
+function mergeAnalyticsSyncOptions(a, b) {
+  if (!a) return b || { refreshPowerBi: 'auto' };
+  if (!b) return a;
+  const refresh = a.refreshPowerBi === true || b.refreshPowerBi === true
+    ? true
+    : (a.refreshPowerBi === 'auto' || b.refreshPowerBi === 'auto' ? 'auto' : false);
+  return { refreshPowerBi: refresh };
+}
+
+async function syncAnalyticsPipeline(options) {
+  options = options || { refreshPowerBi: 'auto' };
+  if (analyticsSyncBusy) {
+    analyticsSyncPending = mergeAnalyticsSyncOptions(analyticsSyncPending, options);
+    return;
+  }
+  analyticsSyncBusy = true;
+  const syncBtn = document.getElementById('analyticsSyncBtn');
+  if (syncBtn) syncBtn.textContent = 'Syncing…';
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=sync'), {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const payload = await response.json();
+    if (payload.success && payload.data) {
+      applyAnalyticsPayload(payload.data, options);
+    }
+  } catch (e) {
+    console.error('Analytics sync error:', e);
+  } finally {
+    analyticsSyncBusy = false;
+    const syncBtnDone = document.getElementById('analyticsSyncBtn');
+    if (syncBtnDone) syncBtnDone.textContent = 'Sync now';
+    if (analyticsSyncPending) {
+      const pending = analyticsSyncPending;
+      analyticsSyncPending = null;
+      syncAnalyticsPipeline(pending);
+    }
+  }
+}
 
 /* ── Device fit, screen sizes & URL access (database-driven) ── */
 function detectDeviceProfile() {

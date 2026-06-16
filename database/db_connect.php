@@ -17,6 +17,34 @@ function ensureColumn($conn, $table, $column, $definition) {
     }
 }
 
+function ensureAnalyticsSeed($conn) {
+    $countResult = $conn->query('SELECT COUNT(*) AS c FROM analytics_config');
+    $countRow = $countResult ? $countResult->fetch_assoc() : array('c' => 0);
+    if (intval($countRow['c']) > 0) {
+        return;
+    }
+
+    $powerbiUrl = 'https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
+    $sheetId = '1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8';
+    $sheetUrl = 'https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing';
+    $sheetName = 'Sheet1';
+    $serviceEmail = '';
+    $privateKey = '';
+
+    $stmt = $conn->prepare(
+        "INSERT INTO analytics_config
+        (powerbi_title, powerbi_embed_url, google_spreadsheet_id, google_sheet_name, google_sheet_url,
+         service_account_email, private_key_pem, last_sync_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'pending')"
+    );
+    if ($stmt) {
+        $title = 'SipAndPulseSalesPerformance';
+        $stmt->bind_param('sssssss', $title, $powerbiUrl, $sheetId, $sheetName, $sheetUrl, $serviceEmail, $privateKey);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
+
 function ensureDeviceAccessSeed($conn) {
     $platforms = [
         ['mobile', 'Mobile (Android & phones)', 0, 767, 'Client Side/index.html', 'Admin Side/admin.html', 'touch', 48, 1, 1, 'Phones and small screens — touch navigation, pinch-zoom friendly.'],
@@ -193,6 +221,50 @@ function ensureDatabaseSchema($conn) {
         UNIQUE KEY uniq_url_key (url_key)
     )");
 
+    $conn->query("CREATE TABLE IF NOT EXISTS analytics_config (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        powerbi_title VARCHAR(120) NOT NULL,
+        powerbi_embed_url VARCHAR(700) NOT NULL,
+        google_spreadsheet_id VARCHAR(120) NOT NULL,
+        google_sheet_name VARCHAR(80) DEFAULT 'Sheet1',
+        google_sheet_url VARCHAR(500) NOT NULL,
+        service_account_email VARCHAR(255) DEFAULT '',
+        private_key_pem TEXT,
+        last_sync_at TIMESTAMP NULL DEFAULT NULL,
+        last_sync_status VARCHAR(40) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    $conn->query("CREATE TABLE IF NOT EXISTS sales_analytics_rows (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT NOT NULL,
+        order_num VARCHAR(20) DEFAULT '',
+        order_date DATETIME DEFAULT NULL,
+        customer_name VARCHAR(255) DEFAULT '',
+        customer_email VARCHAR(255) DEFAULT '',
+        total_amount DECIMAL(10,2) DEFAULT 0,
+        status VARCHAR(50) DEFAULT '',
+        payment_method VARCHAR(80) DEFAULT '',
+        fulfillment VARCHAR(50) DEFAULT '',
+        order_source VARCHAR(5) DEFAULT 'O',
+        item_count INT DEFAULT 0,
+        refund_amount DECIMAL(10,2) DEFAULT 0,
+        refund_status VARCHAR(50) DEFAULT '',
+        is_anomaly TINYINT(1) DEFAULT 0,
+        anomaly_reason VARCHAR(255) DEFAULT '',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        UNIQUE KEY uniq_analytics_order (order_id)
+    )");
+
+    $conn->query("CREATE TABLE IF NOT EXISTS analytics_sync_log (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        sync_status VARCHAR(40) DEFAULT '',
+        message TEXT,
+        row_count INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )");
+
+    ensureAnalyticsSeed($conn);
     ensureDeviceAccessSeed($conn);
 }
 
