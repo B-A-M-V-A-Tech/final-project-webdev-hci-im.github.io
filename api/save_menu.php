@@ -37,7 +37,10 @@ try {
         $item_type = $data['item_type'] ?? 'food';
 
         if ($action === 'add') {
-            // Insert new menu item
+            if (isset($data['id']) && intval($data['id']) > 0) {
+                throw new Exception('New menu items must not include an ID.');
+            }
+
             $query = "INSERT INTO menu_items (name, category, description, price, image_url, available, item_type) VALUES (?, ?, ?, ?, ?, ?, ?)";
             $stmt = $conn->prepare($query);
             
@@ -51,8 +54,22 @@ try {
                 throw new Exception("Execute failed: " . $stmt->error);
             }
 
-            $newId = $conn->insert_id;
+            $newId = intval($conn->insert_id);
             $stmt->close();
+
+            if ($newId <= 0) {
+                throw new Exception('Could not allocate a new menu item ID. Reload admin and try again.');
+            }
+
+            $isAvailableCol = $conn->query("SHOW COLUMNS FROM menu_items LIKE 'is_available'");
+            if ($isAvailableCol && $isAvailableCol->num_rows > 0) {
+                $syncStmt = $conn->prepare('UPDATE menu_items SET is_available = ? WHERE id = ?');
+                if ($syncStmt) {
+                    $syncStmt->bind_param('ii', $available, $newId);
+                    $syncStmt->execute();
+                    $syncStmt->close();
+                }
+            }
 
             echo json_encode([
                 'success' => true,
@@ -62,6 +79,9 @@ try {
         } else {
             // Update existing menu item
             $id = intval($data['id']);
+            if ($id <= 0) {
+                throw new Exception('Invalid menu item ID for update.');
+            }
             
             $query = "UPDATE menu_items SET name = ?, category = ?, description = ?, price = ?, image_url = ?, available = ?, item_type = ? WHERE id = ?";
             $stmt = $conn->prepare($query);
@@ -77,6 +97,16 @@ try {
             }
 
             $stmt->close();
+
+            $isAvailableCol = $conn->query("SHOW COLUMNS FROM menu_items LIKE 'is_available'");
+            if ($isAvailableCol && $isAvailableCol->num_rows > 0) {
+                $syncStmt = $conn->prepare('UPDATE menu_items SET is_available = ? WHERE id = ?');
+                if ($syncStmt) {
+                    $syncStmt->bind_param('ii', $available, $id);
+                    $syncStmt->execute();
+                    $syncStmt->close();
+                }
+            }
 
             echo json_encode([
                 'success' => true,

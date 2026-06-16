@@ -2396,6 +2396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
   setupReviewsFeedActions();
   setupFormValidationClearers();
+  initDeviceAccessFit('admin');
 
   const addOrderModalEl = document.getElementById('addOrderModal');
   if (addOrderModalEl) {
@@ -2750,8 +2751,9 @@ function openCrudModal(mode, itemId=null) {
   if(mode==='add'){
     title.textContent='Add New Menu Item';
     saveBtn.innerHTML='<span class="material-icons" style="font-size:17px;">add_circle</span> Insert to Database';
+    document.getElementById('crudCategory').value='espresso';
   } else if(mode==='edit'&&itemId){
-    const item=state.menuItems.find(i=>i.id===itemId); if(!item) return;
+    const item=state.menuItems.find(i=>Number(i.id)===Number(itemId)); if(!item) return;
     title.textContent='Edit Menu Item';
     saveBtn.innerHTML='<span class="material-icons" style="font-size:17px;">save</span> Update Database';
     document.getElementById('crudItemId').value=item.id;
@@ -2759,7 +2761,7 @@ function openCrudModal(mode, itemId=null) {
     document.getElementById('crudPrice').value=item.price;
     document.getElementById('crudCategory').value=item.cat;
     document.getElementById('crudDesc').value=item.desc;
-    document.getElementById('crudImage').value=item.img;
+    document.getElementById('crudImage').value=item.img || '';
     document.getElementById('crudAvailable').checked=item.available;
     updateCrudImagePreview();
   }
@@ -2779,14 +2781,16 @@ function updateCrudImagePreview() {
     img.removeAttribute('src');
   }
 }
-function saveCrudItem() {
-  const id=document.getElementById('crudItemId').value,
-        name=document.getElementById('crudName').value.trim(),
-        price=parseFloat(document.getElementById('crudPrice').value),
-        cat=document.getElementById('crudCategory').value,
-        desc=document.getElementById('crudDesc').value.trim(),
-        img=document.getElementById('crudImage').value.trim(),
-        available=document.getElementById('crudAvailable').checked;
+async function saveCrudItem() {
+  const idRaw = (document.getElementById('crudItemId').value || '').trim();
+  const idNum = idRaw ? parseInt(idRaw, 10) : 0;
+  const name = document.getElementById('crudName').value.trim();
+  const price = parseFloat(document.getElementById('crudPrice').value);
+  const cat = document.getElementById('crudCategory').value;
+  const desc = document.getElementById('crudDesc').value.trim();
+  const img = document.getElementById('crudImage').value.trim();
+  const available = document.getElementById('crudAvailable').checked;
+  const defaultImg = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
 
   clearAllFieldWarnings(document.getElementById('adminCrudModal'));
   let valid = true;
@@ -2800,27 +2804,44 @@ function saveCrudItem() {
     showToast('Please complete all required fields.', true);
     return;
   }
-  if(id){
-    const idx=state.menuItems.findIndex(i=>i.id==id);
-    if(idx!==-1) state.menuItems[idx]={...state.menuItems[idx],name,price,cat,desc,img:img||state.menuItems[idx].img,available};
-    showToast(`"${name}" updated.`);
-  } else {
-    const newId=Math.max(...state.menuItems.map(i=>i.id))+1;
-    const type=['espresso','iced','noncoffee','milktea','tea'].includes(cat)?'drink':'food';
-    state.menuItems.push({id:newId,name,price,cat,desc,img:img||'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',available,type});
-    showToast(`"${name}" added!`);
-  }
-  saveMenuToStorage();
-  document.getElementById('statMenuCount').textContent=state.menuItems.length;
-  bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
-  renderMenuModal(state.searchQuery);
-  renderMgmtGrid();
-  syncDashboard();
-  // ADDED: Save menu changes to database
+
   const drinkCats = ['espresso','iced','noncoffee','milktea','tea'];
-  const menuPayload = { name, price, cat, desc, img: img, available, type: drinkCats.includes(cat) ? 'drink' : 'food' };
-  if (id) syncMenuItemToDatabase({ ...menuPayload, id: parseInt(id, 10) });
-  else syncMenuItemToDatabase({ ...menuPayload });
+  const menuPayload = {
+    name,
+    price,
+    cat,
+    desc,
+    img: idNum > 0 ? img : (img || defaultImg),
+    available,
+    type: drinkCats.includes(cat) ? 'drink' : 'food'
+  };
+
+  const saveBtn = document.getElementById('crudSaveBtn');
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving…'; }
+
+  try {
+    if (idNum > 0) {
+      await syncMenuItemToDatabase({ ...menuPayload, id: idNum });
+      showToast(`"${name}" updated.`);
+    } else {
+      await syncMenuItemToDatabase({ ...menuPayload });
+      showToast(`"${name}" added!`);
+    }
+    bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
+    await loadMenuFromDatabase();
+    renderMenuModal(state.searchQuery);
+    syncDashboard();
+  } catch (error) {
+    console.error('Save menu item error:', error);
+    showToast(error.message || 'Could not save menu item.', true);
+  } finally {
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.innerHTML = idNum > 0
+        ? '<span class="material-icons" style="font-size:17px;">save</span> Update Database'
+        : '<span class="material-icons" style="font-size:17px;">add_circle</span> Insert to Database';
+    }
+  }
 }
 function openDeleteConfirm(itemId){
   const item=state.menuItems.find(i=>i.id===itemId); if(!item) return;
@@ -2828,19 +2849,22 @@ function openDeleteConfirm(itemId){
   document.getElementById('deleteItemName').textContent=item.name;
   new bootstrap.Modal(document.getElementById('deleteConfirmModal')).show();
 }
-function confirmDelete(){
+async function confirmDelete(){
   const item=state.menuItems.find(i=>i.id===state.pendingDeleteId);
-  // ADDED: Delete from database
-  if (state.pendingDeleteId) syncMenuDeleteToDatabase(state.pendingDeleteId);
-  state.menuItems=state.menuItems.filter(i=>i.id!==state.pendingDeleteId);
-  saveMenuToStorage();
-  bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
-  renderMenuModal(state.searchQuery);
-  renderMgmtGrid();
-  syncDashboard();
-  document.getElementById('statMenuCount').textContent=state.menuItems.length;
-  showToast(`"${item?.name}" removed.`);
-  state.pendingDeleteId=null;
+  if (!item || !state.pendingDeleteId) return;
+
+  try {
+    await syncMenuDeleteToDatabase(state.pendingDeleteId);
+    bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+    state.pendingDeleteId=null;
+    await loadMenuFromDatabase();
+    renderMenuModal(state.searchQuery);
+    syncDashboard();
+    showToast(`"${item.name}" removed.`);
+  } catch (error) {
+    console.error('Delete menu item error:', error);
+    showToast(error.message || 'Could not delete menu item.', true);
+  }
 }
 
 /* ════════ REVIEWS (ADMIN SIDE) ════════ */
@@ -4064,7 +4088,7 @@ function renderMgmtGrid() {
   grid.innerHTML = items.map(item => `
     <div class="col-6 col-md-4 col-lg-3">
       <div class="mgmt-card">
-        <img src="${item.img}" alt="${item.name}" class="mgmt-card-img" loading="lazy"
+        <img src="${item.img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'}" alt="${item.name}" class="mgmt-card-img" loading="lazy"
              onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
         <div class="mgmt-card-body">
           <div class="mgmt-card-cat">${catLabels[item.cat]||item.cat}</div>
@@ -4252,13 +4276,14 @@ const ADMIN_DRINK_CATEGORIES = ['espresso', 'iced', 'noncoffee', 'milktea', 'tea
 
 function mapDbMenuItemToAdmin(row) {
   const cat = row.category || row.cat || 'espresso';
+  const imageUrl = (row.image_url || row.img || '').trim();
   return {
     id: parseInt(row.id, 10),
     name: row.name,
     price: parseFloat(row.price),
     cat: cat,
     desc: row.description || row.desc || '',
-    img: row.image_url || row.img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',
+    img: imageUrl,
     available: row.available === undefined ? true : (row.available == 1 || row.available === true),
     type: row.item_type || (ADMIN_DRINK_CATEGORIES.includes(cat) ? 'drink' : 'food')
   };
@@ -4316,49 +4341,47 @@ function loadReviewsFromDatabase() {
     .catch(err => console.error('Error loading reviews:', err));
 }
 
-function syncMenuItemToDatabase(item) {
+async function syncMenuItemToDatabase(item) {
+  const itemId = Number(item.id || 0);
+  const defaultImg = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
+  const imageUrl = String(item.img || '').trim();
   const payload = {
-    action: item.id ? 'update' : 'add',
+    action: itemId > 0 ? 'update' : 'add',
     name: item.name,
     category: item.cat,
     price: item.price,
     description: item.desc || '',
-    image_url: (item.img || '').trim() || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',
+    image_url: itemId > 0 ? imageUrl : (imageUrl || defaultImg),
     available: item.available !== false ? 1 : 0,
     item_type: item.type || (ADMIN_DRINK_CATEGORIES.includes(item.cat) ? 'drink' : 'food')
   };
-  if (item.id) payload.id = item.id;
+  if (itemId > 0) payload.id = itemId;
 
-  return fetch(apiUrl('save_menu.php'), {
+  const response = await fetch(apiUrl('save_menu.php'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify(payload)
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      loadMenuFromDatabase();
-      showToast('Menu saved to database.');
-    } else {
-      showToast(data.error || 'Could not save menu to database.', true);
-    }
-  })
-  .catch(() => showToast('Could not save menu to database.', true));
+  });
+  const data = await parseAdminApiResponse(response);
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || 'Could not save menu to database.');
+  }
+  return data;
 }
 
-function syncMenuDeleteToDatabase(id) {
-  return fetch(apiUrl('save_menu.php'), {
+async function syncMenuDeleteToDatabase(id) {
+  const response = await fetch(apiUrl('save_menu.php'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
     body: JSON.stringify({ action: 'delete', id: Number(id) })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) loadMenuFromDatabase();
-  })
-  .catch(err => console.error('Error deleting menu item:', err));
+  });
+  const data = await parseAdminApiResponse(response);
+  if (!response.ok || !data.success) {
+    throw new Error(data.error || 'Could not delete menu item.');
+  }
+  return data;
 }
 
 // ADDED: Database-backed review delete for Community panel
@@ -4385,11 +4408,6 @@ window.deleteReview = function(id) {
   })
   .catch(() => showToast('Could not delete review.', true));
 };
-
-loadMenuFromDatabase();
-setupReviewsFeedActions();
-loadReviewsFromDatabase();
-initDeviceAccessFit('admin');
 
 /* ── Analytics & Power BI (database → Google Sheets → Power BI) ── */
 let powerBiEmbedInitialized = false;

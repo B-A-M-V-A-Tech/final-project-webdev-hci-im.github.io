@@ -26,6 +26,38 @@ function ensureColumn($conn, $table, $column, $definition) {
     }
 }
 
+function ensureMenuItemsAutoIncrement($conn) {
+    $tableResult = $conn->query("SHOW TABLES LIKE 'menu_items'");
+    if (!$tableResult || $tableResult->num_rows === 0) {
+        return;
+    }
+
+    $colResult = $conn->query("SHOW COLUMNS FROM menu_items WHERE Field = 'id'");
+    if (!$colResult || !($col = $colResult->fetch_assoc())) {
+        return;
+    }
+
+    $extra = strtolower((string) ($col['Extra'] ?? ''));
+    if (strpos($extra, 'auto_increment') !== false) {
+        return;
+    }
+
+    $zeroResult = $conn->query('SELECT id FROM menu_items WHERE id = 0 LIMIT 1');
+    if ($zeroResult && $zeroResult->num_rows > 0) {
+        $maxResult = $conn->query('SELECT COALESCE(MAX(id), 0) AS mx FROM menu_items');
+        $maxRow = $maxResult ? $maxResult->fetch_assoc() : array('mx' => 0);
+        $newId = intval($maxRow['mx']) + 1;
+        $conn->query('UPDATE menu_items SET id = ' . $newId . ' WHERE id = 0 LIMIT 1');
+    }
+
+    $conn->query('ALTER TABLE menu_items MODIFY id INT NOT NULL AUTO_INCREMENT');
+
+    $maxResult = $conn->query('SELECT COALESCE(MAX(id), 0) AS mx FROM menu_items');
+    $maxRow = $maxResult ? $maxResult->fetch_assoc() : array('mx' => 0);
+    $next = intval($maxRow['mx']) + 1;
+    $conn->query('ALTER TABLE menu_items AUTO_INCREMENT = ' . $next);
+}
+
 function ensureAnalyticsSeed($conn) {
     $countResult = $conn->query('SELECT COUNT(*) AS c FROM analytics_config');
     $countRow = $countResult ? $countResult->fetch_assoc() : array('c' => 0);
@@ -156,6 +188,7 @@ function ensureDatabaseSchema($conn) {
 
     ensureColumn($conn, 'menu_items', 'available', "TINYINT(1) DEFAULT 1");
     ensureColumn($conn, 'menu_items', 'item_type', "VARCHAR(20) DEFAULT 'food'");
+    ensureMenuItemsAutoIncrement($conn);
 
     $conn->query("CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
