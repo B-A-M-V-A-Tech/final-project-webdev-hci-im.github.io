@@ -74,7 +74,8 @@ try {
             echo json_encode([
                 'success' => true,
                 'message' => 'Menu item added successfully',
-                'id' => $newId
+                'id' => $newId,
+                'image_url' => $image_url
             ]);
         } else {
             // Update existing menu item
@@ -110,7 +111,9 @@ try {
 
             echo json_encode([
                 'success' => true,
-                'message' => 'Menu item updated successfully'
+                'message' => 'Menu item updated successfully',
+                'id' => $id,
+                'image_url' => $image_url
             ]);
         }
     } elseif ($action === 'delete') {

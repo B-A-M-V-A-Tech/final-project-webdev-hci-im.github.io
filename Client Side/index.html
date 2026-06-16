@@ -4786,6 +4786,21 @@ const FOOD_ADDONS = [
 
     const STORAGE_KEY = 'sipandpulse_menu';
     const REVIEWS_KEY = 'sipandpulse_reviews';
+    const MENU_DEFAULT_IMG = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
+
+    function escapeHtmlAttr(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;');
+    }
+
+    function menuImageSrc(img, itemId) {
+      const raw = String(img || '').trim() || MENU_DEFAULT_IMG;
+      if (!itemId) return escapeHtmlAttr(raw);
+      const sep = raw.includes('?') ? '&' : '?';
+      return escapeHtmlAttr(`${raw}${sep}menu=${encodeURIComponent(String(itemId))}`);
+    }
 
     function loadMenuFromStorage() {
       try {
@@ -4872,15 +4887,9 @@ const FOOD_ADDONS = [
       // When admin.html adds, edits, or deletes items in another tab,
       // this event fires here and the full menu modal re-renders instantly.
       window.addEventListener('storage', (e) => {
-        if (e.key === STORAGE_KEY && e.newValue) {
-          try {
-            const updated = JSON.parse(e.newValue);
-            if (Array.isArray(updated)) {
-              state.menuItems = updated;
-              renderMenuModal(state.searchQuery);
-              showToast('Menu updated by admin.');
-            }
-          } catch(err) {}
+        if (e.key === STORAGE_KEY) {
+          loadMenuFromDatabase().then(() => showToast('Menu updated by admin.'));
+          return;
         }
         if (e.key === REVIEWS_KEY && e.newValue) {
           try {
@@ -5518,8 +5527,8 @@ const FOOD_ADDONS = [
       grid.innerHTML = filtered.map(item => `
     <div class="col-6 col-md-4 col-lg-3" data-item-id="${item.id}">
       <div class="menu-card-modal">
-        <img src="${item.img}" alt="${item.name}" class="menu-img-modal" loading="lazy"
-             onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
+        <img src="${menuImageSrc(item.img, item.id)}" alt="${escapeHtmlAttr(item.name)}" class="menu-img-modal" loading="lazy"
+             onerror="this.onerror=null;this.src='${escapeHtmlAttr(MENU_DEFAULT_IMG)}'">
         <div class="menu-card-modal-body">
           <span class="cat-tag-modal">${catLabels[item.cat] || item.cat}</span>
           <h5 class="menu-item-name-modal">${item.name}</h5>
@@ -6582,7 +6591,7 @@ function mapDbMenuItemToClient(row) {
     price: parseFloat(row.price),
     cat: cat,
     desc: row.description || row.desc || '',
-    img: row.image_url || row.img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80',
+    img: (row.image_url || row.img || '').trim(),
     available: row.available === undefined ? true : (row.available == 1 || row.available === true),
     type: row.item_type || (DRINK_CATEGORIES.includes(cat) ? 'drink' : 'food')
   };

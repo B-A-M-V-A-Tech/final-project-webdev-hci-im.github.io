@@ -2302,6 +2302,21 @@ const FOOD_ADDONS = [
    ════════════════════════════════════ */
 const STORAGE_KEY = 'sipandpulse_menu';
 const REVIEWS_KEY = 'sipandpulse_reviews';
+const MENU_DEFAULT_IMG = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
+
+function escapeHtmlAttr(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
+}
+
+function menuImageSrc(img, itemId) {
+  const raw = String(img || '').trim() || MENU_DEFAULT_IMG;
+  if (!itemId) return escapeHtmlAttr(raw);
+  const sep = raw.includes('?') ? '&' : '?';
+  return escapeHtmlAttr(`${raw}${sep}menu=${encodeURIComponent(String(itemId))}`);
+}
 
 function loadMenuFromStorage() {
   try {
@@ -2410,17 +2425,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // ── CROSS-TAB SYNC: if the client page or another admin tab changes the menu,
   // this admin panel re-renders its grids automatically.
   window.addEventListener('storage', (e) => {
-    if (e.key === STORAGE_KEY && e.newValue) {
-      try {
-        const updated = JSON.parse(e.newValue);
-        if (Array.isArray(updated)) {
-          state.menuItems = updated;
-          renderMenuModal(state.searchQuery);
-          renderMgmtGrid();
-          syncDashboard();
-          document.getElementById('statMenuCount').textContent = state.menuItems.length;
-        }
-      } catch(err) {}
+    if (e.key === STORAGE_KEY) {
+      loadMenuFromDatabase();
+      return;
     }
     if (e.key === REVIEWS_KEY && e.newValue) {
       try {
@@ -2462,7 +2469,7 @@ function renderMenuModal(query = '') {
   grid.innerHTML = filtered.map(item => `
     <div class="col-6 col-md-4 col-lg-3">
       <div class="menu-card-modal">
-        <img src="${item.img}" alt="${item.name}" class="menu-img-modal" loading="lazy"
+        <img src="${menuImageSrc(item.img, item.id)}" alt="${escapeHtmlAttr(item.name)}" class="menu-img-modal" loading="lazy"
              onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
         <div class="menu-card-modal-body">
           <span class="cat-tag-modal">${catLabels[item.cat]||item.cat}</span>
@@ -2566,7 +2573,7 @@ function renderCart() {
   body.innerHTML=state.cart.map(ci=>{grand+=ci.total; return `
     <div class="order-item-summary mb-2" style="align-items:flex-start;flex-direction:column;gap:6px;">
       <div style="display:flex;gap:12px;align-items:center;width:100%;">
-        <img src="${ci.item.img}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="${ci.item.name}">
+        <img src="${menuImageSrc(ci.item.img, ci.item.id)}" style="width:50px;height:50px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="${escapeHtmlAttr(ci.item.name)}">
         <div style="flex:1;"><p style="font-weight:600;font-size:.9rem;margin:0;">${ci.item.name}</p>
           <p style="font-size:.75rem;color:var(--text-dim);margin:2px 0 0;">${ci.size} · ${ci.fulfillment==='pickup'?'Pick-up':'Delivery'}</p></div>
         <span style="font-weight:700;color:var(--brand);font-size:.9rem;">₱${ci.total.toFixed(2)}</span>
@@ -2790,7 +2797,6 @@ async function saveCrudItem() {
   const desc = document.getElementById('crudDesc').value.trim();
   const img = document.getElementById('crudImage').value.trim();
   const available = document.getElementById('crudAvailable').checked;
-  const defaultImg = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
 
   clearAllFieldWarnings(document.getElementById('adminCrudModal'));
   let valid = true;
@@ -2811,7 +2817,7 @@ async function saveCrudItem() {
     price,
     cat,
     desc,
-    img: idNum > 0 ? img : (img || defaultImg),
+    img: idNum > 0 ? img : (img || MENU_DEFAULT_IMG),
     available,
     type: drinkCats.includes(cat) ? 'drink' : 'food'
   };
@@ -2821,10 +2827,34 @@ async function saveCrudItem() {
 
   try {
     if (idNum > 0) {
-      await syncMenuItemToDatabase({ ...menuPayload, id: idNum });
+      const result = await syncMenuItemToDatabase({ ...menuPayload, id: idNum });
+      const savedImg = (result && result.image_url) ? result.image_url : menuPayload.img;
+      const idx = state.menuItems.findIndex(i => Number(i.id) === idNum);
+      if (idx !== -1) {
+        state.menuItems[idx] = { ...state.menuItems[idx], ...menuPayload, img: savedImg };
+        saveMenuToStorage();
+        renderMgmtGrid();
+        renderMenuModal(state.searchQuery);
+      }
       showToast(`"${name}" updated.`);
     } else {
-      await syncMenuItemToDatabase({ ...menuPayload });
+      const result = await syncMenuItemToDatabase({ ...menuPayload });
+      const savedImg = (result && result.image_url) ? result.image_url : menuPayload.img;
+      if (result && result.id) {
+        state.menuItems.push({
+          id: Number(result.id),
+          name: menuPayload.name,
+          price: menuPayload.price,
+          cat: menuPayload.cat,
+          desc: menuPayload.desc,
+          img: savedImg,
+          available: menuPayload.available,
+          type: menuPayload.type
+        });
+        saveMenuToStorage();
+        renderMgmtGrid();
+        renderMenuModal(state.searchQuery);
+      }
       showToast(`"${name}" added!`);
     }
     bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
@@ -4088,8 +4118,8 @@ function renderMgmtGrid() {
   grid.innerHTML = items.map(item => `
     <div class="col-6 col-md-4 col-lg-3">
       <div class="mgmt-card">
-        <img src="${item.img || 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'}" alt="${item.name}" class="mgmt-card-img" loading="lazy"
-             onerror="this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80'">
+        <img src="${menuImageSrc(item.img, item.id)}" alt="${escapeHtmlAttr(item.name)}" class="mgmt-card-img" loading="lazy"
+             onerror="this.onerror=null;this.src='${escapeHtmlAttr(MENU_DEFAULT_IMG)}'">
         <div class="mgmt-card-body">
           <div class="mgmt-card-cat">${catLabels[item.cat]||item.cat}</div>
           <div class="mgmt-card-name">${item.name}</div>
@@ -4343,7 +4373,6 @@ function loadReviewsFromDatabase() {
 
 async function syncMenuItemToDatabase(item) {
   const itemId = Number(item.id || 0);
-  const defaultImg = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
   const imageUrl = String(item.img || '').trim();
   const payload = {
     action: itemId > 0 ? 'update' : 'add',
@@ -4351,7 +4380,7 @@ async function syncMenuItemToDatabase(item) {
     category: item.cat,
     price: item.price,
     description: item.desc || '',
-    image_url: itemId > 0 ? imageUrl : (imageUrl || defaultImg),
+    image_url: itemId > 0 ? imageUrl : (imageUrl || MENU_DEFAULT_IMG),
     available: item.available !== false ? 1 : 0,
     item_type: item.type || (ADMIN_DRINK_CATEGORIES.includes(item.cat) ? 'drink' : 'food')
   };

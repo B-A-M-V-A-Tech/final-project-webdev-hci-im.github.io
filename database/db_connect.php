@@ -190,6 +190,14 @@ function ensureDatabaseSchema($conn) {
     ensureColumn($conn, 'menu_items', 'item_type', "VARCHAR(20) DEFAULT 'food'");
     ensureMenuItemsAutoIncrement($conn);
 
+    $imageUrlCol = $conn->query("SHOW COLUMNS FROM menu_items WHERE Field = 'image_url'");
+    if ($imageUrlCol && ($imageRow = $imageUrlCol->fetch_assoc())) {
+        $type = strtolower((string) ($imageRow['Type'] ?? ''));
+        if (strpos($type, 'varchar(255)') !== false) {
+            $conn->query('ALTER TABLE menu_items MODIFY image_url VARCHAR(700) DEFAULT ""');
+        }
+    }
+
     $conn->query("CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
