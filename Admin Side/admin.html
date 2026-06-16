@@ -1206,6 +1206,80 @@
 
     <div id="analyticsSyncWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
 
+    <details id="analyticsSetupPanel" class="mb-3" style="border:1px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--bg-body);">
+      <summary style="cursor:pointer;font-size:.82rem;font-weight:700;color:var(--brand);">One-time setup: connect Google Sheet to Power BI (required for chart updates)</summary>
+      <div style="margin-top:12px;font-size:.78rem;color:var(--text-dim);line-height:1.5;">
+        <p style="margin:0 0 10px;">Power BI reads from your Google Sheet. After each order, the server pushes new rows to that sheet. You only need to do this setup once:</p>
+        <ol style="margin:0 0 12px;padding-left:18px;">
+          <li>Open your <a id="analyticsSetupSheetLink" href="https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing" target="_blank" rel="noopener" style="color:var(--brand);">Google Sheet</a> → <strong>Extensions → Apps Script</strong></li>
+          <li>Paste the script below, save, then <strong>Deploy → New deployment → Web app</strong> (Execute as: Me, Who has access: Anyone)</li>
+          <li>Copy the web app URL and paste it here, then click <strong>Save &amp; Sync</strong></li>
+        </ol>
+        <textarea id="analyticsAppsScriptCode" readonly rows="14" style="width:100%;font-family:monospace;font-size:.68rem;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);resize:vertical;">function doPost(e) {
+  try {
+    var payload = JSON.parse(e.postData.contents);
+    var sheetName = payload.sheetName || 'Sheet1';
+    var values = payload.values || [];
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    sheet.clearContents();
+    if (values.length > 0 && values[0].length > 0) {
+      sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: true, rows: Math.max(0, values.length - 1) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  try {
+    var action = e && e.parameter ? e.parameter.action : '';
+    var sheetName = (e && e.parameter && e.parameter.sheetName) ? e.parameter.sheetName : 'Sheet1';
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
+    if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
+    var rows = Math.max(0, sheet.getLastRow() - 1);
+    if (action === 'count') {
+      return ContentService.createTextOutput(JSON.stringify({ success: true, rows: rows }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: true, ok: true, rows: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ success: false, error: String(err) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}</textarea>
+        <div class="d-flex flex-wrap gap-2 align-items-center mt-2">
+          <button type="button" class="btn-queue-done" style="padding:4px 10px;font-size:.68rem;" onclick="copyAnalyticsAppsScript()">Copy script</button>
+          <input type="url" id="analyticsAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:220px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;">
+          <button type="button" id="analyticsSaveConfigBtn" class="btn-queue-done" style="padding:4px 12px;font-size:.68rem;" onclick="saveAnalyticsAppsScriptUrl()">Save &amp; Sync</button>
+        </div>
+      </div>
+    </details>
+
+    <details id="analyticsPowerBiSetupPanel" class="mb-3" style="border:1px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--bg-body);">
+      <summary style="cursor:pointer;font-size:.82rem;font-weight:700;color:var(--brand);">Power BI auto-refresh (required for chart to change)</summary>
+      <div style="margin-top:12px;font-size:.78rem;color:var(--text-dim);line-height:1.5;">
+        <p style="margin:0 0 10px;padding:10px 12px;border-radius:8px;background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.25);color:#7a5e0a;">
+          <strong>Important:</strong> Updating Google Sheet does <em>not</em> automatically update the Power BI chart. Power BI caches data — you must refresh the dataset.
+        </p>
+        <p style="margin:0 0 8px;"><strong>Option A (recommended, no code):</strong> In <a href="https://app.powerbi.com" target="_blank" rel="noopener" style="color:var(--brand);">Power BI Service</a> → open your workspace → select the <strong>dataset</strong> connected to Google Sheets → <strong>Schedule refresh</strong> → set every <strong>15 minutes</strong> (or Daily).</p>
+        <p style="margin:0 0 12px;"><strong>Option B (instant refresh):</strong> Add Azure app credentials below so the server triggers dataset refresh after each order.</p>
+        <div class="row g-2">
+          <div class="col-md-6"><input type="text" id="powerbiClientId" placeholder="Power BI Client ID (Azure app)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;"></div>
+          <div class="col-md-6"><input type="password" id="powerbiClientSecret" placeholder="Power BI Client Secret" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;"></div>
+          <div class="col-md-6"><input type="text" id="powerbiGroupId" placeholder="Workspace ID (optional)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;"></div>
+          <div class="col-md-6"><input type="text" id="powerbiDatasetId" placeholder="Dataset ID (optional — auto-detected)" style="width:100%;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;"></div>
+        </div>
+        <button type="button" id="powerbiSaveConfigBtn" class="btn-queue-done mt-2" style="padding:4px 12px;font-size:.68rem;" onclick="savePowerBiApiConfig()">Save Power BI API &amp; Refresh</button>
+      </div>
+    </details>
+
+    <div id="analyticsPowerBiStatus" style="margin-bottom:10px;font-size:.76rem;font-weight:600;color:var(--text-dim);"></div>
+
     <div class="powerbi-embed-wrap" style="border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-body);">
       <iframe
         id="powerBiAnalyticsFrame"
@@ -2267,7 +2341,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadMenuFromDatabase();
   loadReviewsFromDatabase();
   loadAnalyticsDashboard();
-  syncAnalyticsPipeline({ refreshPowerBi: false });
+  loadAnalyticsConfig();
+  await syncAnalyticsPipeline({ refreshPowerBi: false, silent: true });
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
@@ -2637,7 +2712,7 @@ async function confirmCheckout(){
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    syncAnalyticsPipeline({ refreshPowerBi: true });
+    await syncAnalyticsPipeline({ refreshPowerBi: true });
 
     const checkM = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
     if(checkM) checkM.hide();
@@ -3365,8 +3440,9 @@ async function loadOrderQueue() {
   }
 
   const nextFingerprint = orderQueueFingerprint(state.queue);
-  if (prevFingerprint && nextFingerprint !== prevFingerprint) {
-    syncAnalyticsPipeline({ refreshPowerBi: true });
+  if (nextFingerprint !== prevFingerprint) {
+    loadAnalyticsDashboard();
+    syncAnalyticsPipeline({ refreshPowerBi: true, silent: true });
   }
 }
 
@@ -3709,7 +3785,7 @@ async function saveManualOrder() {
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    syncAnalyticsPipeline({ refreshPowerBi: true });
+    await syncAnalyticsPipeline({ refreshPowerBi: true });
     bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
     resetAddOrderModal();
   } catch (error) {
@@ -3735,7 +3811,7 @@ async function deleteQueueOrder(id) {
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    syncAnalyticsPipeline({ refreshPowerBi: true });
+    await syncAnalyticsPipeline({ refreshPowerBi: true });
     showToast(`Order #${order.num} deleted.`);
   } catch (error) {
     console.error('Delete order error:', error);
@@ -4328,7 +4404,7 @@ function analyticsFingerprint(summary) {
   return `${summary.order_count || 0}|${summary.net_sales || 0}|${summary.anomaly_count || 0}`;
 }
 
-function renderAnalyticsKpis(summary, config, sheetsMeta) {
+function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   const orderEl = document.getElementById('analyticsOrderCount');
   const salesEl = document.getElementById('analyticsNetSales');
   const anomalyEl = document.getElementById('analyticsAnomalyCount');
@@ -4336,6 +4412,8 @@ function renderAnalyticsKpis(summary, config, sheetsMeta) {
   const sheetLink = document.getElementById('analyticsSheetLink');
   const warnEl = document.getElementById('analyticsSyncWarning');
   const syncBtn = document.getElementById('analyticsSyncBtn');
+  const pbiStatusEl = document.getElementById('analyticsPowerBiStatus');
+  const pbiSetupPanel = document.getElementById('analyticsPowerBiSetupPanel');
 
   if (orderEl && summary) orderEl.textContent = String(summary.order_count || 0);
   if (salesEl && summary) salesEl.textContent = formatAnalyticsMoney(summary.net_sales);
@@ -4343,10 +4421,33 @@ function renderAnalyticsKpis(summary, config, sheetsMeta) {
 
   const status = config && config.last_sync_status ? config.last_sync_status : 'pending';
   const when = config && config.last_sync_at ? new Date(config.last_sync_at).toLocaleString() : 'Not yet synced';
+  const sheetVerify = syncMeta && syncMeta.google_sheet_verify;
+  const pbiRefresh = syncMeta && syncMeta.powerbi_refresh;
 
   if (syncEl) {
-    syncEl.textContent = status + ' · ' + when;
+    let syncText = status + ' · ' + when;
+    if (sheetVerify && sheetVerify.success) {
+      syncText += ' · Sheet rows: ' + sheetVerify.rows;
+    }
+    syncEl.textContent = syncText;
     syncEl.style.color = status === 'success' ? 'var(--text-main)' : (status === 'partial' ? '#a93226' : 'var(--text-main)');
+  }
+
+  if (pbiStatusEl) {
+    if (pbiRefresh && pbiRefresh.success) {
+      pbiStatusEl.textContent = 'Power BI dataset refresh triggered — chart may take 15–60 seconds to update.';
+      pbiStatusEl.style.color = '#1e7e34';
+    } else if (config && config.powerbi_last_refresh_status === 'triggered') {
+      const pbiWhen = config.powerbi_last_refresh_at ? new Date(config.powerbi_last_refresh_at).toLocaleString() : '';
+      pbiStatusEl.textContent = 'Power BI refresh triggered' + (pbiWhen ? ' · ' + pbiWhen : '') + ' — reloading chart…';
+      pbiStatusEl.style.color = '#1e7e34';
+    } else if (status === 'success') {
+      pbiStatusEl.textContent = 'Google Sheet updated. Enable Power BI scheduled refresh (see setup below) or add API keys for instant chart updates.';
+      pbiStatusEl.style.color = '#7a5e0a';
+      if (pbiSetupPanel && !(config && config.powerbi_api_configured)) pbiSetupPanel.open = true;
+    } else {
+      pbiStatusEl.textContent = '';
+    }
   }
 
   if (syncBtn) {
@@ -4360,15 +4461,77 @@ function renderAnalyticsKpis(summary, config, sheetsMeta) {
 
   const sheetError = sheetsMeta && sheetsMeta.error ? String(sheetsMeta.error) : '';
   const showWarning = status === 'partial' || (sheetsMeta && sheetsMeta.success === false);
+  const setupPanel = document.getElementById('analyticsSetupPanel');
   if (warnEl) {
     if (showWarning) {
       warnEl.style.display = 'block';
-      warnEl.textContent = sheetError
-        || 'Google Sheets sync is incomplete. KPI cards update from the database, but Power BI only changes after the connected Google Sheet is updated.';
+      warnEl.style.background = 'rgba(192,57,43,.08)';
+      warnEl.style.borderColor = 'rgba(192,57,43,.25)';
+      warnEl.style.color = '#a93226';
+      warnEl.innerHTML = (sheetError
+        || 'Google Sheet is not connected yet. Power BI will not change until you complete the one-time setup below.')
+        + ' <a href="#" style="color:#a93226;text-decoration:underline;" onclick="event.preventDefault();var p=document.getElementById(\'analyticsSetupPanel\');if(p)p.open=true;">Open setup</a>';
     } else {
       warnEl.style.display = 'none';
       warnEl.textContent = '';
     }
+  }
+  if (setupPanel && status === 'success') {
+    setupPanel.open = false;
+  }
+}
+
+function copyAnalyticsAppsScript() {
+  const el = document.getElementById('analyticsAppsScriptCode');
+  if (!el) return;
+  el.select();
+  document.execCommand('copy');
+  showToast('Apps Script copied — paste in Google Sheet → Extensions → Apps Script');
+}
+
+async function loadAnalyticsConfig() {
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=config'), { credentials: 'include' });
+    const payload = await response.json();
+    if (!payload.success || !payload.data) return;
+    const setupLink = document.getElementById('analyticsSetupSheetLink');
+    const sheetLink = document.getElementById('analyticsSheetLink');
+    if (setupLink && payload.data.google_sheet_url) setupLink.href = payload.data.google_sheet_url;
+    if (sheetLink && payload.data.google_sheet_url) sheetLink.href = payload.data.google_sheet_url;
+    const setupPanel = document.getElementById('analyticsSetupPanel');
+    if (setupPanel && payload.data.last_sync_status !== 'success') {
+      setupPanel.open = true;
+    }
+  } catch (e) {
+    console.error('Analytics config load error:', e);
+  }
+}
+
+async function saveAnalyticsAppsScriptUrl() {
+  const input = document.getElementById('analyticsAppsScriptUrl');
+  const btn = document.getElementById('analyticsSaveConfigBtn');
+  const url = (input && input.value ? input.value : '').trim();
+  if (!url || !/^https:\/\/script\.google\.com\//i.test(url)) {
+    showToast('Paste the deployed Apps Script web app URL (starts with https://script.google.com/)', true);
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=save_config'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ google_apps_script_url: url })
+    });
+    const payload = await response.json();
+    if (!payload.success) throw new Error(payload.error || 'Save failed');
+    if (payload.data) applyAnalyticsPayload(payload.data, { refreshPowerBi: true });
+    showToast('Google Sheet connected — Power BI will update on new orders.');
+  } catch (e) {
+    console.error('Save analytics config error:', e);
+    showToast(e.message || 'Could not save Apps Script URL.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save & Sync'; }
   }
 }
 
@@ -4382,6 +4545,44 @@ function ensurePowerBiEmbedOnce(config) {
     frame.src = frame.dataset.embedUrl;
     powerBiEmbedInitialized = true;
   }
+}
+
+async function savePowerBiApiConfig() {
+  const btn = document.getElementById('powerbiSaveConfigBtn');
+  const body = {
+    powerbi_client_id: (document.getElementById('powerbiClientId')?.value || '').trim(),
+    powerbi_client_secret: (document.getElementById('powerbiClientSecret')?.value || '').trim(),
+    powerbi_group_id: (document.getElementById('powerbiGroupId')?.value || '').trim(),
+    powerbi_dataset_id: (document.getElementById('powerbiDatasetId')?.value || '').trim()
+  };
+  if (!body.powerbi_client_id || !body.powerbi_client_secret) {
+    showToast('Enter Power BI Client ID and Client Secret from Azure.', true);
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=save_powerbi_config'), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    const payload = await response.json();
+    if (!payload.success) throw new Error(payload.error || 'Save failed');
+    if (payload.data) applyAnalyticsPayload(payload.data, { refreshPowerBi: true });
+    showToast('Power BI refresh triggered — chart will update shortly.');
+  } catch (e) {
+    showToast(e.message || 'Could not save Power BI API config.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Save Power BI API & Refresh'; }
+  }
+}
+
+function schedulePowerBiEmbedReload(config, powerbiRefresh) {
+  const delays = powerbiRefresh && powerbiRefresh.success ? [5000, 15000, 35000] : [3000];
+  delays.forEach((ms) => {
+    setTimeout(() => refreshPowerBiEmbed(config), ms);
+  });
 }
 
 function refreshPowerBiEmbed(config) {
@@ -4408,12 +4609,15 @@ function applyAnalyticsPayload(data, options) {
   const dataChanged = lastAnalyticsFingerprint !== '' && fp !== lastAnalyticsFingerprint;
   lastAnalyticsFingerprint = fp;
 
-  renderAnalyticsKpis(summary, config, data.google_sheets);
+  renderAnalyticsKpis(summary, config, data.google_sheets, {
+    google_sheet_verify: data.google_sheet_verify,
+    powerbi_refresh: data.powerbi_refresh
+  });
   ensurePowerBiEmbedOnce(config);
 
   const refreshMode = options && options.refreshPowerBi;
   if (refreshMode === true || (refreshMode === 'auto' && dataChanged)) {
-    refreshPowerBiEmbed(config);
+    schedulePowerBiEmbedReload(config, data.powerbi_refresh);
   }
 }
 
@@ -4446,28 +4650,60 @@ function mergeAnalyticsSyncOptions(a, b) {
 
 async function syncAnalyticsPipeline(options) {
   options = options || { refreshPowerBi: 'auto' };
+  const showFeedback = options.silent !== true;
   if (analyticsSyncBusy) {
     analyticsSyncPending = mergeAnalyticsSyncOptions(analyticsSyncPending, options);
-    return;
+    return false;
   }
   analyticsSyncBusy = true;
   const syncBtn = document.getElementById('analyticsSyncBtn');
-  if (syncBtn) syncBtn.textContent = 'Syncing…';
+  const syncEl = document.getElementById('analyticsLastSync');
+  if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = 'Syncing…'; }
+  if (syncEl) syncEl.textContent = 'syncing…';
   try {
     const response = await fetch(apiUrl('analytics.php?action=sync'), {
       method: 'POST',
       credentials: 'include'
     });
-    const payload = await response.json();
-    if (payload.success && payload.data) {
-      applyAnalyticsPayload(payload.data, options);
+    const text = await response.text();
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('Analytics sync raw response:', text);
+      if (showFeedback) showToast('Sync failed — server did not return JSON. Is XAMPP Apache running?', true);
+      return false;
     }
+    if (!response.ok || !payload.success) {
+      if (showFeedback) showToast(payload.error || 'Analytics sync failed.', true);
+      return false;
+    }
+    if (payload.data) {
+      applyAnalyticsPayload(payload.data, options);
+      const count = payload.data.summary ? payload.data.summary.order_count : 0;
+      const sheetOk = payload.data.google_sheets && payload.data.google_sheets.success;
+      const pbiOk = payload.data.powerbi_refresh && payload.data.powerbi_refresh.success;
+      if (showFeedback) {
+        if (sheetOk && pbiOk) {
+          showToast(`Synced ${count} orders → Google Sheet → Power BI refresh started.`);
+        } else if (sheetOk) {
+          showToast(`Google Sheet updated (${count} orders). Enable Power BI scheduled refresh for chart updates.`, true);
+        } else {
+          const sheetErr = (payload.data.google_sheets && payload.data.google_sheets.error)
+            || 'Google Sheet not updated';
+          showToast(`Orders saved (${count}), but sheet sync failed: ${sheetErr}`, true);
+        }
+      }
+    }
+    return true;
   } catch (e) {
     console.error('Analytics sync error:', e);
+    if (showFeedback) showToast('Could not reach analytics API. Check XAMPP is running.', true);
+    return false;
   } finally {
     analyticsSyncBusy = false;
     const syncBtnDone = document.getElementById('analyticsSyncBtn');
-    if (syncBtnDone) syncBtnDone.textContent = 'Sync now';
+    if (syncBtnDone) { syncBtnDone.disabled = false; syncBtnDone.textContent = 'Sync now'; }
     if (analyticsSyncPending) {
       const pending = analyticsSyncPending;
       analyticsSyncPending = null;

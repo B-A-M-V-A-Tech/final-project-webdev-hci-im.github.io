@@ -10,6 +10,15 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+function dbNewConnection() {
+    global $host, $username, $password, $database;
+    $next = new mysqli($host, $username, $password, $database);
+    if ($next->connect_error) {
+        throw new Exception('Connection failed: ' . $next->connect_error);
+    }
+    return $next;
+}
+
 function ensureColumn($conn, $table, $column, $definition) {
     $result = $conn->query("SHOW COLUMNS FROM `$table` LIKE '$column'");
     if ($result && $result->num_rows === 0) {
@@ -263,6 +272,16 @@ function ensureDatabaseSchema($conn) {
         row_count INT DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )");
+
+    ensureColumn($conn, 'analytics_config', 'google_apps_script_url', "VARCHAR(700) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_tenant_id', "VARCHAR(80) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_report_id', "VARCHAR(80) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_group_id', "VARCHAR(80) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_dataset_id', "VARCHAR(80) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_client_id', "VARCHAR(80) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_client_secret', "VARCHAR(255) DEFAULT ''");
+    ensureColumn($conn, 'analytics_config', 'powerbi_last_refresh_at', "TIMESTAMP NULL DEFAULT NULL");
+    ensureColumn($conn, 'analytics_config', 'powerbi_last_refresh_status', "VARCHAR(40) DEFAULT 'pending'");
 
     ensureAnalyticsSeed($conn);
     ensureDeviceAccessSeed($conn);

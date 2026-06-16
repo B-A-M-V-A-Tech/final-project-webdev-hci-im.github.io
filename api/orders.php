@@ -10,6 +10,13 @@ if (!file_exists($sessionFile)) {
 include __DIR__ . '/../database/db_connect.php';
 include $sessionFile;
 
+function triggerOrdersAnalyticsSync() {
+    @include_once __DIR__ . '/../database/analytics_helper.php';
+    if (function_exists('analyticsTriggerAfterOrderChangeDeferred')) {
+        analyticsTriggerAfterOrderChangeDeferred();
+    }
+}
+
 function uiStatusToDb($status) {
     $status = strtolower(trim((string) $status));
     if ($status === 'new') {
@@ -262,6 +269,8 @@ try {
         $orderId = $conn->insert_id;
         $stmt->close();
 
+        triggerOrdersAnalyticsSync();
+
         ob_end_clean();
         echo json_encode([
             'success' => true,
@@ -341,6 +350,8 @@ try {
         $stmt->close();
         $order = fetchOrderById($conn, $id);
 
+        triggerOrdersAnalyticsSync();
+
         ob_end_clean();
         echo json_encode([
             'success' => true,
@@ -367,6 +378,8 @@ try {
         }
 
         $stmt->close();
+
+        triggerOrdersAnalyticsSync();
 
         ob_end_clean();
         echo json_encode([
@@ -401,6 +414,8 @@ try {
         }
 
         $stmt->close();
+
+        triggerOrdersAnalyticsSync();
 
         ob_end_clean();
         echo json_encode([
@@ -462,6 +477,8 @@ try {
 
         $stmt->close();
         $updated = fetchOrderById($conn, $id);
+
+        triggerOrdersAnalyticsSync();
 
         ob_end_clean();
         echo json_encode([

@@ -282,18 +282,9 @@ function analyticsRowsToSheetValues($rows) {
     return $values;
 }
 
-function analyticsSyncGoogleSheet($config, $rows) {
+function analyticsSyncGoogleSheetViaApi($config, $rows, $accessToken) {
     $spreadsheetId = trim((string) ($config['google_spreadsheet_id'] ?? ''));
     $sheetName = trim((string) ($config['google_sheet_name'] ?? 'Sheet1'));
-
-    if ($spreadsheetId === '') {
-        return array('success' => false, 'error' => 'Google Spreadsheet ID is missing in analytics_config.');
-    }
-
-    $tokenResult = analyticsGetGoogleAccessToken($config);
-    if (!$tokenResult['success']) {
-        return $tokenResult;
-    }
 
     $values = analyticsRowsToSheetValues($rows);
     $range = rawurlencode($sheetName) . '!A1';
@@ -302,7 +293,7 @@ function analyticsSyncGoogleSheet($config, $rows) {
     $clearUrl = 'https://sheets.googleapis.com/v4/spreadsheets/' . rawurlencode($spreadsheetId) . '/values/' . rawurlencode($sheetName) . ':clear';
 
     $headers = array(
-        'Authorization: Bearer ' . $tokenResult['access_token'],
+        'Authorization: Bearer ' . $accessToken,
         'Content-Type: application/json',
     );
 
@@ -339,7 +330,338 @@ function analyticsSyncGoogleSheet($config, $rows) {
         'updated_cells' => $payload['updatedCells'] ?? count($values) * count($values[0]),
         'spreadsheet_id' => $spreadsheetId,
         'sheet_name' => $sheetName,
+        'method' => 'service_account',
     );
+}
+
+function analyticsSyncGoogleSheetViaAppsScript($config, $rows) {
+    $url = trim((string) ($config['google_apps_script_url'] ?? ''));
+    if ($url === '') {
+        return array('success' => false, 'error' => 'Google Apps Script web app URL is not configured.');
+    }
+
+    $values = analyticsRowsToSheetValues($rows);
+    $body = json_encode(array(
+        'sheetName' => trim((string) ($config['google_sheet_name'] ?? 'Sheet1')),
+        'values' => $values,
+    ));
+
+    $ch = curl_init($url);
+    curl_setopt_array($ch, array(
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => array('Content-Type: application/json'),
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 90,
+    ));
+
+    $response = curl_exec($ch);
+    $curlError = curl_error($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($response === false) {
+        return array('success' => false, 'error' => 'Apps Script request failed: ' . $curlError);
+    }
+
+    $payload = json_decode((string) $response, true);
+    if (!is_array($payload) && preg_match('/\{.*\}/s', (string) $response, $matches)) {
+        $payload = json_decode($matches[0], true);
+    }
+
+    if (!is_array($payload) || empty($payload['success'])) {
+        $message = is_array($payload) && isset($payload['error'])
+            ? $payload['error']
+            : 'Google Apps Script sync failed (HTTP ' . $httpCode . ').';
+        return array('success' => false, 'error' => $message);
+    }
+
+    return array(
+        'success' => true,
+        'updated_cells' => $payload['rows'] ?? count($values),
+        'method' => 'apps_script',
+    );
+}
+
+function analyticsSyncGoogleSheet($config, $rows) {
+    $spreadsheetId = trim((string) ($config['google_spreadsheet_id'] ?? ''));
+    if ($spreadsheetId === '') {
+        return array('success' => false, 'error' => 'Google Spreadsheet ID is missing in analytics_config.');
+    }
+
+    $email = trim((string) ($config['service_account_email'] ?? ''));
+    $privateKey = trim((string) ($config['private_key_pem'] ?? ''));
+    if ($email !== '' && $privateKey !== '') {
+        $tokenResult = analyticsGetGoogleAccessToken($config);
+        if ($tokenResult['success']) {
+            return analyticsSyncGoogleSheetViaApi($config, $rows, $tokenResult['access_token']);
+        }
+    }
+
+    $appsScriptUrl = trim((string) ($config['google_apps_script_url'] ?? ''));
+    if ($appsScriptUrl !== '') {
+        return analyticsSyncGoogleSheetViaAppsScript($config, $rows);
+    }
+
+    return array(
+        'success' => false,
+        'error' => 'Set up Google Sheet sync: deploy Apps Script (see admin Analytics setup) or add service account credentials.',
+    );
+}
+
+function analyticsParsePowerBiEmbedUrl($embedUrl) {
+    $embedUrl = trim((string) $embedUrl);
+    if ($embedUrl === '') {
+        return array();
+    }
+
+    $parts = parse_url($embedUrl);
+    $query = array();
+    if (!empty($parts['query'])) {
+        parse_str($parts['query'], $query);
+    }
+
+    $token = isset($query['r']) ? (string) $query['r'] : '';
+    if ($token === '') {
+        return array();
+    }
+
+    $padding = strlen($token) % 4;
+    if ($padding > 0) {
+        $token .= str_repeat('=', 4 - $padding);
+    }
+
+    $decoded = json_decode(base64_decode(strtr($token, '-_', '+/')), true);
+    if (!is_array($decoded)) {
+        return array();
+    }
+
+    return array(
+        'report_id' => isset($decoded['r']) ? (string) $decoded['r'] : '',
+        'tenant_id' => isset($decoded['t']) ? (string) $decoded['t'] : '',
+    );
+}
+
+function analyticsEnsurePowerBiIds($conn, $config) {
+    if (!$config) {
+        return $config;
+    }
+
+    $tenantId = trim((string) ($config['powerbi_tenant_id'] ?? ''));
+    $reportId = trim((string) ($config['powerbi_report_id'] ?? ''));
+    $parsed = analyticsParsePowerBiEmbedUrl($config['powerbi_embed_url'] ?? '');
+    $nextTenant = $tenantId !== '' ? $tenantId : ($parsed['tenant_id'] ?? '');
+    $nextReport = $reportId !== '' ? $reportId : ($parsed['report_id'] ?? '');
+
+    if ($nextTenant === $tenantId && $nextReport === $reportId) {
+        return $config;
+    }
+
+    $stmt = $conn->prepare(
+        'UPDATE analytics_config SET powerbi_tenant_id = ?, powerbi_report_id = ? ORDER BY id ASC LIMIT 1'
+    );
+    if ($stmt) {
+        $stmt->bind_param('ss', $nextTenant, $nextReport);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    $config['powerbi_tenant_id'] = $nextTenant;
+    $config['powerbi_report_id'] = $nextReport;
+    return $config;
+}
+
+function analyticsGetPowerBiAccessToken($config) {
+    $tenantId = trim((string) ($config['powerbi_tenant_id'] ?? ''));
+    $clientId = trim((string) ($config['powerbi_client_id'] ?? ''));
+    $clientSecret = trim((string) ($config['powerbi_client_secret'] ?? ''));
+
+    if ($tenantId === '' || $clientId === '' || $clientSecret === '') {
+        return array('success' => false, 'error' => 'Power BI API credentials not configured.');
+    }
+
+    $url = 'https://login.microsoftonline.com/' . rawurlencode($tenantId) . '/oauth2/v2.0/token';
+    $ch = curl_init($url);
+    curl_setopt_array($ch, array(
+        CURLOPT_POST => true,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => array('Content-Type: application/x-www-form-urlencoded'),
+        CURLOPT_POSTFIELDS => http_build_query(array(
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'scope' => 'https://analysis.windows.net/powerbi/api/.default',
+        )),
+    ));
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $payload = json_decode((string) $response, true);
+    if ($httpCode >= 400 || !isset($payload['access_token'])) {
+        $message = isset($payload['error_description']) ? $payload['error_description'] : 'Power BI token request failed.';
+        return array('success' => false, 'error' => $message);
+    }
+
+    return array('success' => true, 'access_token' => $payload['access_token']);
+}
+
+function analyticsPowerBiApiRequest($method, $url, $accessToken, $body = null) {
+    $headers = array(
+        'Authorization: Bearer ' . $accessToken,
+        'Content-Type: application/json',
+    );
+
+    $ch = curl_init($url);
+    $options = array(
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 90,
+    );
+    if ($body !== null) {
+        $options[CURLOPT_POSTFIELDS] = is_string($body) ? $body : json_encode($body);
+    }
+    curl_setopt_array($ch, $options);
+
+    $response = curl_exec($ch);
+    $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $curlError = curl_error($ch);
+    curl_close($ch);
+
+    if ($response === false) {
+        return array('success' => false, 'error' => 'Power BI API request failed: ' . $curlError);
+    }
+
+    $payload = json_decode((string) $response, true);
+    if ($httpCode >= 400) {
+        $message = is_array($payload) && isset($payload['error']['message'])
+            ? $payload['error']['message']
+            : 'Power BI API error (HTTP ' . $httpCode . ').';
+        return array('success' => false, 'error' => $message, 'http_code' => $httpCode);
+    }
+
+    return array('success' => true, 'data' => $payload, 'http_code' => $httpCode);
+}
+
+function analyticsResolvePowerBiDatasetId($config, $accessToken) {
+    $datasetId = trim((string) ($config['powerbi_dataset_id'] ?? ''));
+    if ($datasetId !== '') {
+        return array('success' => true, 'dataset_id' => $datasetId);
+    }
+
+    $reportId = trim((string) ($config['powerbi_report_id'] ?? ''));
+    if ($reportId === '') {
+        return array('success' => false, 'error' => 'Power BI report ID is missing.');
+    }
+
+    $groupId = trim((string) ($config['powerbi_group_id'] ?? ''));
+    $url = $groupId !== ''
+        ? 'https://api.powerbi.com/v1.0/myorg/groups/' . rawurlencode($groupId) . '/reports/' . rawurlencode($reportId)
+        : 'https://api.powerbi.com/v1.0/myorg/reports/' . rawurlencode($reportId);
+
+    $result = analyticsPowerBiApiRequest('GET', $url, $accessToken);
+    if (!$result['success']) {
+        return $result;
+    }
+
+    $datasetId = isset($result['data']['datasetId']) ? (string) $result['data']['datasetId'] : '';
+    if ($datasetId === '') {
+        return array('success' => false, 'error' => 'Could not resolve Power BI dataset ID from report.');
+    }
+
+    return array('success' => true, 'dataset_id' => $datasetId);
+}
+
+function analyticsLogPowerBiRefresh($conn, $status) {
+    $conn->query(
+        "UPDATE analytics_config SET powerbi_last_refresh_at = NOW(), powerbi_last_refresh_status = '"
+        . $conn->real_escape_string($status) . "' ORDER BY id ASC LIMIT 1"
+    );
+}
+
+function analyticsRefreshPowerBiDataset($conn, $config) {
+    $tokenResult = analyticsGetPowerBiAccessToken($config);
+    if (!$tokenResult['success']) {
+        return array(
+            'success' => false,
+            'skipped' => true,
+            'error' => $tokenResult['error'],
+            'hint' => 'Set scheduled refresh in Power BI Service (Dataset → Schedule refresh), or add Power BI API credentials in admin.',
+        );
+    }
+
+    $datasetResult = analyticsResolvePowerBiDatasetId($config, $tokenResult['access_token']);
+    if (!$datasetResult['success']) {
+        analyticsLogPowerBiRefresh($conn, 'failed');
+        return $datasetResult;
+    }
+
+    $datasetId = $datasetResult['dataset_id'];
+    $groupId = trim((string) ($config['powerbi_group_id'] ?? ''));
+    $refreshUrl = $groupId !== ''
+        ? 'https://api.powerbi.com/v1.0/myorg/groups/' . rawurlencode($groupId) . '/datasets/' . rawurlencode($datasetId) . '/refreshes'
+        : 'https://api.powerbi.com/v1.0/myorg/datasets/' . rawurlencode($datasetId) . '/refreshes';
+
+    $refreshResult = analyticsPowerBiApiRequest('POST', $refreshUrl, $tokenResult['access_token'], '{}');
+    if (!$refreshResult['success']) {
+        analyticsLogPowerBiRefresh($conn, 'failed');
+        return $refreshResult;
+    }
+
+    analyticsLogPowerBiRefresh($conn, 'triggered');
+    return array(
+        'success' => true,
+        'status' => 'triggered',
+        'dataset_id' => $datasetId,
+        'message' => 'Power BI dataset refresh started.',
+    );
+}
+
+function analyticsVerifySheetRowCount($config, $expectedRows) {
+    $url = trim((string) ($config['google_apps_script_url'] ?? ''));
+    if ($url === '') {
+        return array('success' => false, 'error' => 'Apps Script URL missing.');
+    }
+
+    $sheetName = trim((string) ($config['google_sheet_name'] ?? 'Sheet1'));
+    $checkUrl = $url . (strpos($url, '?') !== false ? '&' : '?')
+        . 'action=count&sheetName=' . rawurlencode($sheetName);
+
+    $ch = curl_init($checkUrl);
+    curl_setopt_array($ch, array(
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_TIMEOUT => 30,
+    ));
+    $response = curl_exec($ch);
+    curl_close($ch);
+
+    $payload = json_decode((string) $response, true);
+    if (!is_array($payload) || empty($payload['success'])) {
+        return array('success' => false, 'error' => 'Could not verify Google Sheet row count.');
+    }
+
+    $rows = intval($payload['rows'] ?? 0);
+    return array(
+        'success' => true,
+        'rows' => $rows,
+        'matches' => $rows === intval($expectedRows),
+    );
+}
+
+function analyticsBuildExportCsv($rows) {
+    $values = analyticsRowsToSheetValues($rows);
+    $handle = fopen('php://temp', 'r+');
+    foreach ($values as $line) {
+        fputcsv($handle, $line);
+    }
+    rewind($handle);
+    $csv = stream_get_contents($handle);
+    fclose($handle);
+    return $csv;
 }
 
 function analyticsLogSync($conn, $status, $message, $rowCount) {
@@ -353,8 +675,8 @@ function analyticsLogSync($conn, $status, $message, $rowCount) {
     }
 
     $conn->query(
-        "UPDATE analytics_config SET last_sync_at = NOW(), last_sync_status = '" . $conn->real_escape_string($status) . "'
-         ORDER BY id ASC LIMIT 1"
+        "UPDATE analytics_config SET last_sync_at = NOW(), last_sync_status = '"
+        . $conn->real_escape_string($status) . "' ORDER BY id ASC LIMIT 1"
     );
 }
 
@@ -364,18 +686,26 @@ function analyticsRunPipeline($conn) {
         throw new Exception('Analytics configuration not found.');
     }
 
+    $config = analyticsEnsurePowerBiIds($conn, $config);
+
     $rows = analyticsBuildRowsFromOrders($conn);
     analyticsPersistRows($conn, $rows);
     $summary = analyticsBuildSummary($rows);
 
     $sheetResult = analyticsSyncGoogleSheet($config, $rows);
+    $sheetVerify = null;
+    $powerBiResult = null;
+
     if ($sheetResult['success']) {
+        $method = isset($sheetResult['method']) ? $sheetResult['method'] : 'api';
         analyticsLogSync(
             $conn,
             'success',
-            'Synced ' . count($rows) . ' rows to Google Sheets for Power BI.',
+            'Synced ' . count($rows) . ' rows to Google Sheets (' . $method . ') for Power BI.',
             count($rows)
         );
+        $sheetVerify = analyticsVerifySheetRowCount($config, count($rows));
+        $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
     } else {
         analyticsLogSync(
             $conn,
@@ -385,17 +715,64 @@ function analyticsRunPipeline($conn) {
         );
     }
 
+    $freshConfig = analyticsGetConfig($conn);
+
     return array(
         'summary' => $summary,
         'rows' => $rows,
         'google_sheets' => $sheetResult,
+        'google_sheet_verify' => $sheetVerify,
+        'powerbi_refresh' => $powerBiResult,
         'config' => array(
             'powerbi_embed_url' => $config['powerbi_embed_url'],
             'google_sheet_url' => $config['google_sheet_url'],
-            'last_sync_at' => date('Y-m-d H:i:s'),
-            'last_sync_status' => $sheetResult['success'] ? 'success' : 'partial',
+            'google_apps_script_url' => $config['google_apps_script_url'] ?? '',
+            'powerbi_last_refresh_at' => $freshConfig ? $freshConfig['powerbi_last_refresh_at'] : null,
+            'powerbi_last_refresh_status' => $freshConfig ? $freshConfig['powerbi_last_refresh_status'] : 'pending',
+            'powerbi_api_configured' => trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
+                && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '',
+            'last_sync_at' => $freshConfig ? $freshConfig['last_sync_at'] : null,
+            'last_sync_status' => $freshConfig ? $freshConfig['last_sync_status'] : 'partial',
         ),
     );
+}
+
+function analyticsTriggerAfterOrderChange($conn) {
+    try {
+        analyticsRunPipeline($conn);
+    } catch (Throwable $e) {
+        error_log('Analytics sync after order change failed: ' . $e->getMessage());
+    }
+}
+
+function analyticsTriggerAfterOrderChangeDeferred() {
+    register_shutdown_function(function () {
+        $asyncConn = null;
+        try {
+            if (!function_exists('dbNewConnection')) {
+                require_once __DIR__ . '/db_connect.php';
+            }
+            if (!function_exists('analyticsRunPipeline')) {
+                require_once __DIR__ . '/analytics_helper.php';
+            }
+            $asyncConn = dbNewConnection();
+            analyticsTriggerAfterOrderChange($asyncConn);
+        } catch (Throwable $e) {
+            error_log('Deferred analytics sync failed: ' . $e->getMessage());
+        } finally {
+            if ($asyncConn instanceof mysqli) {
+                $asyncConn->close();
+            }
+        }
+    });
+}
+
+function analyticsFormatApiResult($result) {
+    if (!is_array($result)) {
+        return $result;
+    }
+    unset($result['rows']);
+    return $result;
 }
 
 ?>
