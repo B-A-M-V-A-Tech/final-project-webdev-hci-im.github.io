@@ -8,6 +8,7 @@ if (!file_exists($sessionFile)) {
 }
 
 include __DIR__ . '/../database/db_connect.php';
+include __DIR__ . '/../database/order_items_helper.php';
 include $sessionFile;
 
 function triggerOrdersAnalyticsSync() {
@@ -101,10 +102,7 @@ function normalizeOrderSource($source) {
 }
 
 function encodeItems($items) {
-    if (is_string($items)) {
-        return $items;
-    }
-    return json_encode($items);
+    return orderItemsNormalizeForStorage($items);
 }
 
 function fetchOrderById($conn, $id) {

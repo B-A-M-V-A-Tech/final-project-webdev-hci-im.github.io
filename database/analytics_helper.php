@@ -32,6 +32,20 @@ function analyticsFormatStatusForSheet($status) {
     return $map[$status] ?? ucfirst($status);
 }
 
+function analyticsIsOrderCompleted($status) {
+    $status = strtolower(trim((string) $status));
+    return $status === 'done';
+}
+
+function analyticsIsOrderCancelled($status) {
+    $status = strtolower(trim((string) $status));
+    return $status === 'cancelled';
+}
+
+function analyticsCountsTowardSales($status) {
+    return !analyticsIsOrderCancelled($status);
+}
+
 function analyticsFormatPaymentForSheet($payment) {
     $payment = strtolower(trim((string) $payment));
     if ($payment === '') {
@@ -100,6 +114,13 @@ function analyticsGetConfig($conn) {
 }
 
 function analyticsCountOrderItems($itemsRaw) {
+    if (!function_exists('orderItemsCount')) {
+        @include_once __DIR__ . '/order_items_helper.php';
+    }
+    if (function_exists('orderItemsCount')) {
+        return orderItemsCount($itemsRaw);
+    }
+
     $decoded = json_decode((string) $itemsRaw, true);
     if (!is_array($decoded)) {
         return $itemsRaw ? 1 : 0;
@@ -255,7 +276,8 @@ function analyticsPersistRows($conn, $rows) {
 
 function analyticsBuildSummary($rows) {
     $totalSales = 0;
-    $completedSales = 0;
+    $netSales = 0;
+    $completedCount = 0;
     $anomalyCount = 0;
     $tz = new DateTimeZone('Asia/Manila');
     $today = (new DateTime('now', $tz))->format('Y-m-d');
@@ -264,8 +286,11 @@ function analyticsBuildSummary($rows) {
         $amount = floatval($row['total_amount']);
         $status = strtolower(trim((string) $row['status']));
         $totalSales += $amount;
-        if (!in_array($status, array('cancelled'), true)) {
-            $completedSales += $amount;
+        if (analyticsCountsTowardSales($status)) {
+            $netSales += $amount;
+        }
+        if (analyticsIsOrderCompleted($status)) {
+            $completedCount += 1;
         }
         if (intval($row['is_anomaly']) === 1) {
             $anomalyCount += 1;
@@ -278,7 +303,7 @@ function analyticsBuildSummary($rows) {
         if (strpos((string) $row['order_date'], $today) === 0) {
             $ordersToday += 1;
             $status = strtolower(trim((string) $row['status']));
-            if (!in_array($status, array('cancelled'), true)) {
+            if (analyticsCountsTowardSales($status)) {
                 $salesToday += floatval($row['total_amount']);
             }
         }
@@ -286,10 +311,11 @@ function analyticsBuildSummary($rows) {
 
     return array(
         'order_count' => count($rows),
+        'completed_order_count' => $completedCount,
         'orders_today' => $ordersToday,
         'sales_today' => round($salesToday, 2),
         'total_sales' => round($totalSales, 2),
-        'net_sales' => round($completedSales, 2),
+        'net_sales' => round($netSales, 2),
         'anomaly_count' => $anomalyCount,
     );
 }
@@ -382,9 +408,10 @@ function analyticsBuildDailyPerformanceSheetValues($summary, $rows) {
     $values = array(
         array('Daily Sales & Performance', 'Value', 'Notes'),
         array('Total Orders', intval($summary['order_count'] ?? 0), 'All orders in database'),
+        array('Completed Orders', intval($summary['completed_order_count'] ?? 0), 'Orders marked Done'),
         array('Orders Today', intval($summary['orders_today'] ?? 0), 'Orders created today (PH time)'),
-        array('Net Sales (PHP)', floatval($summary['net_sales'] ?? 0), 'Excludes cancelled orders'),
-        array('Today\'s Sales (PHP)', floatval($summary['sales_today'] ?? 0), 'Net sales today (PH time)'),
+        array('Net Sales (PHP)', floatval($summary['net_sales'] ?? 0), 'All orders (excl. cancelled)'),
+        array('Today\'s Sales (PHP)', floatval($summary['sales_today'] ?? 0), 'All orders placed today (excl. cancelled)'),
         array('Anomalies', intval($summary['anomaly_count'] ?? 0), 'Flagged unusual orders'),
         array('Last Sync', $updatedAt, 'Auto-updated from Sip & Pulse admin'),
         array('', '', ''),
@@ -406,7 +433,7 @@ function analyticsBuildDailyPerformanceSheetValues($summary, $rows) {
         }
         $byDay[$dateKey]['orders'] += 1;
         $status = strtolower(trim((string) ($row['status'] ?? '')));
-        if (!in_array($status, array('cancelled'), true)) {
+        if (analyticsCountsTowardSales($status)) {
             $byDay[$dateKey]['sales'] += floatval($row['total_amount'] ?? 0);
         }
     }

@@ -343,6 +343,9 @@ function ensureDatabaseSchema($conn) {
     ensureAnalyticsSeed($conn);
     ensureAnalyticsSheetConfig($conn);
     ensureDeviceAccessSeed($conn);
+
+    require_once __DIR__ . '/demo_seed.php';
+    ensureDemoSeed($conn);
 }
 
 ensureDatabaseSchema($conn);

@@ -873,7 +873,7 @@
     <div class="row justify-content-start">
       <div class="col-lg-8">
         <p class="hero-eyebrow">Sto. Tomas' Brew Stop Cafe</p>
-        <h1 class="hero-title">Good Day<br><em>Admin!</em></h1>
+        <h1 class="hero-title" id="adminHeroTitle">Good Day<br><em>Admin!</em></h1>
         <p style="font-size:.975rem;color:#E1DCC9;max-width:460px;line-height:1.7;" class="mb-4">From craft espresso to hearty all-day meals — every item made with intention and served with warmth.</p>
         <div class="d-flex gap-3 flex-wrap mb-5">
         </div>
@@ -1187,7 +1187,7 @@
       <p class="section-eyebrow mb-1">Analytics</p>
       <h2 class="section-title">Sales &amp; Performance</h2>
       <p style="font-size:.8rem;color:var(--text-dim);margin:8px 0 0;max-width:760px;">
-        Live sales syncs to your existing <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> tabs (Power BI sheet) — both update on every new order. No new tabs created.
+        Live sales syncs to your existing <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> tabs (Power BI sheet) — updates on new orders and when orders are marked <strong>Done</strong>.
       </p>
     </div>
 
@@ -1196,6 +1196,7 @@
         <div class="dash-card analytics-kpi-card">
           <div class="analytics-kpi-label">Total Orders</div>
           <div id="analyticsOrderCount" class="analytics-kpi-value">0</div>
+          <div id="analyticsCompletedCount" class="analytics-kpi-meta" style="margin-top:4px;font-size:.72rem;color:var(--text-dim);"></div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
@@ -1208,12 +1209,14 @@
         <div class="dash-card analytics-kpi-card">
           <div class="analytics-kpi-label">Net Sales (PHP)</div>
           <div id="analyticsNetSales" class="analytics-kpi-value is-money">0.00</div>
+          <div class="analytics-kpi-meta" style="margin-top:4px;font-size:.72rem;color:var(--text-dim);">All orders (excl. cancelled)</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
         <div class="dash-card analytics-kpi-card">
           <div class="analytics-kpi-label">Today's Sales</div>
           <div id="analyticsSalesToday" class="analytics-kpi-value is-money is-green">0.00</div>
+          <div class="analytics-kpi-meta" style="margin-top:4px;font-size:.72rem;color:var(--text-dim);">Orders placed today</div>
         </div>
       </div>
       <div class="col-6 col-md-4 col-lg-4">
@@ -1232,6 +1235,8 @@
         </div>
       </div>
     </div>
+
+    <div id="adminApiWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
 
     <div id="analyticsSyncWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
 
@@ -1902,6 +1907,7 @@ function doGet(e) {
           <div class="col-12">
             <label class="form-label-custom">Role / Position</label>
             <select class="form-select-custom" id="newAdminRole">
+              <option value="admin">Administrator</option>
               <option value="manager">Cafe Manager</option>
               <option value="supervisor">Supervisor</option>
               <option value="staff">Staff Admin</option>
@@ -2214,8 +2220,11 @@ function getAdminGreetingText(admin) {
 function updateAdminGreeting(admin) {
   const greetingEl = document.getElementById('adminGreeting');
   const subEl = document.getElementById('adminGreetingSub');
+  const heroTitleEl = document.getElementById('adminHeroTitle');
+  const displayName = getAdminDisplayName(admin);
   if (greetingEl) greetingEl.textContent = getAdminGreetingText(admin);
   if (subEl) subEl.textContent = 'Welcome back to your admin dashboard.';
+  if (heroTitleEl) heroTitleEl.innerHTML = `Good Day<br><em>${escapeHtml(displayName)}!</em>`;
 }
 
 function updateAdminAccountUI(admin) {
@@ -2254,14 +2263,14 @@ async function ensureAdminSession() {
   try {
     const response = await fetch(apiUrl('admin_auth.php?action=check_session'), { credentials: 'include' });
     const data = await parseAdminApiResponse(response);
-    const hasClientGate = localStorage.getItem(ADMIN_CLIENT_GATE_KEY) === '1';
 
-    if (!data.loggedIn || !hasClientGate) {
-      if (data.loggedIn) await logoutAdminSession();
+    if (!data.loggedIn) {
       clearAdminClientGate();
       window.location.replace(PANEL_ROUTES.clientPanel + '?openAdmin=1');
       return false;
     }
+
+    setAdminClientGate();
     if (data.admin) {
       state.adminUser = data.admin;
       updateAdminAccountUI(data.admin);
@@ -2453,10 +2462,30 @@ function saveMenuToStorage() {
 function loadReviewsFromStorage() {
   try {
     const raw = localStorage.getItem(REVIEWS_KEY);
-    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; }
+    if (raw) {
+      const p = JSON.parse(raw);
+      if (Array.isArray(p) && p.length) return p;
+    }
   } catch(e) {}
-  localStorage.setItem(REVIEWS_KEY, JSON.stringify(DEMO_REVIEWS));
-  return [...DEMO_REVIEWS];
+  return [];
+}
+
+function computeAverageRating(reviews) {
+  const list = Array.isArray(reviews) ? reviews : [];
+  if (!list.length) return null;
+  const total = list.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+  return (total / list.length).toFixed(1);
+}
+
+function updateAvgRatingDisplays() {
+  const avg = computeAverageRating(state.reviews || []);
+  const heroText = avg ? `${avg}★` : '—★';
+  const dashText = avg || '—';
+  document.querySelectorAll('#heroAvgRating').forEach(el => { el.textContent = heroText; });
+  const dashEl = document.getElementById('dashAvgRating');
+  if (dashEl) dashEl.textContent = dashText;
+  const adminEl = document.getElementById('adminAvgRating');
+  if (adminEl) adminEl.textContent = dashText;
 }
 
 function saveReviewsToStorage() {
@@ -2467,21 +2496,29 @@ function saveReviewsToStorage() {
    INIT
    ════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', async () => {
+  initPowerBiEmbedEarly();
   if (!(await window.__adminSessionReady)) return;
 
   state.menuItems = loadMenuFromStorage();
-  state.reviews   = loadReviewsFromStorage();
+  state.reviews = [];
+  await loadReviewsFromDatabase();
+  if (!state.reviews.length) {
+    state.reviews = loadReviewsFromStorage();
+    updateAvgRatingDisplays();
+  }
   renderReviews();
   setupReviewsFeedActions();
   await loadOrderQueue();
-  loadMenuFromDatabase();
-  loadReviewsFromDatabase();
-  loadAnalyticsDashboard();
-  loadAnalyticsConfig();
+  await Promise.all([
+    loadMenuFromDatabase(),
+    loadReviewsFromDatabase(),
+    loadAnalyticsDashboard(),
+    loadAnalyticsConfig()
+  ]);
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
-  syncAnalyticsPipeline({ refreshPowerBi: false, silent: true });
+  syncAnalyticsPipeline({ refreshPowerBi: false, silent: true }).catch(() => {});
   renderQueue();
   renderOrdersHistory();
   setupCategoryBarModal();
@@ -2489,16 +2526,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateCartBadge();
   syncDashboard();
   document.getElementById('statMenuCount').textContent = state.menuItems.length;
+  clearAdminApiWarning();
 
   let ordersRefreshBusy = false;
   let lastHistoryFingerprint = orderQueueFingerprint(state.queue);
+  let lastReviewsFingerprint = reviewsFingerprint(state.reviews);
   setInterval(async () => {
     if (ordersRefreshBusy || queueActionBusyIds.size) return;
     ordersRefreshBusy = true;
     try {
       await loadOrderQueue();
       loadMenuFromDatabase();
-      loadReviewsFromDatabase();
+      await loadReviewsFromDatabase();
+      const reviewsFp = reviewsFingerprint(state.reviews);
+      const reviewsChanged = reviewsFp !== lastReviewsFingerprint;
+      lastReviewsFingerprint = reviewsFp;
+      if (reviewsChanged) {
+        syncReviewStats();
+        syncDashboard();
+        if (!shouldSkipReviewsRerender()) renderReviews(true);
+      }
       renderQueue();
       const fp = orderQueueFingerprint(state.queue);
       if (fp !== lastHistoryFingerprint) {
@@ -2535,7 +2582,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       state.replyDrafts[reviewId] = e.target.value;
     }
   });
-  setupReviewsFeedActions();
   setupFormValidationClearers();
   initDeviceAccessFit('admin');
 
@@ -2560,6 +2606,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const updated = JSON.parse(e.newValue);
         if (Array.isArray(updated)) {
           state.reviews = updated;
+          updateAvgRatingDisplays();
           if (shouldSkipReviewsRerender()) {
             syncReviewStats();
             syncDashboard();
@@ -2816,15 +2863,11 @@ async function confirmCheckout(){
   if(notes) fullNotes += `Notes: ${notes}`;
   fullNotes = fullNotes.trim();
 
-  const itemsPayload = state.cart.map(c => ({
-    name: c.item.name,
-    size: c.size || '',
-    fulfillment: c.fulfillment || 'pickup',
-    addons: c.addons || [],
-    notes: c.notes || '',
-    total: c.total,
-    qty: c.qty || 1
-  }));
+  const itemsPayload = state.cart.map(c => {
+    const name = c.item?.name || c.name || 'Item';
+    const qty = c.qty || 1;
+    return qty > 1 ? `${name} x${qty}` : name;
+  }).join(', ');
 
   try {
     const result = await ordersApiPost('save_order', {
@@ -3027,13 +3070,11 @@ async function confirmDelete(){
 function syncReviewStats() {
   const total = state.reviews.length;
   const pending = state.reviews.filter(r => !r.adminReply || r.adminReply.trim() === '').length;
-  const avg = total > 0 ? (state.reviews.reduce((s, r) => s + r.rating, 0) / total).toFixed(1) : '—';
   const totalEl = document.getElementById('adminReviewCount');
   const pendingEl = document.getElementById('adminPendingReplyCount');
-  const avgEl = document.getElementById('adminAvgRating');
   if (totalEl) totalEl.textContent = total;
   if (pendingEl) pendingEl.textContent = pending;
-  if (avgEl) avgEl.textContent = avg;
+  updateAvgRatingDisplays();
 }
 
 function escapeHtml(str) {
@@ -3187,6 +3228,9 @@ async function saveAdminReplyToDatabase(reviewId, replyText) {
   }
 
   if (!data.success) {
+    if (response.status === 403) {
+      throw new Error('Admin session expired. Open Client page → Admin and sign in again.');
+    }
     throw new Error(data.error || 'Could not save reply.');
   }
 
@@ -3317,6 +3361,7 @@ async function registerAdmin(){
     showToast(error.message || 'Failed to save admin account.', true);
   }
 }
+window.registerAdmin = registerAdmin;
 
 /* ════════ DASHBOARD SYNC ════════ */
 function syncDashboard() {
@@ -3326,18 +3371,7 @@ function syncDashboard() {
   document.getElementById('dashMenuCount').textContent   = state.menuItems.length;
   const sm = document.getElementById('statMenuCount');
   if (sm) sm.textContent = state.menuItems.length;
-  // Live average rating from actual reviews
-  const reviews = state.reviews || [];
-  const avgEl = document.getElementById('dashAvgRating');
-  const heroAvgEl = document.getElementById('heroAvgRating');
-  if (reviews.length > 0) {
-    const avg = (reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length).toFixed(1);
-    if (avgEl) avgEl.textContent = avg;
-    if (heroAvgEl) heroAvgEl.textContent = `${avg}★`;
-  } else {
-    if (avgEl) avgEl.textContent = '—';
-    if (heroAvgEl) heroAvgEl.textContent = '—★';
-  }
+  updateAvgRatingDisplays();
 }
 
 /* ════════ SHARED QUEUE SYSTEM ════════ */
@@ -3364,10 +3398,10 @@ function parseOrderItems(items) {
       if (Array.isArray(parsed) || (parsed && typeof parsed === 'object' && !Array.isArray(parsed))) {
         list = parsed;
       } else {
-        return list.split(/\s*\|\s*|\n/).filter(Boolean).map(line => ({ name: line.trim() }));
+        return list.split(/\s*,\s*|\s*\|\s*|\n/).filter(Boolean).map(line => ({ name: line.trim() }));
       }
     } catch (e) {
-      return list.split(/\s*\|\s*|\n/).filter(Boolean).map(line => ({ name: line.trim() }));
+      return list.split(/\s*,\s*|\s*\|\s*|\n/).filter(Boolean).map(line => ({ name: line.trim() }));
     }
   }
 
@@ -3621,11 +3655,13 @@ async function loadOrderQueue(options) {
       state.queue = dbResult.data.map(mapDbOrderToQueue);
       syncOrderCountersFromQueue(state.queue);
       saveOrderQueue();
+      clearAdminApiWarning();
     } else {
       state.queue = [];
     }
   } catch (e) {
     console.error('Error in loadOrderQueue:', e);
+    showAdminApiWarning('Could not load orders. Start Apache and MySQL in XAMPP, then refresh this page.');
     try {
       const queue = localStorage.getItem(QUEUE_STORAGE_KEY);
       state.queue = queue ? JSON.parse(queue) : [];
@@ -3645,11 +3681,15 @@ async function loadOrderQueue(options) {
   return state.queue;
 }
 
-function scheduleAnalyticsAfterOrderChange() {
+function scheduleAnalyticsAfterOrderChange(options) {
+  options = options || {};
   clearTimeout(window._analyticsOrderDebounce);
-  window._analyticsOrderDebounce = setTimeout(() => {
-    syncAnalyticsPipeline({ refreshPowerBi: true, silent: true });
-  }, 800);
+  window._analyticsOrderDebounce = setTimeout(async () => {
+    const refreshPowerBi = options.refreshPowerBi !== false;
+    await syncAnalyticsPipeline({ refreshPowerBi, silent: true });
+    await loadAnalyticsDashboard();
+    if (options.updateHistory) renderOrdersHistory();
+  }, options.immediate ? 0 : 800);
 }
 
 const queueActionBusyIds = new Set();
@@ -3985,14 +4025,10 @@ async function saveManualOrder() {
       }
 
       const total = addOrderState.selectedItems.reduce((s, e) => s + e.subtotal, 0);
-      const itemsPayload = addOrderState.selectedItems.map(e => ({
-        name: e.item.name,
-        size: e.size || '',
-        sugar: e.sugar || '',
-        temp: e.temp || '',
-        addons: e.addons || [],
-        subtotal: e.subtotal
-      }));
+      const itemsPayload = addOrderState.selectedItems.map(e => {
+        const qty = e.qty && Number(e.qty) > 1 ? ` x${e.qty}` : '';
+        return `${e.item.name}${qty}`;
+      }).join(', ');
 
       const notesParts = addOrderState.selectedItems.map(e => {
         const lines = [`• ${e.item.name} — ₱${e.subtotal.toFixed(2)}`];
@@ -4286,8 +4322,8 @@ async function completeQueue(id) {
 
   try {
     await ordersApiPost('update_status', { id: Number(o.orderId || o.id), status: 'done' });
-    refreshQueueInBackground(true);
-    scheduleAnalyticsAfterOrderChange();
+    await refreshQueueInBackground(true);
+    scheduleAnalyticsAfterOrderChange({ refreshPowerBi: true, updateHistory: true, immediate: true });
   } catch (error) {
     patchQueueOrderLocally(id, { status: prevStatus });
     renderQueue();
@@ -4538,7 +4574,7 @@ function mapDbReviewToAdmin(row) {
     id: parseInt(row.id, 10),
     name: name,
     initials: name === 'Anonymous' ? 'AN' : name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-    rating: parseInt(row.rating, 10),
+    rating: Number(row.rating) || 0,
     comment: row.comment,
     avatar: row.avatar || '',
     adminReply: row.admin_reply || row.adminReply || '',
@@ -4552,7 +4588,7 @@ function loadMenuFromDatabase() {
   return fetch(apiUrl('get_menu.php'), { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
-      if (data.success && Array.isArray(data.data)) {
+      if (data.success && Array.isArray(data.data) && data.data.length > 0) {
         state.menuItems = data.data.map(mapDbMenuItemToAdmin);
         saveMenuToStorage();
         renderMenuModal(state.searchQuery || '');
@@ -4561,18 +4597,26 @@ function loadMenuFromDatabase() {
         document.getElementById('statMenuCount').textContent = state.menuItems.length;
         const tableBody = document.getElementById('adminMenuTableBody');
         if (tableBody) loadAdminMenu();
+      } else if (!state.menuItems.length) {
+        state.menuItems = loadMenuFromStorage();
+        renderMenuModal(state.searchQuery || '');
+        renderMgmtGrid();
+        syncDashboard();
+        document.getElementById('statMenuCount').textContent = state.menuItems.length;
       }
     })
     .catch(err => console.error('Error loading menu:', err));
 }
 
 function loadReviewsFromDatabase() {
-  return fetch(apiUrl('reviews.php?action=get_reviews'), { credentials: 'include' })
+  return fetch(apiUrl('reviews.php?action=get_reviews&_=' + Date.now()), { credentials: 'include' })
     .then(res => res.json())
     .then(data => {
       if (data.success && Array.isArray(data.data)) {
         state.reviews = data.data.map(mapDbReviewToAdmin);
         saveReviewsToStorage();
+      } else if (!state.reviews.length) {
+        state.reviews = loadReviewsFromStorage();
       }
     })
     .catch(err => {
@@ -4580,6 +4624,7 @@ function loadReviewsFromDatabase() {
       if (!state.reviews.length) state.reviews = loadReviewsFromStorage();
     })
     .finally(() => {
+      updateAvgRatingDisplays();
       if (shouldSkipReviewsRerender()) {
         syncReviewStats();
         syncDashboard();
@@ -4649,6 +4694,7 @@ window.deleteReview = function(id) {
       saveReviewsToStorage();
       renderReviews(true);
       showToast('Review removed.');
+      loadReviewsFromDatabase();
     } else {
       showToast(data.error || 'Could not delete review.', true);
     }
@@ -4657,10 +4703,34 @@ window.deleteReview = function(id) {
 };
 
 /* ── Analytics & Power BI (database → Google Sheets → Power BI) ── */
+const DEFAULT_POWERBI_EMBED_URL = 'https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
 let powerBiEmbedInitialized = false;
 let lastAnalyticsFingerprint = '';
 let analyticsConfigCache = null;
 let googleSetupCompleteLocked = false;
+
+function showAdminApiWarning(message) {
+  const el = document.getElementById('adminApiWarning');
+  if (!el) return;
+  el.style.display = 'block';
+  el.textContent = message;
+}
+
+function clearAdminApiWarning() {
+  const el = document.getElementById('adminApiWarning');
+  if (!el) return;
+  el.style.display = 'none';
+  el.textContent = '';
+}
+
+function initPowerBiEmbedEarly() {
+  const frame = document.getElementById('powerBiAnalyticsFrame');
+  if (!frame) return;
+  const existing = (frame.getAttribute('src') || frame.dataset.embedUrl || '').trim();
+  ensurePowerBiEmbedOnce({
+    powerbi_embed_url: existing || DEFAULT_POWERBI_EMBED_URL
+  });
+}
 
 function formatAnalyticsMoney(value) {
   return Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -4668,7 +4738,12 @@ function formatAnalyticsMoney(value) {
 
 function analyticsFingerprint(summary) {
   if (!summary) return '';
-  return `${summary.order_count || 0}|${summary.orders_today || 0}|${summary.net_sales || 0}|${summary.sales_today || 0}|${summary.anomaly_count || 0}`;
+  return `${summary.order_count || 0}|${summary.completed_order_count || 0}|${summary.orders_today || 0}|${summary.net_sales || 0}|${summary.sales_today || 0}|${summary.anomaly_count || 0}`;
+}
+
+function reviewsFingerprint(reviews) {
+  if (!Array.isArray(reviews) || !reviews.length) return '0';
+  return reviews.map(r => `${r.id}:${Number(r.rating || 0)}:${(r.adminReply || '').length}`).join('|');
 }
 
 const GOOGLE_SETUP_COMPLETE_KEY = 'sipPulseGoogleSetupComplete';
@@ -4733,6 +4808,7 @@ function refreshGoogleSetupPanelState(config, sheetsMeta, syncMeta) {
 
 function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   const orderEl = document.getElementById('analyticsOrderCount');
+  const completedEl = document.getElementById('analyticsCompletedCount');
   const todayOrdersEl = document.getElementById('analyticsOrdersToday');
   const salesEl = document.getElementById('analyticsNetSales');
   const todaySalesEl = document.getElementById('analyticsSalesToday');
@@ -4747,6 +4823,10 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   const pbiSetupPanel = document.getElementById('analyticsPowerBiSetupPanel');
 
   if (orderEl && summary) orderEl.textContent = String(summary.order_count || 0);
+  if (completedEl && summary) {
+    const done = Number(summary.completed_order_count || 0);
+    completedEl.textContent = done ? `${done} completed` : '';
+  }
   if (todayOrdersEl && summary) todayOrdersEl.textContent = String(summary.orders_today || 0);
   if (salesEl && summary) salesEl.textContent = formatAnalyticsMoney(summary.net_sales);
   if (todaySalesEl && summary) todaySalesEl.textContent = formatAnalyticsMoney(summary.sales_today);
@@ -4799,9 +4879,8 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
       pbiStatusEl.textContent = 'Power BI refresh triggered' + (pbiWhen ? ' · ' + pbiWhen : '') + ' — reloading chart…';
       pbiStatusEl.style.color = '#1e7e34';
     } else if (status === 'success') {
-      pbiStatusEl.textContent = 'Google Sheet updated. Enable Power BI scheduled refresh (see setup below) or add API keys for instant chart updates.';
+      pbiStatusEl.textContent = 'Google Sheet updated. Chart below reads from Power BI — use scheduled refresh for live updates.';
       pbiStatusEl.style.color = '#7a5e0a';
-      if (pbiSetupPanel && !(config && config.powerbi_api_configured)) pbiSetupPanel.open = true;
     } else {
       pbiStatusEl.textContent = '';
     }
@@ -5010,7 +5089,10 @@ async function saveAnalyticsAppsScriptUrl() {
 function ensurePowerBiEmbedOnce(config) {
   const frame = document.getElementById('powerBiAnalyticsFrame');
   if (!frame) return;
-  const url = config && config.powerbi_embed_url ? String(config.powerbi_embed_url).trim() : '';
+  const url = (config && config.powerbi_embed_url ? String(config.powerbi_embed_url).trim() : '')
+    || frame.dataset.embedUrl
+    || (frame.getAttribute('src') || '').trim()
+    || DEFAULT_POWERBI_EMBED_URL;
   if (!url) return;
   frame.dataset.embedUrl = url.replace(/([?&])_t=\d+/g, '').replace(/[?&]$/, '');
   if (!powerBiEmbedInitialized || !frame.getAttribute('src') || frame.getAttribute('src') === 'about:blank') {
@@ -5111,14 +5193,19 @@ function renderAnalyticsSummary(summary, config) {
 async function loadAnalyticsDashboard() {
   try {
     const response = await fetch(apiUrl('analytics.php?action=summary'), { credentials: 'include' });
-    const payload = await response.json();
-    if (!payload.success || !payload.data) return;
+    const payload = await parseAdminApiResponse(response);
+    if (!payload.success || !payload.data) {
+      throw new Error(payload.error || 'Analytics summary unavailable.');
+    }
+    clearAdminApiWarning();
     const merged = Object.assign({}, payload.data, {
       config: Object.assign({}, analyticsConfigCache || {}, payload.data.config || {})
     });
     applyAnalyticsPayload(merged, { refreshPowerBi: false, manageSetupPanel: !googleSetupCompleteLocked });
   } catch (e) {
     console.error('Analytics summary error:', e);
+    showAdminApiWarning('Dashboard data could not load. Start Apache and MySQL in XAMPP, then refresh this page.');
+    initPowerBiEmbedEarly();
   }
 }
 

@@ -1627,6 +1627,99 @@
       color: #F8F4E1;
     }
 
+    @media (max-width: 420px) {
+      #paymentMethodContainer .seg-control label {
+        font-size: .72rem;
+        padding: 8px 4px;
+      }
+
+      #paymentMethodContainer .seg-control label .material-icons {
+        display: block;
+        margin: 0 auto 2px !important;
+      }
+    }
+
+    .ewallet-connect-panel {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px dashed var(--border);
+      background: rgba(175, 143, 111, .08);
+    }
+
+    .ewallet-connect-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 8px;
+    }
+
+    .ewallet-connect-inner .material-icons {
+      font-size: 28px;
+      color: var(--brand);
+    }
+
+    .ewallet-connect-text {
+      margin: 0;
+      font-size: .78rem;
+      color: var(--text-dim);
+      line-height: 1.45;
+    }
+
+    .ewallet-connect-btn {
+      border: none;
+      background: none;
+      color: var(--brand);
+      font-size: .82rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 4px 0;
+    }
+
+    .ewallet-connect-btn:hover {
+      color: var(--brand-light);
+    }
+
+    .payment-loading-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 40px 24px 32px;
+      min-height: 220px;
+    }
+
+    .payment-loading-spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(175, 143, 111, .25);
+      border-top-color: var(--brand);
+      border-radius: 50%;
+      animation: paymentSpin .85s linear infinite;
+      margin-bottom: 18px;
+    }
+
+    @keyframes paymentSpin {
+      to { transform: rotate(360deg); }
+    }
+
+    .payment-loading-title {
+      margin: 0;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .payment-loading-sub {
+      margin: 8px 0 0;
+      font-size: .8rem;
+      color: var(--text-dim);
+    }
+
     .size-row {
       display: flex;
       gap: 8px;
@@ -3941,6 +4034,11 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
         <div class="modal-body-custom" id="cartBody">
           <p style="color:var(--text-dim);font-size:.875rem;text-align:center;padding:24px 0;">Your cart is empty.</p>
         </div>
+        <div class="payment-loading-overlay" id="paymentLoadingOverlay" aria-live="polite" aria-busy="true">
+          <div class="payment-loading-spinner"></div>
+          <p class="payment-loading-title" id="paymentLoadingTitle">Connecting…</p>
+          <p class="payment-loading-sub" id="paymentLoadingSub">Please wait while we securely link your account.</p>
+        </div>
         <!-- Checkout success state -->
         <div class="checkout-success" id="checkoutSuccess">
           <span class="material-icons" style="font-size:3.5rem;color:#1a7c4a;">check_circle</span>
@@ -3969,10 +4067,22 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
                 <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">payments</span>Cash
               </label>
 
-              <input type="radio" name="payment" id="pay_gcash" value="E-Wallet">
+              <input type="radio" name="payment" id="pay_gcash" value="GCash">
               <label for="pay_gcash">
-                <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">account_balance_wallet</span>GCash / Maya
+                <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">account_balance_wallet</span>GCash
               </label>
+
+              <input type="radio" name="payment" id="pay_maya" value="Maya">
+              <label for="pay_maya">
+                <span class="material-icons align-middle" style="font-size:14px;margin-right:4px;">account_balance_wallet</span>Maya
+              </label>
+            </div>
+            <div id="ewalletConnectPanel" class="ewallet-connect-panel" style="display:none;">
+              <div class="ewallet-connect-inner">
+                <span class="material-icons">account_balance_wallet</span>
+                <p class="ewallet-connect-text" id="ewalletConnectText">Connect your e-wallet to pay securely.</p>
+                <button type="button" class="ewallet-connect-btn" id="ewalletConnectBtn" onclick="placeOrder()">Connect to GCash</button>
+              </div>
             </div>
           </div>
 
@@ -4360,6 +4470,98 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     function isRefundablePayment(method) {
       const m = (method || '').toLowerCase();
       return m.includes('gcash') || m.includes('maya') || m.includes('e-wallet') || m.includes('ewallet');
+    }
+
+    function formatCartItemsForOrder(cart) {
+      return cart.map(ci => {
+        const name = ci.item?.name || 'Item';
+        const qty = ci.qty || 1;
+        return qty > 1 ? `${name} x${qty}` : name;
+      }).join(', ');
+    }
+
+    function getEwalletPaymentTargets(method) {
+      const m = (method || '').toLowerCase();
+      if (m.includes('gcash')) {
+        return { label: 'GCash' };
+      }
+      if (m.includes('maya') || m.includes('paymaya')) {
+        return { label: 'Maya' };
+      }
+      return null;
+    }
+
+    function updateEwalletConnectPanel() {
+      const panel = document.getElementById('ewalletConnectPanel');
+      const textEl = document.getElementById('ewalletConnectText');
+      const btnEl = document.getElementById('ewalletConnectBtn');
+      const paymentElement = document.querySelector('input[name="payment"]:checked');
+      if (!panel) return;
+
+      const targets = paymentElement ? getEwalletPaymentTargets(paymentElement.value) : null;
+      if (!targets || !state.cart.length) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      const grand = state.cart.reduce((sum, ci) => sum + ci.total, 0);
+      panel.style.display = 'block';
+      if (textEl) {
+        textEl.textContent = `Connect your ${targets.label} account to pay ₱${grand.toFixed(2)} securely.`;
+      }
+      if (btnEl) {
+        btnEl.textContent = `Connect to ${targets.label}`;
+      }
+    }
+
+    function showPaymentLoadingOverlay(method, amount) {
+      const targets = getEwalletPaymentTargets(method);
+      const overlay = document.getElementById('paymentLoadingOverlay');
+      const titleEl = document.getElementById('paymentLoadingTitle');
+      const subEl = document.getElementById('paymentLoadingSub');
+      if (!overlay || !targets) return;
+
+      document.getElementById('cartBody').style.display = 'none';
+      document.getElementById('cartFooter').style.display = 'none';
+      document.getElementById('checkoutSuccess').classList.remove('visible');
+      overlay.style.display = 'flex';
+      if (titleEl) titleEl.textContent = `Connecting to ${targets.label}…`;
+      if (subEl) subEl.textContent = 'Please wait while we securely link your account.';
+    }
+
+    function hidePaymentLoadingOverlay() {
+      const overlay = document.getElementById('paymentLoadingOverlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    function runEwalletPaymentFlow(method, amount) {
+      const targets = getEwalletPaymentTargets(method);
+      if (!targets) return Promise.resolve();
+
+      showPaymentLoadingOverlay(method, amount);
+      const amountText = `₱${parseFloat(amount || 0).toFixed(2)}`;
+      const titleEl = document.getElementById('paymentLoadingTitle');
+      const subEl = document.getElementById('paymentLoadingSub');
+      const steps = [
+        { title: `Connecting to ${targets.label}…`, sub: 'Establishing secure connection…' },
+        { title: `Processing ${amountText}…`, sub: `Verifying your ${targets.label} payment.` },
+        { title: 'Returning to your order…', sub: 'Completing checkout…' }
+      ];
+
+      let chain = Promise.resolve();
+      steps.forEach((step, index) => {
+        chain = chain.then(() => new Promise(resolve => {
+          setTimeout(() => {
+            if (titleEl) titleEl.textContent = step.title;
+            if (subEl) subEl.textContent = step.sub;
+            resolve();
+          }, index === 0 ? 900 : 1100);
+        }));
+      });
+
+      return chain.then(() => {
+        hidePaymentLoadingOverlay();
+      });
     }
 
     function canClientCancelOrder(status) {
@@ -4859,16 +5061,37 @@ const FOOD_ADDONS = [
     function loadReviewsFromStorage() {
       try {
         const raw = localStorage.getItem(REVIEWS_KEY);
-        if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) return p; }
+        if (raw) {
+          const p = JSON.parse(raw);
+          if (Array.isArray(p) && p.length) return p;
+        }
       } catch(e) {}
-      localStorage.setItem(REVIEWS_KEY, JSON.stringify(DEMO_REVIEWS));
-      return [...DEMO_REVIEWS];
+      return [];
     }
+
+    function computeAverageRating(reviews) {
+      const list = Array.isArray(reviews) ? reviews : [];
+      if (!list.length) return null;
+      const total = list.reduce((sum, r) => sum + Number(r.rating || 0), 0);
+      return (total / list.length).toFixed(1);
+    }
+
+    function updateAvgRatingBadges() {
+      const avg = computeAverageRating(state.reviews);
+      const heroText = avg ? `${avg}★` : '—★';
+      document.querySelectorAll('#heroAvgRating').forEach(el => { el.textContent = heroText; });
+      const dashEl = document.getElementById('dashAvgRating');
+      if (dashEl) dashEl.textContent = avg || '—';
+      const adminEl = document.getElementById('adminAvgRating');
+      if (adminEl) adminEl.textContent = avg || '—';
+    }
+    window.updateAvgRatingBadges = updateAvgRatingBadges;
+    window.computeAverageRating = computeAverageRating;
 
     /* ════════════════════════════════════════════
        INIT
        ════════════════════════════════════════════ */
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
       if (new URLSearchParams(window.location.search).get('openAdmin') === '1') {
         history.replaceState(null, '', window.location.pathname);
         setTimeout(() => {
@@ -4877,7 +5100,12 @@ const FOOD_ADDONS = [
       }
 
       state.menuItems = loadMenuFromStorage();
-      state.reviews   = loadReviewsFromStorage();
+      state.reviews = [];
+      await loadReviewsFromDatabase();
+      if (!state.reviews.length) {
+        state.reviews = loadReviewsFromStorage();
+        updateAvgRatingBadges();
+      }
       renderMenuModal();
       renderMenuPreview();
       renderReviews();
@@ -4945,6 +5173,7 @@ const FOOD_ADDONS = [
             const updated = JSON.parse(e.newValue);
             if (Array.isArray(updated)) {
               state.reviews = updated;
+              updateAvgRatingBadges();
               renderReviews();
             }
           } catch(err) {}
@@ -5426,8 +5655,14 @@ const FOOD_ADDONS = [
     }
 
     function openAdminLoginModal() {
-      document.getElementById('adminEmail').value = '';
+      const emailEl = document.getElementById('adminEmail');
       document.getElementById('adminPassword').value = '';
+
+      if (emailEl && !emailEl.value.trim() && state.googleUser && state.googleUser.email) {
+        emailEl.value = state.googleUser.email;
+      } else if (emailEl) {
+        emailEl.value = emailEl.value.trim();
+      }
 
       const notice = document.getElementById('adminGoogleClientNotice');
       if (notice) {
@@ -5782,6 +6017,7 @@ const FOOD_ADDONS = [
       success.classList.remove('visible');
       footer.style.display = '';
       body.style.display = '';
+      hidePaymentLoadingOverlay();
       const cancelBtn = document.getElementById('checkoutCancelBtn');
       const cancelMsg = document.getElementById('checkoutCancelMsg');
       const orderNumEl = document.getElementById('checkoutOrderNum');
@@ -5794,6 +6030,7 @@ const FOOD_ADDONS = [
         body.innerHTML = '<p style="color:var(--text-dim);font-size:.875rem;text-align:center;padding:24px 0;">Your cart is empty.</p>';
         placeBtn.disabled = true;
         document.getElementById('cartGrandTotal').textContent = '₱0.00';
+        updateEwalletConnectPanel();
         return;
       }
       placeBtn.disabled = false;
@@ -5832,6 +6069,7 @@ const FOOD_ADDONS = [
       </div>`;
       }).join('');
       document.getElementById('cartGrandTotal').textContent = `₱${grand.toFixed(2)}`;
+      updateEwalletConnectPanel();
     }
 
     function updateCartItemQty(cartId, delta) {
@@ -5927,6 +6165,7 @@ const FOOD_ADDONS = [
     }
 
 async function placeOrder() {
+    if (state.isPlacingOrder) return;
     clearAllFieldWarnings(document.getElementById('cartModal'));
 
     if (!state.cart.length) {
@@ -5966,7 +6205,7 @@ async function placeOrder() {
     const newOrder = {
         customer_name: customerName,
         customer_email: customerEmail,
-        items: state.cart,
+        items: formatCartItemsForOrder(state.cart),
         total_amount: state.cart.reduce((sum, ci) => sum + ci.total, 0),
         fulfillment: fulfillmentElement ? fulfillmentElement.value : 'pickup',
         delivery_location: document.getElementById('delivery-location')?.value?.trim() || '',
@@ -5976,7 +6215,17 @@ async function placeOrder() {
         notes: state.cart.map(ci => ci.notes).filter(Boolean).join(' | ')
     };
 
+    const placeBtn = document.getElementById('placeOrderBtn');
+    const connectBtn = document.getElementById('ewalletConnectBtn');
+    state.isPlacingOrder = true;
+    if (placeBtn) placeBtn.disabled = true;
+    if (connectBtn) connectBtn.disabled = true;
+
     try {
+        if (isRefundablePayment(newOrder.payment_method)) {
+            await runEwalletPaymentFlow(newOrder.payment_method, newOrder.total_amount);
+        }
+
         const response = await fetch(apiUrl('orders.php?action=save_order'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -6015,6 +6264,7 @@ async function placeOrder() {
 
                 document.getElementById('cartBody').style.display = 'none';
                 document.getElementById('cartFooter').style.display = 'none';
+                hidePaymentLoadingOverlay();
                 document.getElementById('checkoutSuccess').classList.add('visible');
                 state.cart = [];
                 updateCartBadge();
@@ -6025,7 +6275,14 @@ async function placeOrder() {
         }
     } catch (error) {
         console.error('Order Error:', error);
+        hidePaymentLoadingOverlay();
+        document.getElementById('cartBody').style.display = '';
+        document.getElementById('cartFooter').style.display = '';
         alert('Something went wrong: ' + error.message);
+    } finally {
+        state.isPlacingOrder = false;
+        if (placeBtn) placeBtn.disabled = !state.cart.length;
+        if (connectBtn) connectBtn.disabled = false;
     }
 }
 
@@ -6399,6 +6656,7 @@ async function openMyOrdersModal() {
     }
 
     window.submitReview = submitReview;
+    window.renderReviews = renderReviews;
 
     function deleteReview(id) {
       state.reviews = state.reviews.filter(r => r.id !== id);
@@ -6538,7 +6796,10 @@ async function openMyOrdersModal() {
       });
       document.addEventListener('change', (e) => {
         if (e.target.matches('input[name="rating"]')) clearGroupWarning('reviewRatingGroup');
-        if (e.target.matches('input[name="payment"]')) clearGroupWarning('paymentMethodContainer');
+        if (e.target.matches('input[name="payment"]')) {
+          clearGroupWarning('paymentMethodContainer');
+          updateEwalletConnectPanel();
+        }
         if (e.target.matches('input[name="fulfillment"]') && e.target.value !== 'delivery') {
           clearFieldWarning(document.getElementById('delivery-location'));
         }
@@ -6654,7 +6915,7 @@ function mapDbReviewToClient(row) {
     id: parseInt(row.id, 10),
     name: name,
     initials: name === 'Anonymous' ? 'AN' : name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2),
-    rating: parseInt(row.rating, 10),
+    rating: Number(row.rating) || 0,
     comment: row.comment,
     avatar: row.avatar || '',
     adminReply: row.admin_reply || row.adminReply || '',
@@ -6663,19 +6924,6 @@ function mapDbReviewToClient(row) {
       : new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
   };
 }
-
-function updateAvgRatingBadges() {
-  const reviews = state.reviews || [];
-  const el = document.getElementById('heroAvgRating');
-  if (!el) return;
-  if (!reviews.length) {
-    el.textContent = '—★';
-    return;
-  }
-  const avg = (reviews.reduce((s, r) => s + Number(r.rating || 0), 0) / reviews.length).toFixed(1);
-  el.textContent = `${avg}★`;
-}
-window.updateAvgRatingBadges = updateAvgRatingBadges;
 
 function loadMenuFromDatabase() {
   return fetch(apiUrl('get_menu.php'))
@@ -6692,7 +6940,7 @@ function loadMenuFromDatabase() {
 }
 
 function loadReviewsFromDatabase() {
-  return fetch(apiUrl('reviews.php?action=get_reviews'))
+  return fetch(apiUrl('reviews.php?action=get_reviews&_=' + Date.now()))
     .then(res => res.json())
     .then(data => {
       if (data.success && Array.isArray(data.data)) {
@@ -6743,8 +6991,6 @@ function initCafeTourVideo() {
 
 document.addEventListener('DOMContentLoaded', function() {
   initCafeTourVideo();
-  loadMenuFromDatabase();
-  loadReviewsFromDatabase();
   initDeviceAccessFit('client');
   setInterval(function() {
     loadMenuFromDatabase();
@@ -6752,7 +6998,7 @@ document.addEventListener('DOMContentLoaded', function() {
   }, 5000);
 });
 
-/* ── Device fit, screen sizes & URL access (database-driven) ── */
+
 function detectDeviceProfile() {
   const w = window.innerWidth;
   const ua = navigator.userAgent || '';

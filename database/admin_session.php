@@ -1,5 +1,8 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
+$sessionBootstrap = dirname(__DIR__) . '/api/session_bootstrap.php';
+if (is_file($sessionBootstrap)) {
+    require_once $sessionBootstrap;
+} elseif (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
