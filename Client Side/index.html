@@ -3401,16 +3401,16 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     <div class="row g-4">
       
       <div class="col-lg-7">
-        <div class="bento-card featured-bento h-100">
+        <div class="bento-card featured-bento h-100" data-preview-slot="featured" data-preview-id="1" data-preview-name="Caramel Macchiato">
           <div class="bento-badge">Signature</div>
-          <img src="https://images.unsplash.com/photo-1551030173-122aabc4489c?w=1000&q=80" alt="Caramel Macchiato" class="bento-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1000&q=80';">
+          <img data-preview-img src="https://images.unsplash.com/photo-1551030173-122aabc4489c?w=1000&q=80" alt="Caramel Macchiato" class="bento-img" onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=1000&q=80';">
           <div class="bento-overlay">
             <div class="bento-content">
-              <p class="bento-cat">Espresso & Hot Brews</p>
-              <h3 class="bento-title display-font">Caramel Macchiato</h3>
+              <p class="bento-cat" data-preview-cat>Espresso & Hot Brews</p>
+              <h3 class="bento-title display-font" data-preview-name>Caramel Macchiato</h3>
               <div class="d-flex align-items-center gap-3 mt-3">
-                <span class="bento-price">₱150.00</span>
-                <button class="bento-action-btn" onclick="openOrderModal(1)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                <span class="bento-price" data-preview-price>₱150.00</span>
+                <button class="bento-action-btn" data-preview-order onclick="openOrderModal(1)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
               </div>
             </div>
           </div>
@@ -3420,29 +3420,29 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
       <div class="col-lg-5">
         <div class="d-flex flex-column gap-4 h-100">
           
-          <div class="bento-card regular-bento flex-grow-1">
-            <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80" alt="Classic Beef Burger" class="bento-img">
+          <div class="bento-card regular-bento flex-grow-1" data-preview-slot="secondary" data-preview-id="31" data-preview-name="Classic Beef Burger">
+            <img data-preview-img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800&q=80" alt="Classic Beef Burger" class="bento-img">
             <div class="bento-overlay">
               <div class="bento-content">
-                <p class="bento-cat">Burgers</p>
-                <h4 class="bento-title display-font">Classic Beef Burger</h4>
+                <p class="bento-cat" data-preview-cat>Burgers</p>
+                <h4 class="bento-title display-font" data-preview-name>Classic Beef Burger</h4>
                 <div class="d-flex align-items-center gap-3 mt-2">
-                  <span class="bento-price">₱180.00</span>
-                  <button class="bento-action-btn" onclick="openOrderModal(31)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                  <span class="bento-price" data-preview-price>₱180.00</span>
+                  <button class="bento-action-btn" data-preview-order onclick="openOrderModal(31)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div class="bento-card regular-bento flex-grow-1">
-            <img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800&q=80" alt="Blueberry Cheesecake" class="bento-img">
+          <div class="bento-card regular-bento flex-grow-1" data-preview-slot="secondary" data-preview-id="50" data-preview-name="Blueberry Cheesecake">
+            <img data-preview-img src="https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800&q=80" alt="Blueberry Cheesecake" class="bento-img">
             <div class="bento-overlay">
               <div class="bento-content">
-                <p class="bento-cat">Pastries & Baked Goods</p>
-                <h4 class="bento-title display-font">Blueberry Cheesecake</h4>
+                <p class="bento-cat" data-preview-cat>Pastries & Baked Goods</p>
+                <h4 class="bento-title display-font" data-preview-name>Blueberry Cheesecake</h4>
                 <div class="d-flex align-items-center gap-3 mt-2">
-                  <span class="bento-price">₱145.00</span>
-                  <button class="bento-action-btn" onclick="openOrderModal(50)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
+                  <span class="bento-price" data-preview-price>₱145.00</span>
+                  <button class="bento-action-btn" data-preview-order onclick="openOrderModal(50)" title="Add to Order"><span class="material-icons" style="font-size: 20px;">add</span></button>
                 </div>
               </div>
             </div>
@@ -4795,11 +4795,56 @@ const FOOD_ADDONS = [
         .replace(/</g, '&lt;');
     }
 
-    function menuImageSrc(img, itemId) {
+    function menuImageUrl(img, itemId) {
       const raw = String(img || '').trim() || MENU_DEFAULT_IMG;
-      if (!itemId) return escapeHtmlAttr(raw);
+      if (!itemId) return raw;
       const sep = raw.includes('?') ? '&' : '?';
-      return escapeHtmlAttr(`${raw}${sep}menu=${encodeURIComponent(String(itemId))}`);
+      let hash = 0;
+      for (let i = 0; i < raw.length; i += 1) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
+      return `${raw}${sep}menu=${encodeURIComponent(String(itemId))}&v=${Math.abs(hash)}`;
+    }
+
+    function menuImageSrc(img, itemId) {
+      return escapeHtmlAttr(menuImageUrl(img, itemId));
+    }
+
+    function findMenuPreviewItem(slotEl) {
+      const id = parseInt(slotEl.dataset.previewId, 10);
+      const fallbackName = (slotEl.dataset.previewName || '').trim().toLowerCase();
+      let item = (state.menuItems || []).find(i => Number(i.id) === id);
+      if (!item && fallbackName) {
+        item = (state.menuItems || []).find(i => String(i.name || '').trim().toLowerCase() === fallbackName);
+      }
+      return item || null;
+    }
+
+    function renderMenuPreview() {
+      document.querySelectorAll('[data-preview-slot]').forEach(slot => {
+        const item = findMenuPreviewItem(slot);
+        if (!item) return;
+
+        const imgEl = slot.querySelector('[data-preview-img]');
+        const catEl = slot.querySelector('[data-preview-cat]');
+        const nameEl = slot.querySelector('[data-preview-name]');
+        const priceEl = slot.querySelector('[data-preview-price]');
+        const orderBtn = slot.querySelector('[data-preview-order]');
+        const nextSrc = menuImageUrl(item.img, item.id);
+
+        if (imgEl && imgEl.src !== nextSrc) {
+          imgEl.src = nextSrc;
+          imgEl.alt = item.name;
+        }
+        if (catEl) catEl.textContent = catLabels[item.cat] || item.cat || '';
+        if (nameEl) nameEl.textContent = item.name;
+        if (priceEl) priceEl.textContent = `₱${parseFloat(item.price || 0).toFixed(2)}`;
+        if (orderBtn) {
+          orderBtn.onclick = () => openOrderModal(item.id);
+          orderBtn.title = `Add ${item.name} to Order`;
+        }
+      });
     }
 
     function loadMenuFromStorage() {
@@ -4834,6 +4879,7 @@ const FOOD_ADDONS = [
       state.menuItems = loadMenuFromStorage();
       state.reviews   = loadReviewsFromStorage();
       renderMenuModal();
+      renderMenuPreview();
       renderReviews();
       setupCategoryBarModal();
       updateCartBadge();
@@ -4888,7 +4934,10 @@ const FOOD_ADDONS = [
       // this event fires here and the full menu modal re-renders instantly.
       window.addEventListener('storage', (e) => {
         if (e.key === STORAGE_KEY) {
-          loadMenuFromDatabase().then(() => showToast('Menu updated by admin.'));
+          loadMenuFromDatabase().then(() => {
+            renderMenuPreview();
+            showToast('Menu updated by admin.');
+          });
           return;
         }
         if (e.key === REVIEWS_KEY && e.newValue) {
@@ -6176,6 +6225,7 @@ async function openMyOrdersModal() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
       bootstrap.Modal.getInstance(document.getElementById('adminCrudModal')).hide();
       renderMenuModal(state.searchQuery);
+      renderMenuPreview();
     }
 
     function openDeleteConfirm(itemId) {
@@ -6192,6 +6242,7 @@ async function openMyOrdersModal() {
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
       bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
       renderMenuModal(state.searchQuery);
+      renderMenuPreview();
       showToast(`"${item?.name}" removed.`);
       state.pendingDeleteId = null;
     }
@@ -6634,6 +6685,7 @@ function loadMenuFromDatabase() {
         state.menuItems = data.data.map(mapDbMenuItemToClient);
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
         renderMenuModal(state.searchQuery || '');
+        renderMenuPreview();
       }
     })
     .catch(err => console.error('Error loading menu:', err));

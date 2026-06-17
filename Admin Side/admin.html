@@ -142,7 +142,10 @@
     .btn-del-card:hover{background:rgba(192,57,43,.25);}
 
     /* ── REVIEWS ── */
-    .reviews-section{background-color:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 0;}
+    .reviews-section{background-color:var(--bg-surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:60px 0;scroll-margin-top:88px;}
+    .reviews-empty-state{text-align:center;padding:48px 24px;background:var(--bg-body);border:1px dashed var(--border);border-radius:14px;}
+    .reviews-jump-link{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--brand);text-decoration:none;margin-top:12px;}
+    .reviews-jump-link:hover{color:var(--brand-dark);text-decoration:underline;}
     .review-card{background-color:var(--bg-body);border:1px solid var(--border);border-radius:14px;padding:20px;height:100%;}
     .admin-reply-actions{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;position:relative;z-index:2;}
     .btn-reply-action{background:transparent;border:1px solid var(--border);color:var(--text-dim);border-radius:8px;padding:6px 12px;font-size:.72rem;cursor:pointer;display:inline-flex;align-items:center;gap:4px;transition:all var(--transition);position:relative;z-index:2;pointer-events:auto;}
@@ -265,6 +268,18 @@
     .dash-icon .material-icons{color:var(--brand);font-size:22px;}
     .dash-num{font-family:'Playfair Display',serif;font-size:1.7rem;font-weight:700;color:var(--text-main);line-height:1;}
     .dash-label{font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-top:2px;}
+    #analyticsKpiRow .analytics-kpi-card{padding:16px 18px;height:100%;min-height:120px;overflow:hidden;display:block;align-items:stretch;gap:0;}
+    #analyticsKpiRow .analytics-kpi-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);margin-bottom:8px;line-height:1.3;}
+    #analyticsKpiRow .analytics-kpi-value{font-family:'Playfair Display',serif;font-size:clamp(1.1rem,2.1vw,1.5rem);font-weight:700;color:var(--brand);line-height:1.15;word-break:break-word;}
+    #analyticsKpiRow .analytics-kpi-value.is-money{font-size:clamp(.95rem,1.8vw,1.35rem);}
+    #analyticsKpiRow .analytics-kpi-value.is-green{color:#1a7c4a;}
+    #analyticsKpiRow .analytics-kpi-value.is-alert{color:var(--admin-accent);}
+    #analyticsKpiRow .analytics-kpi-status{font-size:.72rem;font-weight:700;color:#1a7c4a;line-height:1.3;margin-bottom:4px;}
+    #analyticsKpiRow .analytics-kpi-status.is-partial{color:#a93226;}
+    #analyticsKpiRow .analytics-kpi-status.is-pending{color:var(--text-dim);}
+    #analyticsKpiRow .analytics-kpi-sync-time{font-size:.7rem;font-weight:600;color:var(--text-main);line-height:1.35;word-break:break-word;}
+    #analyticsKpiRow .analytics-kpi-meta{font-size:.65rem;color:var(--text-dim);margin-top:4px;line-height:1.3;}
+    #analyticsKpiRow .analytics-sync-btn{margin-top:10px;width:100%;padding:6px 10px;font-size:.68rem;display:block;box-sizing:border-box;}
     .admin-greeting{font-family:'Playfair Display',serif;font-size:clamp(1.5rem,3vw,2rem);font-weight:700;color:var(--text-main);margin:0 0 4px;line-height:1.2;}
     .admin-greeting-sub{font-size:.88rem;color:var(--text-dim);margin:0;}
 
@@ -1172,34 +1187,48 @@
       <p class="section-eyebrow mb-1">Analytics</p>
       <h2 class="section-title">Sales &amp; Performance</h2>
       <p style="font-size:.8rem;color:var(--text-dim);margin:8px 0 0;max-width:760px;">
-        Live sales data from the database is exported to Google Sheets, then visualized in Power BI (including anomalies).
+        Live sales syncs to your existing <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> tabs (Power BI sheet) — both update on every new order. No new tabs created.
       </p>
     </div>
 
-    <div class="row g-3 mb-4" id="analyticsKpiRow">
-      <div class="col-6 col-md-3">
-        <div class="dash-card" style="padding:16px 18px;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Total Orders</div>
-          <div id="analyticsOrderCount" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--brand);">0</div>
+    <div class="row g-3 mb-3" id="analyticsKpiRow">
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Total Orders</div>
+          <div id="analyticsOrderCount" class="analytics-kpi-value">0</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="dash-card" style="padding:16px 18px;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Net Sales (PHP)</div>
-          <div id="analyticsNetSales" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--brand);">0.00</div>
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Orders Today</div>
+          <div id="analyticsOrdersToday" class="analytics-kpi-value">0</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="dash-card" style="padding:16px 18px;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Anomalies</div>
-          <div id="analyticsAnomalyCount" style="font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--admin-accent);">0</div>
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Net Sales (PHP)</div>
+          <div id="analyticsNetSales" class="analytics-kpi-value is-money">0.00</div>
         </div>
       </div>
-      <div class="col-6 col-md-3">
-        <div class="dash-card" style="padding:16px 18px;">
-          <div style="font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-dim);">Last Sync</div>
-          <div id="analyticsLastSync" style="font-size:.78rem;font-weight:600;color:var(--text-main);line-height:1.4;">—</div>
-          <button type="button" id="analyticsSyncBtn" class="btn-queue-done" style="margin-top:8px;padding:4px 10px;font-size:.68rem;" onclick="syncAnalyticsPipeline({ refreshPowerBi: true })">Sync now</button>
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Today's Sales</div>
+          <div id="analyticsSalesToday" class="analytics-kpi-value is-money is-green">0.00</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Anomalies</div>
+          <div id="analyticsAnomalyCount" class="analytics-kpi-value is-alert">0</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-4 col-lg-4">
+        <div class="dash-card analytics-kpi-card">
+          <div class="analytics-kpi-label">Google Sheet Sync</div>
+          <div id="analyticsSyncStatus" class="analytics-kpi-status is-pending">Not synced yet</div>
+          <div id="analyticsLastSync" class="analytics-kpi-sync-time">—</div>
+          <div id="analyticsSheetRows" class="analytics-kpi-meta"></div>
+          <button type="button" id="analyticsSyncBtn" class="btn-queue-done analytics-sync-btn" onclick="syncAnalyticsPipeline({ refreshPowerBi: true })">Sync now</button>
         </div>
       </div>
     </div>
@@ -1207,27 +1236,101 @@
     <div id="analyticsSyncWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
 
     <details id="analyticsSetupPanel" class="mb-3" style="border:1px solid var(--border);border-radius:12px;padding:12px 16px;background:var(--bg-body);">
-      <summary style="cursor:pointer;font-size:.82rem;font-weight:700;color:var(--brand);">One-time setup: connect Google Sheet to Power BI (required for chart updates)</summary>
+      <summary style="cursor:pointer;font-size:.82rem;font-weight:700;color:var(--brand);">Google Sheet setup (required for Daily Sales &amp; Performance sync)</summary>
       <div style="margin-top:12px;font-size:.78rem;color:var(--text-dim);line-height:1.5;">
-        <p style="margin:0 0 10px;">Power BI reads from your Google Sheet. After each order, the server pushes new rows to that sheet. You only need to do this setup once:</p>
+        <div id="analyticsSetupStatus" style="margin-bottom:12px;padding:10px 12px;border-radius:8px;background:rgba(212,160,23,.1);border:1px solid rgba(212,160,23,.25);color:#7a5e0a;">
+          <strong>Not connected yet.</strong> Follow all 4 steps below. If sync failed before, click <strong>Reset setup</strong> first, then deploy a <strong>new</strong> web app.
+        </div>
         <ol style="margin:0 0 12px;padding-left:18px;">
-          <li>Open your <a id="analyticsSetupSheetLink" href="https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing" target="_blank" rel="noopener" style="color:var(--brand);">Google Sheet</a> → <strong>Extensions → Apps Script</strong></li>
-          <li>Paste the script below, save, then <strong>Deploy → New deployment → Web app</strong> (Execute as: Me, Who has access: Anyone)</li>
-          <li>Copy the web app URL and paste it here, then click <strong>Save &amp; Sync</strong></li>
+          <li>Open your <a id="analyticsSetupSheetLink" href="https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing" target="_blank" rel="noopener" style="color:var(--brand);">Google Sheet</a> — every order updates <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> (existing tabs only, connected to Power BI)</li>
+          <li>Go to <strong>Extensions → Apps Script</strong> on that sheet</li>
+          <li>Delete all old code → click <strong>Copy script</strong> below → paste → <strong>Save</strong> (Ctrl+S)</li>
+          <li><strong>Deploy → New deployment → Web app</strong> — Execute as: <strong>Me</strong>, Who has access: <strong>Anyone</strong> — then copy the <strong>/exec</strong> URL</li>
+          <li>Paste the URL below → click <strong>Save &amp; Sync</strong> — you should see a success toast with order count + Daily Sales tab</li>
         </ol>
-        <textarea id="analyticsAppsScriptCode" readonly rows="14" style="width:100%;font-family:monospace;font-size:.68rem;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);resize:vertical;">function doPost(e) {
+        <textarea id="analyticsAppsScriptCode" readonly rows="34" style="width:100%;font-family:monospace;font-size:.68rem;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg-surface);resize:vertical;">var SCRIPT_VERSION = 6;
+var DAILY_TAB = 'Daily Sales & Performance';
+var ORDER_TAB_NAMES = ['Sales Records', 'Sales Record', 'Sheet1'];
+var SALES_HEADERS = ['Order ID','Order #','Date & Time','Customer','Email','Total (PHP)','Status','Payment','Fulfillment','Source','Items','Refund','Refund Status','Anomaly','Anomaly Reason'];
+
+function getSpreadsheet(payload) {
+  var id = payload && payload.spreadsheetId ? String(payload.spreadsheetId) : '';
+  if (!id) throw new Error('spreadsheetId is required.');
+  return SpreadsheetApp.openById(id);
+}
+
+function resolveOrdersSheet(ss) {
+  for (var i = 0; i < ORDER_TAB_NAMES.length; i++) {
+    var s = ss.getSheetByName(ORDER_TAB_NAMES[i]);
+    if (s) return s;
+  }
+  throw new Error('Sales Records tab not found. Keep your existing tab (Sales Records / Sales Record / Sheet1). This script NEVER creates new tabs.');
+}
+
+function resolveDailySheet(ss) {
+  var sheet = ss.getSheetByName(DAILY_TAB);
+  if (!sheet) throw new Error('Tab "' + DAILY_TAB + '" not found. Will NOT create new tabs.');
+  return sheet;
+}
+
+function writeOrdersSheet(sheet, dataRows) {
+  var colCount = SALES_HEADERS.length;
+  if (sheet.getLastRow() < 1 || !sheet.getRange(1, 1).getValue()) {
+    sheet.getRange(1, 1, 1, colCount).setValues([SALES_HEADERS]);
+  }
+  var oldLast = sheet.getLastRow();
+  if (oldLast > 1) {
+    sheet.getRange(2, 1, oldLast - 1, colCount).clearContent();
+  }
+  if (dataRows.length > 0) {
+    sheet.getRange(2, 1, dataRows.length, colCount).setValues(dataRows);
+  }
+  return dataRows.length;
+}
+
+function normalizeRows(values, colCount) {
+  var out = [];
+  for (var i = 0; i < values.length; i++) {
+    var row = values[i] || [];
+    var copy = [];
+    for (var c = 0; c < colCount; c++) copy.push(row[c] != null ? row[c] : '');
+    out.push(copy);
+  }
+  return out;
+}
+
+function writeDailySheet(sheet, values) {
+  if (!values || !values.length) throw new Error('Daily Sales & Performance data is required on every sync.');
+  var colCount = values[0].length;
+  var normalized = normalizeRows(values, colCount);
+  var rows = normalized.length;
+  sheet.getRange(1, 1, rows, colCount).clearContent();
+  sheet.getRange(1, 1, rows, colCount).setValues(normalized);
+  return rows;
+}
+
+function doPost(e) {
   try {
     var payload = JSON.parse(e.postData.contents);
-    var sheetName = payload.sheetName || 'Sheet1';
+    var ss = getSpreadsheet(payload);
+    var orderSheet = resolveOrdersSheet(ss);
     var values = payload.values || [];
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-    sheet.clearContents();
-    if (values.length > 0 && values[0].length > 0) {
-      sheet.getRange(1, 1, values.length, values[0].length).setValues(values);
-    }
-    return ContentService.createTextOutput(JSON.stringify({ success: true, rows: Math.max(0, values.length - 1) }))
-      .setMimeType(ContentService.MimeType.JSON);
+    var orderRows = payload.ordersDataOnly
+      ? writeOrdersSheet(orderSheet, values)
+      : writeOrdersSheet(orderSheet, values.length && values[0][0] === 'Order ID' ? values.slice(1) : values);
+
+    var dailySheet = resolveDailySheet(ss);
+    var dailyValues = payload.dailyValues || [];
+    var dailyRows = writeDailySheet(dailySheet, dailyValues);
+
+    return ContentService.createTextOutput(JSON.stringify({
+      success: true,
+      version: SCRIPT_VERSION,
+      rows: orderRows,
+      daily_rows: dailyRows,
+      orders_tab: orderSheet.getName(),
+      synced_tabs: [orderSheet.getName(), DAILY_TAB]
+    })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: String(err) }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -1236,16 +1339,24 @@
 
 function doGet(e) {
   try {
-    var action = e && e.parameter ? e.parameter.action : '';
-    var sheetName = (e && e.parameter && e.parameter.sheetName) ? e.parameter.sheetName : 'Sheet1';
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
-    if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-    var rows = Math.max(0, sheet.getLastRow() - 1);
-    if (action === 'count') {
-      return ContentService.createTextOutput(JSON.stringify({ success: true, rows: rows }))
-        .setMimeType(ContentService.MimeType.JSON);
+    var params = e && e.parameter ? e.parameter : {};
+    if (params.action === 'version') {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true,
+        version: SCRIPT_VERSION,
+        orders_tab_names: ORDER_TAB_NAMES,
+        daily_tab: DAILY_TAB
+      })).setMimeType(ContentService.MimeType.JSON);
     }
-    return ContentService.createTextOutput(JSON.stringify({ success: true, ok: true, rows: rows }))
+    var ss = getSpreadsheet({ spreadsheetId: params.spreadsheetId || '' });
+    var sheet = resolveOrdersSheet(ss);
+    var rows = Math.max(0, sheet.getLastRow() - 1);
+    if (params.action === 'count') {
+      return ContentService.createTextOutput(JSON.stringify({
+        success: true, version: SCRIPT_VERSION, rows: rows, orders_tab: sheet.getName()
+      })).setMimeType(ContentService.MimeType.JSON);
+    }
+    return ContentService.createTextOutput(JSON.stringify({ success: true, version: SCRIPT_VERSION, ok: true, rows: rows }))
       .setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
     return ContentService.createTextOutput(JSON.stringify({ success: false, error: String(err) }))
@@ -1256,7 +1367,9 @@ function doGet(e) {
           <button type="button" class="btn-queue-done" style="padding:4px 10px;font-size:.68rem;" onclick="copyAnalyticsAppsScript()">Copy script</button>
           <input type="url" id="analyticsAppsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" style="flex:1;min-width:220px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);font-size:.75rem;">
           <button type="button" id="analyticsSaveConfigBtn" class="btn-queue-done" style="padding:4px 12px;font-size:.68rem;" onclick="saveAnalyticsAppsScriptUrl()">Save &amp; Sync</button>
+          <button type="button" id="analyticsResetSetupBtn" class="btn-queue-done" style="padding:4px 12px;font-size:.68rem;background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.4);color:#c0392b;" onclick="resetGoogleSheetSetup()">Reset setup</button>
         </div>
+        <p id="analyticsSetupHint" style="margin:10px 0 0;font-size:.72rem;color:var(--text-dim);"></p>
       </div>
     </details>
 
@@ -1293,6 +1406,12 @@ function doGet(e) {
       Google Sheet:
       <a id="analyticsSheetLink" href="https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing" target="_blank" rel="noopener" style="color:var(--brand);">Open connected sheet</a>
       · Auto-sync runs when orders are added or removed.
+    </p>
+    <p style="text-align:center;margin:20px 0 0;">
+      <a href="#reviews-section" class="reviews-jump-link">
+        <span class="material-icons" style="font-size:18px;">rate_review</span>
+        Guest Reviews below — reply, edit, or delete responses
+      </a>
     </p>
   </div>
 </section>
@@ -2352,15 +2471,17 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   state.menuItems = loadMenuFromStorage();
   state.reviews   = loadReviewsFromStorage();
+  renderReviews();
+  setupReviewsFeedActions();
   await loadOrderQueue();
   loadMenuFromDatabase();
   loadReviewsFromDatabase();
   loadAnalyticsDashboard();
   loadAnalyticsConfig();
-  await syncAnalyticsPipeline({ refreshPowerBi: false, silent: true });
   renderMenuModal();
   renderReviews();
   renderMgmtGrid();
+  syncAnalyticsPipeline({ refreshPowerBi: false, silent: true });
   renderQueue();
   renderOrdersHistory();
   setupCategoryBarModal();
@@ -2370,16 +2491,22 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('statMenuCount').textContent = state.menuItems.length;
 
   let ordersRefreshBusy = false;
+  let lastHistoryFingerprint = orderQueueFingerprint(state.queue);
   setInterval(async () => {
-    if (ordersRefreshBusy) return;
+    if (ordersRefreshBusy || queueActionBusyIds.size) return;
     ordersRefreshBusy = true;
     try {
       await loadOrderQueue();
       loadMenuFromDatabase();
       loadReviewsFromDatabase();
       renderQueue();
-      renderOrdersHistory();
+      const fp = orderQueueFingerprint(state.queue);
+      if (fp !== lastHistoryFingerprint) {
+        renderOrdersHistory();
+        lastHistoryFingerprint = fp;
+      }
       syncDashboard();
+      loadAnalyticsDashboard();
     } catch (e) {
       console.error('Error in auto-refresh:', e);
     } finally {
@@ -2387,15 +2514,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }, 3000);
 
-  // Analytics KPIs refresh (text only — never reloads Power BI iframe)
+  // Analytics: refresh summary every 15s; full Google Sheet sync every 30s
   setInterval(() => {
     loadAnalyticsDashboard();
   }, 15000);
 
-  // Full pipeline sync (database → Google Sheets) — refresh Power BI only when data changes
   setInterval(() => {
-    syncAnalyticsPipeline({ refreshPowerBi: 'auto' });
-  }, 60000);
+    syncAnalyticsPipeline({ refreshPowerBi: 'auto', silent: true });
+  }, 30000);
 
   document.getElementById('cartOpenBtn')?.addEventListener('click', () => {
     new bootstrap.Modal(document.getElementById('cartModal')).show();
@@ -2720,7 +2846,7 @@ async function confirmCheckout(){
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    await syncAnalyticsPipeline({ refreshPowerBi: true });
+    scheduleAnalyticsAfterOrderChange();
 
     const checkM = bootstrap.Modal.getInstance(document.getElementById('checkoutModal'));
     if(checkM) checkM.hide();
@@ -2959,6 +3085,20 @@ function renderReviews(force = false) {
 
   captureReplyDrafts();
   if (!force && shouldSkipReviewsRerender() && feed.children.length > 0) return;
+
+  if (!state.reviews.length) {
+    feed.innerHTML = `
+      <div class="col-12">
+        <div class="reviews-empty-state">
+          <span class="material-icons" style="font-size:42px;color:var(--brand);opacity:.85;">forum</span>
+          <p style="font-family:'Playfair Display',serif;font-weight:700;font-size:1.05rem;margin:12px 0 6px;color:var(--text-main);">No guest reviews yet</p>
+          <p style="font-size:.82rem;color:var(--text-dim);margin:0;max-width:420px;margin-left:auto;margin-right:auto;">
+            Reviews from the client page appear here automatically. You can reply, edit your response, or delete it from each card.
+          </p>
+        </div>
+      </div>`;
+    return;
+  }
 
   feed.innerHTML = state.reviews.map(r => {
     const reviewId = Number(r.id);
@@ -3470,7 +3610,8 @@ function syncOrderCountersFromQueue(queue) {
   localStorage.setItem(O_COUNTER_KEY, String(maxO));
 }
 
-async function loadOrderQueue() {
+async function loadOrderQueue(options) {
+  options = options || {};
   const prevFingerprint = orderQueueFingerprint(state.queue);
   try {
     const response = await fetch(apiUrl('orders.php?action=get_orders'), { credentials: 'include' });
@@ -3493,10 +3634,54 @@ async function loadOrderQueue() {
     }
   }
 
-  const nextFingerprint = orderQueueFingerprint(state.queue);
-  if (nextFingerprint !== prevFingerprint) {
-    loadAnalyticsDashboard();
+  if (!options.skipAnalytics) {
+    const nextFingerprint = orderQueueFingerprint(state.queue);
+    if (nextFingerprint !== prevFingerprint) {
+      scheduleAnalyticsAfterOrderChange();
+    } else if (!options.skipSummary) {
+      loadAnalyticsDashboard();
+    }
+  }
+  return state.queue;
+}
+
+function scheduleAnalyticsAfterOrderChange() {
+  clearTimeout(window._analyticsOrderDebounce);
+  window._analyticsOrderDebounce = setTimeout(() => {
     syncAnalyticsPipeline({ refreshPowerBi: true, silent: true });
+  }, 800);
+}
+
+const queueActionBusyIds = new Set();
+
+function patchQueueOrderLocally(id, patch) {
+  const target = Number(id);
+  const idx = state.queue.findIndex(o => Number(o.id) === target || Number(o.orderId) === target);
+  if (idx === -1) return false;
+  state.queue[idx] = { ...state.queue[idx], ...patch };
+  saveOrderQueue();
+  return true;
+}
+
+function removeQueueOrderLocally(id) {
+  const target = Number(id);
+  const before = state.queue.length;
+  state.queue = state.queue.filter(o => Number(o.id) !== target && Number(o.orderId) !== target);
+  if (state.queue.length !== before) {
+    saveOrderQueue();
+    return true;
+  }
+  return false;
+}
+
+async function refreshQueueInBackground(updateHistory) {
+  try {
+    await loadOrderQueue({ skipSummary: true });
+    renderQueue();
+    if (updateHistory) renderOrdersHistory();
+    syncDashboard();
+  } catch (e) {
+    console.error('Background queue refresh error:', e);
   }
 }
 
@@ -3839,7 +4024,7 @@ async function saveManualOrder() {
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    await syncAnalyticsPipeline({ refreshPowerBi: true });
+    scheduleAnalyticsAfterOrderChange();
     bootstrap.Modal.getInstance(document.getElementById('addOrderModal')).hide();
     resetAddOrderModal();
   } catch (error) {
@@ -3861,11 +4046,12 @@ async function deleteQueueOrder(id) {
 
   try {
     await ordersApiPost('delete_order', { id: Number(order.orderId || order.id) });
-    await loadOrderQueue();
+    removeQueueOrderLocally(id);
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
-    await syncAnalyticsPipeline({ refreshPowerBi: true });
+    refreshQueueInBackground(false);
+    scheduleAnalyticsAfterOrderChange();
     showToast(`Order #${order.num} deleted.`);
   } catch (error) {
     console.error('Delete order error:', error);
@@ -3893,10 +4079,17 @@ async function cancelQueueOrder(id) {
 
   try {
     const result = await ordersApiPost('cancel_order', { id: Number(order.orderId || order.id) });
-    await loadOrderQueue();
+    patchQueueOrderLocally(id, {
+      status: 'cancelled',
+      cancelNum: result.cancel_num || order.cancelNum,
+      refundStatus: result.refund_status || order.refundStatus,
+      refundAmount: result.refund_amount != null ? result.refund_amount : order.refundAmount
+    });
     renderQueue();
     renderOrdersHistory();
     syncDashboard();
+    refreshQueueInBackground(true);
+    scheduleAnalyticsAfterOrderChange();
     const refundMsg = result.refund_status === 'refunded'
       ? ` Refunded ₱${parseFloat(result.refund_amount).toFixed(2)} to GCash/Maya.`
       : '';
@@ -4017,13 +4210,14 @@ function renderQueue() {
   const active = state.queue.filter(o => o.status !== 'done' && o.status !== 'cancelled');
   if (!active.length) {
     tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-dim);padding:24px;font-size:.85rem;">No active orders in queue.</td></tr>';
-    renderOrdersHistory();
     syncDashboard();
     restoreOrderDetailsFlyout();
     return;
   }
-  renderOrdersHistory();
-  tbody.innerHTML = active.map(o => `
+  tbody.innerHTML = active.map(o => {
+    const busy = queueActionBusyIds.has(Number(o.id)) || queueActionBusyIds.has(Number(o.orderId));
+    const busyAttr = busy ? ' disabled style="opacity:.55;pointer-events:none;"' : '';
+    return `
     <tr>
       <td>
         <strong style="color:var(--brand);">${o.num}</strong>
@@ -4038,9 +4232,9 @@ function renderQueue() {
       <td class="menu-price-color" style="font-weight:700;">₱${parseFloat(o.total).toFixed(2)}</td>
       <td><span class="queue-badge ${o.status}">${o.status === 'new' ? 'New' : o.status === 'preparing' ? 'Preparing' : 'Ready'}</span></td>
       <td>
-        ${o.status === 'new'      ? `<button class="btn-queue-done" onclick="advanceQueue(${o.id})" style="background:rgba(212,160,23,.1);border-color:rgba(212,160,23,.4);color:#b8870a;">Start</button>` : ''}
-        ${o.status === 'preparing'? `<button class="btn-queue-done" onclick="advanceQueue(${o.id})">Ready</button>` : ''}
-        ${o.status === 'ready'    ? `<button class="btn-queue-done" onclick="completeQueue(${o.id})">Done</button>` : ''}
+        ${o.status === 'new'      ? `<button class="btn-queue-done" onclick="advanceQueue(${o.id})"${busyAttr} style="background:rgba(212,160,23,.1);border-color:rgba(212,160,23,.4);color:#b8870a;">Start</button>` : ''}
+        ${o.status === 'preparing'? `<button class="btn-queue-done" onclick="advanceQueue(${o.id})"${busyAttr}>Ready</button>` : ''}
+        ${o.status === 'ready'    ? `<button class="btn-queue-done" onclick="completeQueue(${o.id})"${busyAttr}>Done</button>` : ''}
       </td>
       <td style="font-size:.75rem;white-space:nowrap;">
         <button class="btn-queue-done" onclick="editQueueOrder(${o.id})" style="background:rgba(116,81,45,.1);border-color:rgba(116,81,45,.4);color:var(--brand);padding:2px 6px;font-size:.7rem;margin-right:2px;"><span class="material-icons" style="font-size:12px;">edit</span></button>
@@ -4048,39 +4242,58 @@ function renderQueue() {
         <button class="btn-queue-done" onclick="deleteQueueOrder(${o.id})" style="background:rgba(169,64,48,.1);border-color:rgba(169,64,48,.4);color:#c0392b;padding:2px 6px;font-size:.7rem;"><span class="material-icons" style="font-size:12px;">delete</span></button>
       </td>
     </tr>
-  `).join('');
+  `;
+  }).join('');
   syncDashboard();
   restoreOrderDetailsFlyout();
 }
 
 async function advanceQueue(id) {
+  if (queueActionBusyIds.has(Number(id))) return;
   const o = findQueueOrder(id);
   if (!o) return;
+  const prevStatus = o.status;
   const newStatus = o.status === 'new' ? 'preparing' : 'ready';
+
+  queueActionBusyIds.add(Number(id));
+  patchQueueOrderLocally(id, { status: newStatus });
+  renderQueue();
+
   try {
     await ordersApiPost('update_status', { id: Number(o.orderId || o.id), status: newStatus });
-    await loadOrderQueue();
-    renderQueue();
-    syncDashboard();
+    refreshQueueInBackground(false);
+    scheduleAnalyticsAfterOrderChange();
   } catch (error) {
-    console.error('Advance queue error:', error);
+    patchQueueOrderLocally(id, { status: prevStatus });
+    renderQueue();
     showToast(error.message || 'Could not update order status.', true);
+  } finally {
+    queueActionBusyIds.delete(Number(id));
   }
 }
 
 async function completeQueue(id) {
+  if (queueActionBusyIds.has(Number(id))) return;
   const o = findQueueOrder(id);
   if (!o) return;
+  const prevStatus = o.status;
+  const orderNum = o.num;
+
+  queueActionBusyIds.add(Number(id));
+  patchQueueOrderLocally(id, { status: 'done' });
+  renderQueue();
+  showToast(`Order #${orderNum} marked as done.`);
+
   try {
     await ordersApiPost('update_status', { id: Number(o.orderId || o.id), status: 'done' });
-    await loadOrderQueue();
-    showToast(`Order #${o.num} marked as done.`);
-    renderQueue();
-    renderOrdersHistory();
-    syncDashboard();
+    refreshQueueInBackground(true);
+    scheduleAnalyticsAfterOrderChange();
   } catch (error) {
-    console.error('Complete queue error:', error);
+    patchQueueOrderLocally(id, { status: prevStatus });
+    renderQueue();
     showToast(error.message || 'Could not complete order.', true);
+  } finally {
+    queueActionBusyIds.delete(Number(id));
   }
 }
 
@@ -4360,15 +4573,20 @@ function loadReviewsFromDatabase() {
       if (data.success && Array.isArray(data.data)) {
         state.reviews = data.data.map(mapDbReviewToAdmin);
         saveReviewsToStorage();
-        if (shouldSkipReviewsRerender()) {
-          syncReviewStats();
-          syncDashboard();
-        } else {
-          renderReviews();
-        }
       }
     })
-    .catch(err => console.error('Error loading reviews:', err));
+    .catch(err => {
+      console.error('Error loading reviews:', err);
+      if (!state.reviews.length) state.reviews = loadReviewsFromStorage();
+    })
+    .finally(() => {
+      if (shouldSkipReviewsRerender()) {
+        syncReviewStats();
+        syncDashboard();
+      } else {
+        renderReviews();
+      }
+    });
 }
 
 async function syncMenuItemToDatabase(item) {
@@ -4441,6 +4659,8 @@ window.deleteReview = function(id) {
 /* ── Analytics & Power BI (database → Google Sheets → Power BI) ── */
 let powerBiEmbedInitialized = false;
 let lastAnalyticsFingerprint = '';
+let analyticsConfigCache = null;
+let googleSetupCompleteLocked = false;
 
 function formatAnalyticsMoney(value) {
   return Number(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -4448,14 +4668,78 @@ function formatAnalyticsMoney(value) {
 
 function analyticsFingerprint(summary) {
   if (!summary) return '';
-  return `${summary.order_count || 0}|${summary.net_sales || 0}|${summary.anomaly_count || 0}`;
+  return `${summary.order_count || 0}|${summary.orders_today || 0}|${summary.net_sales || 0}|${summary.sales_today || 0}|${summary.anomaly_count || 0}`;
+}
+
+const GOOGLE_SETUP_COMPLETE_KEY = 'sipPulseGoogleSetupComplete';
+
+function markGoogleSetupComplete(complete) {
+  googleSetupCompleteLocked = !!complete;
+  try {
+    if (complete) sessionStorage.setItem(GOOGLE_SETUP_COMPLETE_KEY, '1');
+    else sessionStorage.removeItem(GOOGLE_SETUP_COMPLETE_KEY);
+  } catch (e) { /* ignore */ }
+}
+
+function isGoogleSetupPanelDismissed() {
+  if (googleSetupCompleteLocked) return true;
+  try {
+    return sessionStorage.getItem(GOOGLE_SETUP_COMPLETE_KEY) === '1';
+  } catch (e) {
+    return false;
+  }
+}
+
+function isGoogleSheetSetupComplete(config, sheetsMeta, syncMeta) {
+  const merged = Object.assign({}, analyticsConfigCache || {}, config || {});
+  const url = trimAnalyticsUrl(merged.google_apps_script_url || '');
+  if (!url) return false;
+  const syncStatus = merged.last_sync_status ? merged.last_sync_status : 'pending';
+  if (syncStatus !== 'success') return false;
+  if (syncMeta && syncMeta.needs_script_update) return false;
+  if (sheetsMeta && sheetsMeta.success === false) return false;
+  if (sheetsMeta && sheetsMeta.needs_script_update) return false;
+  return true;
+}
+
+function closeGoogleSetupPanel() {
+  const panel = document.getElementById('analyticsSetupPanel');
+  if (panel) panel.open = false;
+  markGoogleSetupComplete(true);
+}
+
+function openGoogleSetupPanel() {
+  markGoogleSetupComplete(false);
+  const panel = document.getElementById('analyticsSetupPanel');
+  if (panel) panel.open = true;
+}
+
+function setGoogleSetupPanelOpen(shouldOpen) {
+  if (shouldOpen) openGoogleSetupPanel();
+  else closeGoogleSetupPanel();
+}
+
+function refreshGoogleSetupPanelState(config, sheetsMeta, syncMeta) {
+  const complete = isGoogleSheetSetupComplete(config, sheetsMeta, syncMeta);
+  if (complete) {
+    closeGoogleSetupPanel();
+    return true;
+  }
+  if (!isGoogleSetupPanelDismissed()) {
+    openGoogleSetupPanel();
+  }
+  return false;
 }
 
 function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   const orderEl = document.getElementById('analyticsOrderCount');
+  const todayOrdersEl = document.getElementById('analyticsOrdersToday');
   const salesEl = document.getElementById('analyticsNetSales');
+  const todaySalesEl = document.getElementById('analyticsSalesToday');
   const anomalyEl = document.getElementById('analyticsAnomalyCount');
   const syncEl = document.getElementById('analyticsLastSync');
+  const statusEl = document.getElementById('analyticsSyncStatus');
+  const sheetRowsEl = document.getElementById('analyticsSheetRows');
   const sheetLink = document.getElementById('analyticsSheetLink');
   const warnEl = document.getElementById('analyticsSyncWarning');
   const syncBtn = document.getElementById('analyticsSyncBtn');
@@ -4463,21 +4747,47 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   const pbiSetupPanel = document.getElementById('analyticsPowerBiSetupPanel');
 
   if (orderEl && summary) orderEl.textContent = String(summary.order_count || 0);
+  if (todayOrdersEl && summary) todayOrdersEl.textContent = String(summary.orders_today || 0);
   if (salesEl && summary) salesEl.textContent = formatAnalyticsMoney(summary.net_sales);
+  if (todaySalesEl && summary) todaySalesEl.textContent = formatAnalyticsMoney(summary.sales_today);
   if (anomalyEl && summary) anomalyEl.textContent = String(summary.anomaly_count || 0);
 
   const status = config && config.last_sync_status ? config.last_sync_status : 'pending';
-  const when = config && config.last_sync_at ? new Date(config.last_sync_at).toLocaleString() : 'Not yet synced';
+  const when = config && config.last_sync_at
+    ? new Date(config.last_sync_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' })
+    : 'Not yet synced';
   const sheetVerify = syncMeta && syncMeta.google_sheet_verify;
   const pbiRefresh = syncMeta && syncMeta.powerbi_refresh;
 
-  if (syncEl) {
-    let syncText = status + ' · ' + when;
-    if (sheetVerify && sheetVerify.success) {
-      syncText += ' · Sheet rows: ' + sheetVerify.rows;
+  if (statusEl) {
+    statusEl.className = 'analytics-kpi-status'
+      + (status === 'success' ? '' : (status === 'partial' ? ' is-partial' : ' is-pending'));
+    if (status === 'success') {
+      statusEl.textContent = 'Synced to Google Sheet';
+    } else if (status === 'partial') {
+      statusEl.textContent = 'Partial sync — check setup';
+    } else {
+      statusEl.textContent = 'Waiting for sync';
     }
-    syncEl.textContent = syncText;
-    syncEl.style.color = status === 'success' ? 'var(--text-main)' : (status === 'partial' ? '#a93226' : 'var(--text-main)');
+  }
+
+  if (syncEl) {
+    syncEl.textContent = when;
+  }
+
+  if (sheetRowsEl) {
+    const sheetMeta = sheetsMeta || {};
+    if (sheetVerify && sheetVerify.success) {
+      sheetRowsEl.textContent = sheetVerify.rows + ' orders in Sales Records · Daily Sales & Performance updated';
+    } else if (sheetMeta.success) {
+      const orders = sheetMeta.updated_cells || (summary ? summary.order_count : 0);
+      const dailyNote = sheetMeta.daily_rows != null ? ' · Daily summary synced' : '';
+      sheetRowsEl.textContent = orders + ' orders pushed to Google Sheet' + dailyNote;
+    } else if (summary && summary.order_count) {
+      sheetRowsEl.textContent = summary.order_count + ' orders ready to sync';
+    } else {
+      sheetRowsEl.textContent = '';
+    }
   }
 
   if (pbiStatusEl) {
@@ -4507,25 +4817,28 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
   }
 
   const sheetError = sheetsMeta && sheetsMeta.error ? String(sheetsMeta.error) : '';
-  const showWarning = status === 'partial' || (sheetsMeta && sheetsMeta.success === false);
-  const setupPanel = document.getElementById('analyticsSetupPanel');
+  const needsScriptUpdate = syncMeta && syncMeta.needs_script_update;
+  const showWarning = status === 'partial' || (sheetsMeta && sheetsMeta.success === false) || needsScriptUpdate;
   if (warnEl) {
     if (showWarning) {
       warnEl.style.display = 'block';
       warnEl.style.background = 'rgba(192,57,43,.08)';
       warnEl.style.borderColor = 'rgba(192,57,43,.25)';
       warnEl.style.color = '#a93226';
-      warnEl.innerHTML = (sheetError
-        || 'Google Sheet is not connected yet. Power BI will not change until you complete the one-time setup below.')
-        + ' <a href="#" style="color:#a93226;text-decoration:underline;" onclick="event.preventDefault();var p=document.getElementById(\'analyticsSetupPanel\');if(p)p.open=true;">Open setup</a>';
+      if (needsScriptUpdate) {
+        warnEl.innerHTML = 'Lumang Apps Script pa. I-deploy ang BAGONG script v6. Bawat order ay mag-u-update sa <strong>Sales Records</strong> at <strong>Daily Sales &amp; Performance</strong> — walang bagong tab na malilikha.'
+          + ' <a href="#" style="color:#a93226;text-decoration:underline;" onclick="event.preventDefault();openGoogleSetupPanel();">Open setup</a>';
+      } else {
+        warnEl.innerHTML = (sheetError
+          || 'Google Sheet is not connected yet. Complete the setup steps below.')
+          + ' <a href="#" style="color:#a93226;text-decoration:underline;" onclick="event.preventDefault();openGoogleSetupPanel();">Open setup</a>';
+      }
     } else {
       warnEl.style.display = 'none';
       warnEl.textContent = '';
     }
   }
-  if (setupPanel && status === 'success') {
-    setupPanel.open = false;
-  }
+  updateGoogleSetupPanelStatus(config, sheetsMeta, syncMeta);
 }
 
 function copyAnalyticsAppsScript() {
@@ -4536,6 +4849,74 @@ function copyAnalyticsAppsScript() {
   showToast('Apps Script copied — paste in Google Sheet → Extensions → Apps Script');
 }
 
+function updateGoogleSetupPanelStatus(config, sheetsMeta, syncMeta) {
+  const statusBox = document.getElementById('analyticsSetupStatus');
+  const hintEl = document.getElementById('analyticsSetupHint');
+  if (!statusBox) return;
+
+  const configured = config && trimAnalyticsUrl(config.google_apps_script_url || '');
+  const syncStatus = config && config.last_sync_status ? config.last_sync_status : 'pending';
+  const sheetOk = sheetsMeta && sheetsMeta.success;
+  const dailyRows = sheetsMeta && sheetsMeta.daily_rows != null ? Number(sheetsMeta.daily_rows) : null;
+  const needsUpdate = syncMeta && syncMeta.needs_script_update;
+
+  if (!configured) {
+    statusBox.style.background = 'rgba(212,160,23,.1)';
+    statusBox.style.borderColor = 'rgba(212,160,23,.25)';
+    statusBox.style.color = '#7a5e0a';
+    statusBox.innerHTML = '<strong>Step 1:</strong> Copy the script, deploy a new web app, then paste the URL below.';
+  } else if (needsUpdate || (sheetOk && dailyRows === 0)) {
+    statusBox.style.background = 'rgba(192,57,43,.08)';
+    statusBox.style.borderColor = 'rgba(192,57,43,.25)';
+    statusBox.style.color = '#a93226';
+    statusBox.innerHTML = '<strong>Old script still active.</strong> Deploy NEW script v6. Every order updates <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> (Power BI sheet) — never creates new tabs.';
+  } else if (syncStatus === 'success' && sheetOk) {
+    statusBox.style.background = 'rgba(26,124,74,.1)';
+    statusBox.style.borderColor = 'rgba(26,124,74,.25)';
+    statusBox.style.color = '#1a7c4a';
+    statusBox.innerHTML = '<strong>Connected.</strong> Every new order (client + admin) syncs to <strong>Sales Records</strong> + <strong>Daily Sales &amp; Performance</strong> → Power BI. No new tabs created.';
+  } else {
+    statusBox.style.background = 'rgba(212,160,23,.1)';
+    statusBox.style.borderColor = 'rgba(212,160,23,.25)';
+    statusBox.style.color = '#7a5e0a';
+    statusBox.innerHTML = '<strong>URL saved.</strong> Click Save &amp; Sync to test the connection, or Reset setup to start over.';
+  }
+
+  if (hintEl && configured) {
+    hintEl.textContent = 'Current URL saved (' + configured.length + ' chars). After any script change, always create a New deployment — editing alone does not update the web app URL.';
+  } else if (hintEl) {
+    hintEl.textContent = '';
+  }
+}
+
+function trimAnalyticsUrl(url) {
+  return String(url || '').trim();
+}
+
+async function resetGoogleSheetSetup() {
+  if (!confirm('Reset Google Sheet setup? This clears the saved Apps Script URL so you can connect a new deployment.')) return;
+  const btn = document.getElementById('analyticsResetSetupBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Resetting…'; }
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=reset_google_setup'), {
+      method: 'POST',
+      credentials: 'include'
+    });
+    const payload = await response.json();
+    if (!payload.success) throw new Error(payload.error || 'Reset failed');
+    const input = document.getElementById('analyticsAppsScriptUrl');
+    if (input) input.value = '';
+    openGoogleSetupPanel();
+    updateGoogleSetupPanelStatus(null, null, null);
+    showToast('Setup reset. Copy the new script, deploy, then paste URL and Save & Sync.');
+    await loadAnalyticsDashboard();
+  } catch (e) {
+    showToast(e.message || 'Could not reset Google setup.', true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Reset setup'; }
+  }
+}
+
 async function loadAnalyticsConfig() {
   try {
     const response = await fetch(apiUrl('analytics.php?action=config'), { credentials: 'include' });
@@ -4543,12 +4924,19 @@ async function loadAnalyticsConfig() {
     if (!payload.success || !payload.data) return;
     const setupLink = document.getElementById('analyticsSetupSheetLink');
     const sheetLink = document.getElementById('analyticsSheetLink');
+    const urlInput = document.getElementById('analyticsAppsScriptUrl');
     if (setupLink && payload.data.google_sheet_url) setupLink.href = payload.data.google_sheet_url;
     if (sheetLink && payload.data.google_sheet_url) sheetLink.href = payload.data.google_sheet_url;
-    const setupPanel = document.getElementById('analyticsSetupPanel');
-    if (setupPanel && payload.data.last_sync_status !== 'success') {
-      setupPanel.open = true;
+    if (urlInput && payload.data.google_apps_script_url) {
+      urlInput.value = payload.data.google_apps_script_url;
     }
+    const config = {
+      google_apps_script_url: payload.data.google_apps_script_url,
+      last_sync_status: payload.data.last_sync_status
+    };
+    analyticsConfigCache = Object.assign({}, analyticsConfigCache || {}, config);
+    refreshGoogleSetupPanelState(config, null, null);
+    updateGoogleSetupPanelStatus(config, null, null);
   } catch (e) {
     console.error('Analytics config load error:', e);
   }
@@ -4558,8 +4946,9 @@ async function saveAnalyticsAppsScriptUrl() {
   const input = document.getElementById('analyticsAppsScriptUrl');
   const btn = document.getElementById('analyticsSaveConfigBtn');
   const url = (input && input.value ? input.value : '').trim();
-  if (!url || !/^https:\/\/script\.google\.com\//i.test(url)) {
-    showToast('Paste the deployed Apps Script web app URL (starts with https://script.google.com/)', true);
+  if (!url || !/script\.google\.com/i.test(url)) {
+    showToast('Paste the deployed Apps Script web app URL (https://script.google.com/macros/s/.../exec)', true);
+    setGoogleSetupPanelOpen(true);
     return;
   }
   if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
@@ -4570,12 +4959,48 @@ async function saveAnalyticsAppsScriptUrl() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ google_apps_script_url: url })
     });
-    const payload = await response.json();
-    if (!payload.success) throw new Error(payload.error || 'Save failed');
-    if (payload.data) applyAnalyticsPayload(payload.data, { refreshPowerBi: true });
-    showToast('Google Sheet connected — Power BI will update on new orders.');
+    const text = await response.text();
+    let payload;
+    try {
+      payload = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('Save config raw response:', text);
+      throw new Error('Server did not return JSON. Is XAMPP Apache running?');
+    }
+    if (!payload.success) throw new Error(payload.error || 'Could not save URL.');
+
+    analyticsConfigCache = Object.assign({}, analyticsConfigCache || {}, {
+      google_apps_script_url: url,
+      last_sync_status: payload.data && payload.data.config ? payload.data.config.last_sync_status : 'partial'
+    });
+
+    if (payload.data) {
+      if (payload.data.config) {
+        analyticsConfigCache = Object.assign({}, analyticsConfigCache || {}, payload.data.config);
+      }
+      applyAnalyticsPayload(payload.data, { refreshPowerBi: true, manageSetupPanel: false });
+    }
+
+    const sheetOk = !!(payload.sheet_sync_success || (payload.data && payload.data.google_sheets && payload.data.google_sheets.success));
+    const count = payload.data && payload.data.summary ? payload.data.summary.order_count : 0;
+    const sheetErr = payload.data && payload.data.google_sheets && payload.data.google_sheets.error
+      ? String(payload.data.google_sheets.error)
+      : '';
+
+    if (sheetOk) {
+      closeGoogleSetupPanel();
+      showToast('Setup successful — ' + count + ' orders synced to Sales Records + Daily Sales & Performance.');
+    } else {
+      openGoogleSetupPanel();
+      showToast(
+        'URL saved, but Google Sheet sync failed'
+        + (sheetErr ? ': ' + sheetErr : '. Deploy script v6 → New deployment → Save & Sync again.'),
+        true
+      );
+    }
   } catch (e) {
     console.error('Save analytics config error:', e);
+    openGoogleSetupPanel();
     showToast(e.message || 'Could not save Apps Script URL.', true);
   } finally {
     if (btn) { btn.disabled = false; btn.textContent = 'Save & Sync'; }
@@ -4650,19 +5075,30 @@ function refreshPowerBiEmbed(config) {
 
 function applyAnalyticsPayload(data, options) {
   if (!data) return;
+  options = options || {};
   const summary = data.summary;
-  const config = data.config;
+  const config = Object.assign({}, analyticsConfigCache || {}, data.config || {});
+  if (data.config) analyticsConfigCache = config;
   const fp = analyticsFingerprint(summary);
   const dataChanged = lastAnalyticsFingerprint !== '' && fp !== lastAnalyticsFingerprint;
   lastAnalyticsFingerprint = fp;
 
-  renderAnalyticsKpis(summary, config, data.google_sheets, {
+  const syncMeta = {
     google_sheet_verify: data.google_sheet_verify,
-    powerbi_refresh: data.powerbi_refresh
-  });
+    powerbi_refresh: data.powerbi_refresh,
+    needs_script_update: !!(data.google_sheets && data.google_sheets.needs_script_update)
+  };
+
+  renderAnalyticsKpis(summary, config, data.google_sheets, syncMeta);
   ensurePowerBiEmbedOnce(config);
 
-  const refreshMode = options && options.refreshPowerBi;
+  if (options.manageSetupPanel !== false && !isGoogleSetupPanelDismissed()) {
+    refreshGoogleSetupPanelState(config, data.google_sheets, syncMeta);
+  } else if (isGoogleSheetSetupComplete(config, data.google_sheets, syncMeta)) {
+    closeGoogleSetupPanel();
+  }
+
+  const refreshMode = options.refreshPowerBi;
   if (refreshMode === true || (refreshMode === 'auto' && dataChanged)) {
     schedulePowerBiEmbedReload(config, data.powerbi_refresh);
   }
@@ -4677,7 +5113,10 @@ async function loadAnalyticsDashboard() {
     const response = await fetch(apiUrl('analytics.php?action=summary'), { credentials: 'include' });
     const payload = await response.json();
     if (!payload.success || !payload.data) return;
-    applyAnalyticsPayload(payload.data, { refreshPowerBi: false });
+    const merged = Object.assign({}, payload.data, {
+      config: Object.assign({}, analyticsConfigCache || {}, payload.data.config || {})
+    });
+    applyAnalyticsPayload(merged, { refreshPowerBi: false, manageSetupPanel: !googleSetupCompleteLocked });
   } catch (e) {
     console.error('Analytics summary error:', e);
   }
@@ -4704,9 +5143,9 @@ async function syncAnalyticsPipeline(options) {
   }
   analyticsSyncBusy = true;
   const syncBtn = document.getElementById('analyticsSyncBtn');
-  const syncEl = document.getElementById('analyticsLastSync');
+  const statusEl = document.getElementById('analyticsSyncStatus');
   if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = 'Syncing…'; }
-  if (syncEl) syncEl.textContent = 'syncing…';
+  if (statusEl) statusEl.textContent = 'Syncing to Google Sheet…';
   try {
     const response = await fetch(apiUrl('analytics.php?action=sync'), {
       method: 'POST',

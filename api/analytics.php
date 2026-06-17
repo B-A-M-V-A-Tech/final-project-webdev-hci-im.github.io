@@ -37,6 +37,7 @@ try {
                 'google_spreadsheet_id' => $config['google_spreadsheet_id'],
                 'google_sheet_name' => $config['google_sheet_name'],
                 'google_apps_script_configured' => trim((string) ($config['google_apps_script_url'] ?? '')) !== '',
+                'google_apps_script_url' => trim((string) ($config['google_apps_script_url'] ?? '')),
                 'powerbi_api_configured' => trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
                     && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '',
                 'powerbi_group_id' => $config['powerbi_group_id'] ?? '',
@@ -85,6 +86,29 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'reset_google_setup') {
+        $stmt = $conn->prepare(
+            'UPDATE analytics_config SET google_apps_script_url = ?, last_sync_status = ?, last_sync_at = NULL ORDER BY id ASC LIMIT 1'
+        );
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $conn->error);
+        }
+        $empty = '';
+        $pending = 'pending';
+        $stmt->bind_param('ss', $empty, $pending);
+        if (!$stmt->execute()) {
+            throw new Exception('Could not reset Google setup: ' . $stmt->error);
+        }
+        $stmt->close();
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Google Sheet setup reset. Deploy a new Apps Script web app and paste the URL below.',
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'save_config') {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!is_array($data)) {
@@ -109,11 +133,16 @@ try {
         $stmt->close();
 
         $result = analyticsRunPipeline($conn);
+        $sheetOk = is_array($result['google_sheets'] ?? null) && !empty($result['google_sheets']['success']);
 
         ob_end_clean();
         echo json_encode([
             'success' => true,
-            'message' => 'Analytics config saved and sync triggered.',
+            'url_saved' => true,
+            'sheet_sync_success' => $sheetOk,
+            'message' => $sheetOk
+                ? 'Google Sheet setup saved and synced successfully.'
+                : 'URL saved. Google Sheet sync needs attention — see setup panel.',
             'data' => analyticsFormatApiResult($result),
         ]);
         exit;
@@ -133,6 +162,11 @@ try {
                 'config' => $config ? [
                     'powerbi_embed_url' => $config['powerbi_embed_url'],
                     'google_sheet_url' => $config['google_sheet_url'],
+                    'google_apps_script_url' => trim((string) ($config['google_apps_script_url'] ?? '')),
+                    'powerbi_api_configured' => trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
+                        && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '',
+                    'powerbi_last_refresh_at' => $config['powerbi_last_refresh_at'],
+                    'powerbi_last_refresh_status' => $config['powerbi_last_refresh_status'],
                     'last_sync_at' => $config['last_sync_at'],
                     'last_sync_status' => $config['last_sync_status'],
                 ] : null,

@@ -58,6 +58,22 @@ function ensureMenuItemsAutoIncrement($conn) {
     $conn->query('ALTER TABLE menu_items AUTO_INCREMENT = ' . $next);
 }
 
+function ensureAnalyticsSheetConfig($conn) {
+    $canonical = array(
+        'id' => '1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8',
+        'url' => 'https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing',
+        'name' => 'Sales Records',
+    );
+
+    $conn->query(
+        "UPDATE analytics_config SET
+            google_spreadsheet_id = '" . $conn->real_escape_string($canonical['id']) . "',
+            google_sheet_url = '" . $conn->real_escape_string($canonical['url']) . "',
+            google_sheet_name = '" . $conn->real_escape_string($canonical['name']) . "'
+         WHERE id >= 1"
+    );
+}
+
 function ensureAnalyticsSeed($conn) {
     $countResult = $conn->query('SELECT COUNT(*) AS c FROM analytics_config');
     $countRow = $countResult ? $countResult->fetch_assoc() : array('c' => 0);
@@ -68,7 +84,7 @@ function ensureAnalyticsSeed($conn) {
     $powerbiUrl = 'https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
     $sheetId = '1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8';
     $sheetUrl = 'https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing';
-    $sheetName = 'Sheet1';
+    $sheetName = 'Sales Records';
     $serviceEmail = '';
     $privateKey = '';
 
@@ -276,7 +292,7 @@ function ensureDatabaseSchema($conn) {
         powerbi_title VARCHAR(120) NOT NULL,
         powerbi_embed_url VARCHAR(700) NOT NULL,
         google_spreadsheet_id VARCHAR(120) NOT NULL,
-        google_sheet_name VARCHAR(80) DEFAULT 'Sheet1',
+        google_sheet_name VARCHAR(80) DEFAULT 'Sales Records',
         google_sheet_url VARCHAR(500) NOT NULL,
         service_account_email VARCHAR(255) DEFAULT '',
         private_key_pem TEXT,
@@ -325,6 +341,7 @@ function ensureDatabaseSchema($conn) {
     ensureColumn($conn, 'analytics_config', 'powerbi_last_refresh_status', "VARCHAR(40) DEFAULT 'pending'");
 
     ensureAnalyticsSeed($conn);
+    ensureAnalyticsSheetConfig($conn);
     ensureDeviceAccessSeed($conn);
 }
 
