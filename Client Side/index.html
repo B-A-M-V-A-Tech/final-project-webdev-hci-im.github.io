@@ -912,6 +912,75 @@
       height: 180px;
       object-fit: cover;
       display: block;
+      cursor: pointer;
+      transition: opacity .2s, transform .22s;
+    }
+
+    .menu-img-modal:hover {
+      opacity: .92;
+      transform: scale(1.02);
+    }
+
+    .menu-detail-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+      align-items: start;
+    }
+
+    .menu-detail-image-wrap {
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: rgba(116, 81, 45, .08);
+    }
+
+    .menu-detail-image {
+      width: 100%;
+      max-height: 420px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .menu-detail-info {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .menu-detail-name {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin: 0;
+      line-height: 1.25;
+    }
+
+    .menu-detail-desc {
+      font-size: .9rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+      margin: 0;
+      white-space: pre-wrap;
+    }
+
+    .menu-detail-price {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--brand);
+      margin: 0;
+    }
+
+    @media (max-width: 767px) {
+      .menu-detail-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .menu-detail-image {
+        max-height: 260px;
+      }
     }
 
     .menu-card-modal-body {
@@ -3724,14 +3793,14 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
                       <select id="categoryDropdownModal" onchange="selectCategoryFromDropdown(this.value)"
                         style="background:rgba(225,220,201,.12);border:1.5px solid rgba(175,143,111,.4);border-radius:30px;padding:11px 36px 11px 16px;color:#F8F4E1;font-size:.85rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;min-width:180px;transition:border-color .3s;">
                         <option value="all" style="background:#1f150c;">All Categories</option>
-                        <optgroup label="☕ Beverages" style="background:#1f150c;">
+                        <optgroup label="Beverages" style="background:#1f150c;">
                           <option value="espresso" style="background:#1f150c;">Espresso & Hot Brews</option>
                           <option value="iced" style="background:#1f150c;">Iced & Cold Brews</option>
                           <option value="noncoffee" style="background:#1f150c;">Non-Coffee</option>
                           <option value="milktea" style="background:#1f150c;">Milktea & Frappe</option>
                           <option value="tea" style="background:#1f150c;">Tea & Herbal Tea</option>
                         </optgroup>
-                        <optgroup label="🍽 Food & Meals" style="background:#1f150c;">
+                        <optgroup label="Food & Meals" style="background:#1f150c;">
                           <option value="breakfast" style="background:#1f150c;">All-Day Breakfast</option>
                           <option value="starters" style="background:#1f150c;">Starters</option>
                           <option value="salad" style="background:#1f150c;">Salad</option>
@@ -3787,6 +3856,39 @@ body:has(#orderModal.show) .modal.show:not(#orderModal) .modal-content {
     </div>
   </div>
 </div>
+
+  <!-- ══ MENU ITEM DETAIL MODAL ══ -->
+  <div class="modal fade" id="menuItemDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content">
+        <div class="modal-header-custom">
+          <div>
+            <span style="font-size:.7rem;color:var(--brand);font-weight:700;text-transform:uppercase;letter-spacing:1px;">Menu Item</span>
+            <h5 class="modal-title-custom" id="menuDetailTitle">Item Details</h5>
+          </div>
+          <button type="button" class="btn-theme" data-bs-dismiss="modal" aria-label="Close">
+            <span class="material-icons" style="font-size:18px;">close</span>
+          </button>
+        </div>
+        <div class="modal-body-custom">
+          <div class="menu-detail-layout">
+            <div class="menu-detail-image-wrap">
+              <img id="menuDetailImage" class="menu-detail-image" src="" alt="">
+            </div>
+            <div class="menu-detail-info">
+              <span class="cat-tag-modal" id="menuDetailCat" style="align-self:flex-start;"></span>
+              <h3 class="menu-detail-name" id="menuDetailName"></h3>
+              <p class="menu-detail-desc" id="menuDetailDesc"></p>
+              <p class="menu-detail-price" id="menuDetailPrice"></p>
+              <button type="button" class="btn-primary-custom client-btn-modal" id="menuDetailAddBtn" style="align-self:flex-start;margin-top:4px;">
+                <span class="material-icons" style="font-size:17px;">add_shopping_cart</span> Add to Order
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- ══ REVIEW DETAIL MODAL ══ -->
   <div class="modal fade" id="reviewDetailModal" tabindex="-1" aria-hidden="true">
@@ -4987,6 +5089,7 @@ const FOOD_ADDONS = [
     }
 
     const STORAGE_KEY = 'sipandpulse_menu';
+    const MENU_UPDATED_KEY = 'sipandpulse_menu_updated';
     const REVIEWS_KEY = 'sipandpulse_reviews';
     const MENU_DEFAULT_IMG = 'https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=500&q=80';
 
@@ -4997,16 +5100,25 @@ const FOOD_ADDONS = [
         .replace(/</g, '&lt;');
     }
 
+    function resolveMenuImageUrl(img) {
+      const raw = String(img || '').trim();
+      if (!raw) return '';
+      if (/^(https?:|data:)/i.test(raw)) return raw;
+      const path = raw.replace(/^\.?\//, '');
+      return `${PROJECT_BASE}/${path}`;
+    }
+
     function menuImageUrl(img, itemId) {
       const raw = String(img || '').trim() || MENU_DEFAULT_IMG;
-      if (!itemId) return raw;
-      const sep = raw.includes('?') ? '&' : '?';
+      const resolved = resolveMenuImageUrl(raw) || raw;
+      if (!itemId) return resolved;
+      const sep = resolved.includes('?') ? '&' : '?';
       let hash = 0;
       for (let i = 0; i < raw.length; i += 1) {
         hash = ((hash << 5) - hash) + raw.charCodeAt(i);
         hash |= 0;
       }
-      return `${raw}${sep}menu=${encodeURIComponent(String(itemId))}&v=${Math.abs(hash)}`;
+      return `${resolved}${sep}menu=${encodeURIComponent(String(itemId))}&v=${Math.abs(hash)}`;
     }
 
     function menuImageSrc(img, itemId) {
@@ -5038,6 +5150,11 @@ const FOOD_ADDONS = [
         if (imgEl && imgEl.src !== nextSrc) {
           imgEl.src = nextSrc;
           imgEl.alt = item.name;
+        }
+        if (imgEl) {
+          imgEl.style.cursor = 'pointer';
+          imgEl.title = `View ${item.name}`;
+          imgEl.onclick = () => openMenuItemDetail(item.id);
         }
         if (catEl) catEl.textContent = catLabels[item.cat] || item.cat || '';
         if (nameEl) nameEl.textContent = item.name;
@@ -5161,9 +5278,10 @@ const FOOD_ADDONS = [
       // When admin.html adds, edits, or deletes items in another tab,
       // this event fires here and the full menu modal re-renders instantly.
       window.addEventListener('storage', (e) => {
-        if (e.key === STORAGE_KEY) {
+        if (e.key === STORAGE_KEY || e.key === MENU_UPDATED_KEY) {
           loadMenuFromDatabase().then(() => {
             renderMenuPreview();
+            if (typeof renderMenuModal === 'function') renderMenuModal(state.searchQuery || '');
             showToast('Menu updated by admin.');
           });
           return;
@@ -5812,6 +5930,10 @@ const FOOD_ADDONS = [
     <div class="col-6 col-md-4 col-lg-3" data-item-id="${item.id}">
       <div class="menu-card-modal">
         <img src="${menuImageSrc(item.img, item.id)}" alt="${escapeHtmlAttr(item.name)}" class="menu-img-modal" loading="lazy"
+             title="View ${escapeHtmlAttr(item.name)}"
+             role="button" tabindex="0"
+             onclick="openMenuItemDetail(${item.id})"
+             onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openMenuItemDetail(${item.id});}"
              onerror="this.onerror=null;this.src='${escapeHtmlAttr(MENU_DEFAULT_IMG)}'">
         <div class="menu-card-modal-body">
           <span class="cat-tag-modal">${catLabels[item.cat] || item.cat}</span>
@@ -5860,6 +5982,45 @@ const FOOD_ADDONS = [
       state.currentFilter = cat;
       renderMenuModal(state.searchQuery);
     }
+
+    /* ════════════════════════════════════════════
+       MENU ITEM DETAIL
+       ════════════════════════════════════════════ */
+    function openMenuItemDetail(itemId) {
+      const item = state.menuItems.find(i => Number(i.id) === Number(itemId));
+      if (!item) return;
+
+      const titleEl = document.getElementById('menuDetailTitle');
+      const imgEl = document.getElementById('menuDetailImage');
+      const catEl = document.getElementById('menuDetailCat');
+      const nameEl = document.getElementById('menuDetailName');
+      const descEl = document.getElementById('menuDetailDesc');
+      const priceEl = document.getElementById('menuDetailPrice');
+      const addBtn = document.getElementById('menuDetailAddBtn');
+
+      if (titleEl) titleEl.textContent = item.name;
+      if (imgEl) {
+        imgEl.src = menuImageUrl(item.img, item.id);
+        imgEl.alt = item.name;
+        imgEl.onerror = function() {
+          this.onerror = null;
+          this.src = MENU_DEFAULT_IMG;
+        };
+      }
+      if (catEl) catEl.textContent = catLabels[item.cat] || item.cat || '';
+      if (nameEl) nameEl.textContent = item.name;
+      if (descEl) descEl.textContent = (item.desc || '').trim() || 'No description available.';
+      if (priceEl) priceEl.textContent = `₱${parseFloat(item.price || 0).toFixed(2)}`;
+      if (addBtn) {
+        addBtn.onclick = () => {
+          closeModalSafe('menuItemDetailModal');
+          setTimeout(() => openOrderModal(item.id), 250);
+        };
+      }
+
+      openModalSafe('menuItemDetailModal');
+    }
+    window.openMenuItemDetail = openMenuItemDetail;
 
     /* ════════════════════════════════════════════
        ORDER MODAL
@@ -6926,12 +7087,15 @@ function mapDbReviewToClient(row) {
 }
 
 function loadMenuFromDatabase() {
-  return fetch(apiUrl('get_menu.php'))
+  return fetch(apiUrl('get_menu.php?_=' + Date.now()))
     .then(res => res.json())
     .then(data => {
       if (data.success && Array.isArray(data.data)) {
         state.menuItems = data.data.map(mapDbMenuItemToClient);
-        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems)); } catch(e) {}
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(state.menuItems));
+          localStorage.setItem(MENU_UPDATED_KEY, String(Date.now()));
+        } catch(e) {}
         renderMenuModal(state.searchQuery || '');
         renderMenuPreview();
       }

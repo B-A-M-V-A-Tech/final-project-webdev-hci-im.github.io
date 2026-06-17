@@ -3,6 +3,7 @@ include __DIR__ . '/session_bootstrap.php';
 header('Content-Type: application/json');
 include '../database/db_connect.php';
 include '../database/admin_session.php';
+include '../database/menu_image_resolver.php';
 
 if (!isAdminLoggedIn()) {
     http_response_code(403);
@@ -32,7 +33,12 @@ try {
         $category = $data['category'];
         $description = $data['description'] ?? '';
         $price = floatval($data['price']);
-        $image_url = $data['image_url'] ?? '';
+        $image_url = trim((string) ($data['image_url'] ?? ''));
+        if ($image_url !== '' && preg_match('#pinterest\.com|pin\.it#i', $image_url)) {
+            $image_url = resolveMenuImageUrl($image_url);
+        } elseif ($image_url !== '' && preg_match('#^https?://i\.pinimg\.com/#i', $image_url)) {
+            $image_url = cleanPinimgUrl($image_url);
+        }
         $available = isset($data['available']) ? intval($data['available']) : 1;
         $item_type = $data['item_type'] ?? 'food';
 
