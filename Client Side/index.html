@@ -5984,45 +5984,6 @@ const FOOD_ADDONS = [
     }
 
     /* ════════════════════════════════════════════
-       MENU ITEM DETAIL
-       ════════════════════════════════════════════ */
-    function openMenuItemDetail(itemId) {
-      const item = state.menuItems.find(i => Number(i.id) === Number(itemId));
-      if (!item) return;
-
-      const titleEl = document.getElementById('menuDetailTitle');
-      const imgEl = document.getElementById('menuDetailImage');
-      const catEl = document.getElementById('menuDetailCat');
-      const nameEl = document.getElementById('menuDetailName');
-      const descEl = document.getElementById('menuDetailDesc');
-      const priceEl = document.getElementById('menuDetailPrice');
-      const addBtn = document.getElementById('menuDetailAddBtn');
-
-      if (titleEl) titleEl.textContent = item.name;
-      if (imgEl) {
-        imgEl.src = menuImageUrl(item.img, item.id);
-        imgEl.alt = item.name;
-        imgEl.onerror = function() {
-          this.onerror = null;
-          this.src = MENU_DEFAULT_IMG;
-        };
-      }
-      if (catEl) catEl.textContent = catLabels[item.cat] || item.cat || '';
-      if (nameEl) nameEl.textContent = item.name;
-      if (descEl) descEl.textContent = (item.desc || '').trim() || 'No description available.';
-      if (priceEl) priceEl.textContent = `₱${parseFloat(item.price || 0).toFixed(2)}`;
-      if (addBtn) {
-        addBtn.onclick = () => {
-          closeModalSafe('menuItemDetailModal');
-          setTimeout(() => openOrderModal(item.id), 250);
-        };
-      }
-
-      openModalSafe('menuItemDetailModal');
-    }
-    window.openMenuItemDetail = openMenuItemDetail;
-
-    /* ════════════════════════════════════════════
        ORDER MODAL
        ════════════════════════════════════════════ */
     function openOrderModal(itemId) {
