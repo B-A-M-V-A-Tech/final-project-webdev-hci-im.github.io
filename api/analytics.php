@@ -195,25 +195,20 @@ try {
     if ($method === 'GET' && $action === 'summary') {
         header('Cache-Control: no-store, no-cache, must-revalidate');
         header('Pragma: no-cache');
-        $autoResult = analyticsAutoRefreshPowerBiPipeline($conn, false);
         $rows = analyticsBuildRowsFromOrders($conn);
         analyticsPersistRows($conn, $rows);
-        $summary = $autoResult['summary'] ?? analyticsBuildSummary($rows);
+        $summary = analyticsBuildSummary($rows);
         $config = analyticsGetConfig($conn);
-        $powerBiRefresh = $autoResult['powerbi_refresh'] ?? null;
 
         ob_end_clean();
         echo json_encode([
             'success' => true,
             'data' => [
                 'summary' => $summary,
-                'powerbi_refresh' => $powerBiRefresh,
                 'config' => $config ? [
                     'powerbi_embed_url' => $config['powerbi_embed_url'],
                     'google_sheet_url' => $config['google_sheet_url'],
                     'google_apps_script_url' => trim((string) ($config['google_apps_script_url'] ?? '')),
-                    'powerbi_api_configured' => trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
-                        && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '',
                     'powerbi_last_refresh_at' => $config['powerbi_last_refresh_at'],
                     'powerbi_last_refresh_status' => $config['powerbi_last_refresh_status'],
                     'last_sync_at' => $config['last_sync_at'],

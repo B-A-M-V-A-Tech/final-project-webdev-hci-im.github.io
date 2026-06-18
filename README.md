@@ -44,8 +44,7 @@ Sip & Pulse is a full-stack cafe ordering and management system with a customer-
 ### Analytics & Power BI
 
 - Live KPIs pulled directly from MySQL on every page load
-- Power BI **Publish to web** embed in admin dashboard (auto-reloads on refresh)
-- Optional **one-time Azure API setup** for automatic cloud dataset refresh (no manual iframe copy needed)
+- Power BI **Publish to web** embed in admin dashboard
 - Data feeds for Power BI Desktop via Web connector:
   - **One-file import:** `api/powerbi_all.php` (6 sheets: Orders, Order Lines, Menu, Reviews, Daily, Calendar)
   - **Per-table CSV/JSON:** `api/powerbi_feed.php?resource=orders&format=csv`
@@ -182,22 +181,6 @@ mysql -u root < database/setup_powerbi_user.sql
 |------|----------|
 | `powerbi` | `SipPulse_PBI_2026` |
 
-### Auto chart updates in Admin (no manual iframe copy)
-
-The admin dashboard automatically:
-
-- Reloads the Power BI iframe on every page refresh (cache-busted)
-- Triggers a cloud dataset refresh when new orders are placed (if API credentials are configured)
-- Shows live order count from the database above the chart
-
-**One-time optional setup** (Admin → Sales & Performance → *One-time setup: auto chart updates*):
-
-1. Create an Azure AD app registration with Power BI API permissions
-2. Enter **Client ID** and **Client Secret** in the admin panel
-3. Tenant ID is auto-detected from the embed URL
-
-After setup, the chart updates automatically — no need to copy a new iframe URL after each publish.
-
 ---
 
 ## API Reference
@@ -257,7 +240,7 @@ final-project-webdev-hci-im.github.io/
 | Menu or orders not loading | Ensure Apache and MySQL are running in XAMPP |
 | `Connection failed` error | Check `database/db_connect.php` credentials; create DB via `fix_db.php` |
 | Admin login fails | Run `demo_seed.php` to create default admin user |
-| Power BI shows old data | Refresh the admin page; enable auto-sync with Azure API credentials |
+| Power BI shows old data | Refresh dataset in Power BI Service, then hard-refresh the admin page |
 | Power BI MySQL connector error | Use Web feed (`powerbi_all.php`) instead of direct MySQL |
 | Pinterest image not showing | Use `resolve_menu_image.php` or paste a direct image URL |
 | GitHub Pages site has no orders | PHP/MySQL only works locally — use XAMPP for full backend |
