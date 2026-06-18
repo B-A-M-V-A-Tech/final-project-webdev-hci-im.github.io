@@ -109,6 +109,50 @@ try {
         exit;
     }
 
+    if ($method === 'POST' && $action === 'save_embed_url') {
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($data)) {
+            throw new Exception('Invalid JSON body.');
+        }
+
+        $embedUrl = trim((string) ($data['powerbi_embed_url'] ?? ''));
+        if ($embedUrl === '' || !preg_match('#^https://app\.powerbi\.com/view\?r=#i', $embedUrl)) {
+            throw new Exception('Paste a valid Power BI embed URL (https://app.powerbi.com/view?r=...).');
+        }
+
+        $title = trim((string) ($data['powerbi_title'] ?? 'SipandPulse'));
+        if ($title === '') {
+            $title = 'SipandPulse';
+        }
+
+        $stmt = $conn->prepare(
+            'UPDATE analytics_config SET powerbi_embed_url = ?, powerbi_title = ? ORDER BY id ASC LIMIT 1'
+        );
+        if (!$stmt) {
+            throw new Exception('Prepare failed: ' . $conn->error);
+        }
+        $stmt->bind_param('ss', $embedUrl, $title);
+        if (!$stmt->execute()) {
+            throw new Exception('Could not save embed URL: ' . $stmt->error);
+        }
+        $stmt->close();
+
+        $config = analyticsEnsurePowerBiIds($conn, analyticsGetConfig($conn));
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Power BI embed URL saved. Chart will reload.',
+            'data' => [
+                'config' => [
+                    'powerbi_embed_url' => $embedUrl,
+                    'powerbi_title' => $title,
+                ],
+            ],
+        ]);
+        exit;
+    }
+
     if ($method === 'POST' && $action === 'save_config') {
         $data = json_decode(file_get_contents('php://input'), true);
         if (!is_array($data)) {
@@ -149,16 +193,21 @@ try {
     }
 
     if ($method === 'GET' && $action === 'summary') {
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        header('Pragma: no-cache');
+        $autoResult = analyticsAutoRefreshPowerBiPipeline($conn, false);
         $rows = analyticsBuildRowsFromOrders($conn);
         analyticsPersistRows($conn, $rows);
-        $summary = analyticsBuildSummary($rows);
+        $summary = $autoResult['summary'] ?? analyticsBuildSummary($rows);
         $config = analyticsGetConfig($conn);
+        $powerBiRefresh = $autoResult['powerbi_refresh'] ?? null;
 
         ob_end_clean();
         echo json_encode([
             'success' => true,
             'data' => [
                 'summary' => $summary,
+                'powerbi_refresh' => $powerBiRefresh,
                 'config' => $config ? [
                     'powerbi_embed_url' => $config['powerbi_embed_url'],
                     'google_sheet_url' => $config['google_sheet_url'],
@@ -171,6 +220,25 @@ try {
                     'last_sync_status' => $config['last_sync_status'],
                 ] : null,
             ],
+        ]);
+        exit;
+    }
+
+    if (($method === 'GET' || $method === 'POST') && $action === 'refresh_powerbi') {
+        $force = isset($_GET['force']) && $_GET['force'] === '1';
+        if ($method === 'POST') {
+            $body = json_decode(file_get_contents('php://input'), true);
+            if (is_array($body) && !empty($body['force'])) {
+                $force = true;
+            }
+        }
+        $result = analyticsAutoRefreshPowerBiPipeline($conn, $force);
+
+        ob_end_clean();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Power BI refresh requested.',
+            'data' => $result,
         ]);
         exit;
     }

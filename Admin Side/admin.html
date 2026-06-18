@@ -1229,11 +1229,27 @@
 
     <div id="adminApiWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border-radius:10px;background:rgba(192,57,43,.08);border:1px solid rgba(192,57,43,.25);font-size:.78rem;color:#a93226;line-height:1.45;"></div>
 
+    <p id="powerBiChartStatus" style="display:none;margin:0 0 10px;font-size:.76rem;color:var(--text-dim);line-height:1.5;"></p>
+
+    <details id="powerBiAutoSyncSetup" style="display:none;margin:0 0 12px;font-size:.78rem;color:var(--text-dim);">
+      <summary style="cursor:pointer;font-weight:600;color:var(--brand);">One-time setup: auto chart updates (optional)</summary>
+      <p style="margin:10px 0 8px;line-height:1.6;">
+        Para automatic na mag-update ang chart sa bawat refresh — i-save ang Azure app credentials isang beses lang.
+        Tenant ID ay auto-detect mula sa embed URL.
+      </p>
+      <div class="d-flex flex-wrap gap-2" style="margin-bottom:8px;">
+        <input type="text" class="form-control-custom" id="powerbiClientId" placeholder="Azure Client ID" style="flex:1;min-width:180px;font-size:.75rem;">
+        <input type="password" class="form-control-custom" id="powerbiClientSecret" placeholder="Client Secret" style="flex:1;min-width:180px;font-size:.75rem;">
+      </div>
+      <button type="button" class="btn-queue-done" id="powerbiSaveConfigBtn" onclick="savePowerBiApiConfig()">Save &amp; enable auto-sync</button>
+    </details>
+
     <div class="powerbi-embed-wrap" style="border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-body);">
       <iframe
         id="powerBiAnalyticsFrame"
         title="SipandPulse"
-        src="https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D"
+        src="about:blank"
+        data-embed-url="https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D"
         frameborder="0"
         allowfullscreen="true">
       </iframe>
@@ -4783,6 +4799,7 @@ window.deleteReview = function(id) {
 const DEFAULT_POWERBI_EMBED_URL = 'https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
 let powerBiEmbedInitialized = false;
 let lastAnalyticsFingerprint = '';
+let lastPowerBiReloadOrderCount = null;
 let analyticsConfigCache = null;
 let googleSetupCompleteLocked = false;
 
@@ -4801,12 +4818,7 @@ function clearAdminApiWarning() {
 }
 
 function initPowerBiEmbedEarly() {
-  const frame = document.getElementById('powerBiAnalyticsFrame');
-  if (!frame) return;
-  const existing = (frame.getAttribute('src') || frame.dataset.embedUrl || '').trim();
-  ensurePowerBiEmbedOnce({
-    powerbi_embed_url: existing || DEFAULT_POWERBI_EMBED_URL
-  });
+  hardReloadPowerBiEmbed({ powerbi_embed_url: DEFAULT_POWERBI_EMBED_URL });
 }
 
 function formatAnalyticsMoney(value) {
@@ -5084,12 +5096,90 @@ async function loadAnalyticsConfig() {
     if (!payload.success || !payload.data) return;
     analyticsConfigCache = Object.assign({}, analyticsConfigCache || {}, {
       powerbi_embed_url: payload.data.powerbi_embed_url,
-      google_sheet_url: payload.data.google_sheet_url
+      google_sheet_url: payload.data.google_sheet_url,
+      powerbi_api_configured: payload.data.powerbi_api_configured
     });
+    const setupPanel = document.getElementById('powerBiAutoSyncSetup');
+    if (setupPanel) {
+      setupPanel.style.display = payload.data.powerbi_api_configured ? 'none' : 'block';
+    }
     ensurePowerBiEmbedOnce(analyticsConfigCache);
   } catch (e) {
     console.error('Analytics config load error:', e);
   }
+}
+
+function updatePowerBiChartStatus(summary, config, powerbiRefresh) {
+  const el = document.getElementById('powerBiChartStatus');
+  if (!el) return;
+  const count = summary ? Number(summary.order_count || 0) : 0;
+  const apiOk = config && config.powerbi_api_configured;
+  const refreshOk = powerbiRefresh && powerbiRefresh.success;
+  const refreshSkipped = powerbiRefresh && powerbiRefresh.skipped;
+
+  if (refreshOk) {
+    el.style.display = 'block';
+    el.style.color = '#1e7e34';
+    el.textContent = `Database: ${count} orders — Power BI refresh started. Chart reloads automatically in ~15–60s.`;
+    return;
+  }
+  if (config && config.powerbi_last_refresh_status === 'triggered') {
+    const when = config.powerbi_last_refresh_at
+      ? new Date(config.powerbi_last_refresh_at).toLocaleString('en-PH', { dateStyle: 'short', timeStyle: 'short' })
+      : '';
+    el.style.display = 'block';
+    el.style.color = '#1e7e34';
+    el.textContent = `Database: ${count} orders — chart syncing${when ? ' (last refresh ' + when + ')' : ''}…`;
+    return;
+  }
+  if (!apiOk || refreshSkipped) {
+    el.style.display = 'block';
+    el.style.color = '#7a5e0a';
+    el.textContent = `Database: ${count} orders — chart reloads on refresh. Enable auto-sync above for cloud dataset updates.`;
+    return;
+  }
+  el.style.display = 'block';
+  el.style.color = 'var(--text-dim)';
+  el.textContent = `Database: ${count} orders — chart auto-reloads on page refresh.`;
+}
+
+let powerBiEmbedReloadTimers = [];
+
+function clearPowerBiEmbedReloadTimers() {
+  powerBiEmbedReloadTimers.forEach((id) => clearTimeout(id));
+  powerBiEmbedReloadTimers = [];
+}
+
+function schedulePowerBiEmbedReload(config, powerbiRefresh) {
+  clearPowerBiEmbedReloadTimers();
+  const delays = powerbiRefresh && powerbiRefresh.success
+    ? [500, 3000, 8000, 15000, 30000, 60000, 90000]
+    : [300, 1500, 5000, 15000, 45000];
+  powerBiEmbedReloadTimers = delays.map((ms) =>
+    setTimeout(() => hardReloadPowerBiEmbed(config), ms)
+  );
+}
+
+async function triggerPowerBiAutoRefresh(force) {
+  try {
+    const response = await fetch(apiUrl('analytics.php?action=refresh_powerbi' + (force ? '&force=1' : '')), {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ force: !!force })
+    });
+    const payload = await response.json();
+    if (payload.success && payload.data) {
+      const merged = Object.assign({}, analyticsConfigCache || {}, payload.data.config || {});
+      analyticsConfigCache = merged;
+      updatePowerBiChartStatus(payload.data.summary, merged, payload.data.powerbi_refresh);
+      schedulePowerBiEmbedReload(merged, payload.data.powerbi_refresh);
+      return payload.data;
+    }
+  } catch (e) {
+    console.warn('Power BI auto-refresh:', e);
+  }
+  return null;
 }
 
 async function saveAnalyticsAppsScriptUrl() {
@@ -5195,35 +5285,56 @@ async function savePowerBiApiConfig() {
     const payload = await response.json();
     if (!payload.success) throw new Error(payload.error || 'Save failed');
     if (payload.data) applyAnalyticsPayload(payload.data, { refreshPowerBi: true });
-    showToast('Power BI refresh triggered — chart will update shortly.');
+    const setupPanel = document.getElementById('powerBiAutoSyncSetup');
+    if (setupPanel) setupPanel.style.display = 'none';
+    showToast('Auto-sync enabled — chart updates automatically on refresh.');
   } catch (e) {
     showToast(e.message || 'Could not save Power BI API config.', true);
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Save Power BI API & Refresh'; }
+    if (btn) { btn.disabled = false; btn.textContent = 'Save & enable auto-sync'; }
   }
 }
 
-function schedulePowerBiEmbedReload(config, powerbiRefresh) {
-  const delays = powerbiRefresh && powerbiRefresh.success ? [5000, 15000, 35000] : [3000];
-  delays.forEach((ms) => {
-    setTimeout(() => refreshPowerBiEmbed(config), ms);
-  });
+function hardReloadPowerBiEmbed(config) {
+  const wrap = document.querySelector('.powerbi-embed-wrap');
+  if (!wrap) return;
+  const baseUrl = (
+    (config && config.powerbi_embed_url) ||
+    document.getElementById('powerBiAnalyticsFrame')?.dataset?.embedUrl ||
+    DEFAULT_POWERBI_EMBED_URL
+  ).trim().replace(/([?&])_t=\d+/g, '').replace(/([?&])t=\d+/g, '').replace(/[?&]$/, '');
+  if (!baseUrl || baseUrl === 'about:blank') return;
+
+  const sep = baseUrl.includes('?') ? '&' : '?';
+  const src = baseUrl + sep + 't=' + Date.now();
+
+  wrap.innerHTML = '';
+  const iframe = document.createElement('iframe');
+  iframe.id = 'powerBiAnalyticsFrame';
+  iframe.title = 'SipandPulse';
+  iframe.src = src;
+  iframe.setAttribute('frameborder', '0');
+  iframe.allowFullscreen = true;
+  iframe.dataset.embedUrl = baseUrl;
+  wrap.appendChild(iframe);
+  powerBiEmbedInitialized = true;
 }
 
 function refreshPowerBiEmbed(config) {
-  const frame = document.getElementById('powerBiAnalyticsFrame');
-  if (!frame) return;
-  const baseUrl = (
-    (config && config.powerbi_embed_url) ||
-    frame.dataset.embedUrl ||
-    frame.getAttribute('src') ||
-    ''
-  ).trim().replace(/([?&])_t=\d+/g, '').replace(/[?&]$/, '');
-  if (!baseUrl) return;
-  frame.dataset.embedUrl = baseUrl;
-  const sep = baseUrl.includes('?') ? '&' : '?';
-  frame.src = baseUrl + sep + '_t=' + Date.now();
-  powerBiEmbedInitialized = true;
+  hardReloadPowerBiEmbed(config);
+}
+
+function maybeReloadPowerBiForOrderCount(summary, config, powerbiRefresh) {
+  const count = summary ? Number(summary.order_count || 0) : 0;
+  const changed = lastPowerBiReloadOrderCount === null || count !== lastPowerBiReloadOrderCount;
+  if (!changed) return;
+  const orderCountChanged = lastPowerBiReloadOrderCount !== null && count !== lastPowerBiReloadOrderCount;
+  lastPowerBiReloadOrderCount = count;
+  hardReloadPowerBiEmbed(config);
+  schedulePowerBiEmbedReload(config, powerbiRefresh);
+  if (orderCountChanged) {
+    triggerPowerBiAutoRefresh(true);
+  }
 }
 
 function applyAnalyticsPayload(data, options) {
@@ -5233,7 +5344,8 @@ function applyAnalyticsPayload(data, options) {
   const config = Object.assign({}, analyticsConfigCache || {}, data.config || {});
   if (data.config) analyticsConfigCache = config;
   const fp = analyticsFingerprint(summary);
-  const dataChanged = lastAnalyticsFingerprint !== '' && fp !== lastAnalyticsFingerprint;
+  const isFirstLoad = lastAnalyticsFingerprint === '';
+  const dataChanged = !isFirstLoad && fp !== lastAnalyticsFingerprint;
   lastAnalyticsFingerprint = fp;
 
   const syncMeta = {
@@ -5243,11 +5355,16 @@ function applyAnalyticsPayload(data, options) {
   };
 
   renderAnalyticsKpis(summary, config, data.google_sheets, syncMeta);
-  ensurePowerBiEmbedOnce(config);
+  updatePowerBiChartStatus(summary, config, syncMeta && syncMeta.powerbi_refresh);
 
-  const refreshMode = options.refreshPowerBi;
-  if (refreshMode === true || (refreshMode === 'auto' && dataChanged)) {
-    schedulePowerBiEmbedReload(config, data.powerbi_refresh);
+  if (summary) {
+    maybeReloadPowerBiForOrderCount(summary, config, syncMeta && syncMeta.powerbi_refresh);
+  } else {
+    const refreshMode = options.refreshPowerBi;
+    if (refreshMode === true || options.forceEmbedReload || isFirstLoad) {
+      hardReloadPowerBiEmbed(config);
+      schedulePowerBiEmbedReload(config, syncMeta && syncMeta.powerbi_refresh);
+    }
   }
 }
 
@@ -5257,7 +5374,10 @@ function renderAnalyticsSummary(summary, config) {
 
 async function loadAnalyticsDashboard() {
   try {
-    const response = await fetch(apiUrl('analytics.php?action=summary'), { credentials: 'include' });
+    const response = await fetch(apiUrl('analytics.php?action=summary&_=' + Date.now()), {
+      credentials: 'include',
+      cache: 'no-store'
+    });
     const payload = await parseAdminApiResponse(response);
     if (!payload.success || !payload.data) {
       throw new Error(payload.error || 'Analytics summary unavailable.');
@@ -5266,7 +5386,13 @@ async function loadAnalyticsDashboard() {
     const merged = Object.assign({}, payload.data, {
       config: Object.assign({}, analyticsConfigCache || {}, payload.data.config || {})
     });
-    applyAnalyticsPayload(merged, { refreshPowerBi: false, manageSetupPanel: false });
+    applyAnalyticsPayload(merged, { refreshPowerBi: 'auto', manageSetupPanel: false });
+    const pbiRefresh = merged.powerbi_refresh || null;
+    if (pbiRefresh) {
+      schedulePowerBiEmbedReload(merged.config || analyticsConfigCache, pbiRefresh);
+    } else {
+      schedulePowerBiEmbedReload(merged.config || analyticsConfigCache, null);
+    }
   } catch (e) {
     console.error('Analytics summary error:', e);
     showAdminApiWarning('Dashboard data could not load. Start Apache and MySQL in XAMPP, then refresh this page.');
@@ -5287,8 +5413,7 @@ function mergeAnalyticsSyncOptions(a, b) {
 }
 
 function reloadPowerBiChart(config) {
-  refreshPowerBiEmbed(config || analyticsConfigCache || {});
-  showToast('Power BI chart reloaded.');
+  hardReloadPowerBiEmbed(config || analyticsConfigCache || { powerbi_embed_url: DEFAULT_POWERBI_EMBED_URL });
 }
 window.reloadPowerBiChart = reloadPowerBiChart;
 

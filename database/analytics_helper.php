@@ -849,7 +849,7 @@ function analyticsRefreshPowerBiDataset($conn, $config) {
             'success' => false,
             'skipped' => true,
             'error' => $tokenResult['error'],
-            'hint' => 'Set scheduled refresh in Power BI Service (Dataset → Schedule refresh), or add Power BI API credentials in admin.',
+            'hint' => 'Add Power BI API credentials once in admin (Analytics → auto-sync setup) so the chart updates without copying a new iframe.',
         );
     }
 
@@ -961,8 +961,14 @@ function analyticsRunPipeline($conn) {
 
     $hasPbiApi = trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
         && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '';
-    if ($hasPbiApi) {
+    if ($hasPbiApi && analyticsShouldAutoRefreshPowerBi($conn, 120)) {
         $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
+    } elseif (!$hasPbiApi) {
+        $powerBiResult = array(
+            'success' => false,
+            'skipped' => true,
+            'message' => 'Power BI API not configured.',
+        );
     }
 
     if ($sheetResult['success']) {
@@ -974,9 +980,6 @@ function analyticsRunPipeline($conn) {
             count($rows)
         );
         $sheetVerify = analyticsVerifySheetRowCount($config, count($rows));
-        if (!$hasPbiApi) {
-            $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
-        }
     } else {
         analyticsLogSync(
             $conn,
@@ -1004,6 +1007,56 @@ function analyticsRunPipeline($conn) {
                 && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '',
             'last_sync_at' => $freshConfig ? $freshConfig['last_sync_at'] : null,
             'last_sync_status' => $freshConfig ? $freshConfig['last_sync_status'] : 'partial',
+        ),
+    );
+}
+
+function analyticsShouldAutoRefreshPowerBi($conn, $minIntervalSeconds = 120) {
+    $config = analyticsGetConfig($conn);
+    if (!$config) {
+        return true;
+    }
+    $last = $config['powerbi_last_refresh_at'] ?? null;
+    if (!$last) {
+        return true;
+    }
+    $lastTs = strtotime((string) $last);
+    if ($lastTs === false) {
+        return true;
+    }
+    return (time() - $lastTs) >= max(30, intval($minIntervalSeconds));
+}
+
+function analyticsAutoRefreshPowerBiPipeline($conn, $force = false) {
+    $config = analyticsGetConfig($conn);
+    if (!$config) {
+        throw new Exception('Analytics configuration not found.');
+    }
+
+    $config = analyticsEnsurePowerBiIds($conn, $config);
+    $rows = analyticsBuildRowsFromOrders($conn);
+    analyticsPersistRows($conn, $rows);
+    $summary = analyticsBuildSummary($rows);
+
+    $powerBiResult = array('success' => false, 'skipped' => true, 'message' => 'Power BI API not configured.');
+    $hasApi = trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
+        && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '';
+
+    if ($hasApi && ($force || analyticsShouldAutoRefreshPowerBi($conn, 120))) {
+        $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
+    }
+
+    $freshConfig = analyticsGetConfig($conn);
+
+    return array(
+        'summary' => $summary,
+        'powerbi_refresh' => $powerBiResult,
+        'config' => array(
+            'powerbi_embed_url' => $config['powerbi_embed_url'],
+            'powerbi_api_configured' => $hasApi,
+            'powerbi_last_refresh_at' => $freshConfig ? $freshConfig['powerbi_last_refresh_at'] : null,
+            'powerbi_last_refresh_status' => $freshConfig ? $freshConfig['powerbi_last_refresh_status'] : 'pending',
+            'order_count' => $summary['order_count'],
         ),
     );
 }
