@@ -81,7 +81,7 @@ function ensureAnalyticsSeed($conn) {
         return;
     }
 
-    $powerbiUrl = 'https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
+    $powerbiUrl = 'https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
     $sheetId = '1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8';
     $sheetUrl = 'https://docs.google.com/spreadsheets/d/1FKCvoXqNIJd7uYAOfTC39lepsegswNsYujECatuSbj8/edit?usp=sharing';
     $sheetName = 'Sales Records';

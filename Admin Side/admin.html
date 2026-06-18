@@ -1232,8 +1232,8 @@
     <div class="powerbi-embed-wrap" style="border-radius:14px;overflow:hidden;border:1px solid var(--border);background:var(--bg-body);">
       <iframe
         id="powerBiAnalyticsFrame"
-        title="SipAndPulseSalesPerformance"
-        src="https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D"
+        title="SipandPulse"
+        src="https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D"
         frameborder="0"
         allowfullscreen="true">
       </iframe>
@@ -2399,6 +2399,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   let ordersRefreshBusy = false;
   let lastHistoryFingerprint = orderQueueFingerprint(state.queue);
+  let lastOrdersAnalyticsFingerprint = orderQueueFingerprint(state.queue);
   let lastReviewsFingerprint = reviewsFingerprint(state.reviews);
   setInterval(async () => {
     if (ordersRefreshBusy || queueActionBusyIds.size) return;
@@ -2421,8 +2422,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderOrdersHistory();
         lastHistoryFingerprint = fp;
       }
+      if (fp !== lastOrdersAnalyticsFingerprint) {
+        lastOrdersAnalyticsFingerprint = fp;
+        scheduleAnalyticsAfterOrderChange({ refreshPowerBi: true, silent: true });
+      } else {
+        loadAnalyticsDashboard();
+      }
       syncDashboard();
-      loadAnalyticsDashboard();
     } catch (e) {
       console.error('Error in auto-refresh:', e);
     } finally {
@@ -4774,7 +4780,7 @@ window.deleteReview = function(id) {
 };
 
 /* ── Analytics & Power BI (database → Google Sheets → Power BI) ── */
-const DEFAULT_POWERBI_EMBED_URL = 'https://app.powerbi.com/view?r=eyJrIjoiZjE2OGYxODYtNzZhNC00OGYxLWI2NjQtMWQ4ZjllOTFlYWM1IiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
+const DEFAULT_POWERBI_EMBED_URL = 'https://app.powerbi.com/view?r=eyJrIjoiN2I1MmM5YjktOWZlMS00NjAxLTgyNTMtNjcwYWRkNjg4YTQwIiwidCI6IjRkYTk4NTcxLWRjZWEtNDgzOS04ZmIxLTBiZGQ1ZGM5NjlmOSIsImMiOjEwfQ%3D%3D';
 let powerBiEmbedInitialized = false;
 let lastAnalyticsFingerprint = '';
 let analyticsConfigCache = null;
@@ -4915,9 +4921,9 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
     statusEl.className = 'analytics-kpi-status'
       + (status === 'success' ? '' : (status === 'partial' ? ' is-partial' : ' is-pending'));
     if (status === 'success') {
-      statusEl.textContent = 'Synced to Google Sheet';
+      statusEl.textContent = 'Database + Google Sheet synced';
     } else if (status === 'partial') {
-      statusEl.textContent = 'Partial sync — check setup';
+      statusEl.textContent = 'Database updated — refresh Power BI report';
     } else {
       statusEl.textContent = 'Waiting for sync';
     }
@@ -4950,6 +4956,9 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
       const pbiWhen = config.powerbi_last_refresh_at ? new Date(config.powerbi_last_refresh_at).toLocaleString() : '';
       pbiStatusEl.textContent = 'Power BI refresh triggered' + (pbiWhen ? ' · ' + pbiWhen : '') + ' — reloading chart…';
       pbiStatusEl.style.color = '#1e7e34';
+    } else if (status === 'partial' && summary && summary.order_count) {
+      pbiStatusEl.textContent = summary.order_count + ' orders in database — use manual refresh steps below, then Reload chart.';
+      pbiStatusEl.style.color = '#7a5e0a';
     } else if (status === 'success') {
       pbiStatusEl.textContent = 'Google Sheet updated. Chart below reads from Power BI — use scheduled refresh for live updates.';
       pbiStatusEl.style.color = '#7a5e0a';
@@ -4960,7 +4969,7 @@ function renderAnalyticsKpis(summary, config, sheetsMeta, syncMeta) {
 
   if (syncBtn) {
     syncBtn.disabled = !!analyticsSyncBusy;
-    syncBtn.textContent = analyticsSyncBusy ? 'Syncing…' : 'Sync now';
+    syncBtn.textContent = analyticsSyncBusy ? 'Syncing…' : 'Sync database & reload chart';
   }
 
   if (sheetLink && config && config.google_sheet_url) {
@@ -5277,6 +5286,12 @@ function mergeAnalyticsSyncOptions(a, b) {
   return { refreshPowerBi: refresh };
 }
 
+function reloadPowerBiChart(config) {
+  refreshPowerBiEmbed(config || analyticsConfigCache || {});
+  showToast('Power BI chart reloaded.');
+}
+window.reloadPowerBiChart = reloadPowerBiChart;
+
 async function syncAnalyticsPipeline(options) {
   options = options || { refreshPowerBi: 'auto' };
   const showFeedback = options.silent !== true;
@@ -5288,7 +5303,7 @@ async function syncAnalyticsPipeline(options) {
   const syncBtn = document.getElementById('analyticsSyncBtn');
   const statusEl = document.getElementById('analyticsSyncStatus');
   if (syncBtn) { syncBtn.disabled = true; syncBtn.textContent = 'Syncing…'; }
-  if (statusEl) statusEl.textContent = 'Syncing to Google Sheet…';
+  if (statusEl) statusEl.textContent = 'Syncing database…';
   try {
     const response = await fetch(apiUrl('analytics.php?action=sync'), {
       method: 'POST',
@@ -5314,15 +5329,16 @@ async function syncAnalyticsPipeline(options) {
       const pbiOk = payload.data.powerbi_refresh && payload.data.powerbi_refresh.success;
       if (showFeedback) {
         if (sheetOk && pbiOk) {
-          showToast(`Synced ${count} orders → Google Sheet → Power BI refresh started.`);
+          showToast(`Synced ${count} orders → database → Google Sheet → Power BI refresh started.`);
+        } else if (pbiOk) {
+          showToast(`Database synced (${count} orders). Power BI refresh started — reload chart in ~30s.`);
         } else if (sheetOk) {
-          showToast(`Google Sheet updated (${count} orders). Enable Power BI scheduled refresh for chart updates.`, true);
+          showToast(`Database + Google Sheet updated (${count} orders). Refresh Power BI Desktop & publish.`, true);
         } else {
-          const sheetErr = (payload.data.google_sheets && payload.data.google_sheets.error)
-            || 'Google Sheet not updated';
-          showToast(`Orders saved (${count}), but sheet sync failed: ${sheetErr}`, true);
+          showToast(`Database synced (${count} orders). Follow manual Power BI refresh steps below.`, true);
         }
       }
+      reloadPowerBiChart(payload.data.config || analyticsConfigCache);
     }
     return true;
   } catch (e) {
@@ -5332,7 +5348,7 @@ async function syncAnalyticsPipeline(options) {
   } finally {
     analyticsSyncBusy = false;
     const syncBtnDone = document.getElementById('analyticsSyncBtn');
-    if (syncBtnDone) { syncBtnDone.disabled = false; syncBtnDone.textContent = 'Sync now'; }
+    if (syncBtnDone) { syncBtnDone.disabled = false; syncBtnDone.textContent = 'Sync database & reload chart'; }
     if (analyticsSyncPending) {
       const pending = analyticsSyncPending;
       analyticsSyncPending = null;

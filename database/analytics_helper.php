@@ -959,6 +959,12 @@ function analyticsRunPipeline($conn) {
     $sheetVerify = null;
     $powerBiResult = null;
 
+    $hasPbiApi = trim((string) ($config['powerbi_client_id'] ?? '')) !== ''
+        && trim((string) ($config['powerbi_client_secret'] ?? '')) !== '';
+    if ($hasPbiApi) {
+        $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
+    }
+
     if ($sheetResult['success']) {
         $method = isset($sheetResult['method']) ? $sheetResult['method'] : 'api';
         analyticsLogSync(
@@ -968,12 +974,14 @@ function analyticsRunPipeline($conn) {
             count($rows)
         );
         $sheetVerify = analyticsVerifySheetRowCount($config, count($rows));
-        $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
+        if (!$hasPbiApi) {
+            $powerBiResult = analyticsRefreshPowerBiDataset($conn, $config);
+        }
     } else {
         analyticsLogSync(
             $conn,
             'partial',
-            'Database updated. Google Sheets: ' . $sheetResult['error'],
+            'Database updated (' . count($rows) . ' orders). Google Sheets: ' . $sheetResult['error'],
             count($rows)
         );
     }
